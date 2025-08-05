@@ -7,8 +7,10 @@ from itertools import product
 from typing import Dict, Union
 
 import fire
+import pandas as pd
 import pyrootutils
 
+from scfg.prompt import ChatCompletionResponse, basic_prompt
 from scfg.scfg import SCFG, CFGParams, SCFGParams
 from scfg.utils import get_logger, set_all_seeds
 
@@ -24,13 +26,16 @@ PROJECT_ROOT = path = pyrootutils.find_root(
     search_from=__file__, indicator=".project-root"
 )
 DATA_DIR = PROJECT_ROOT / "data"
+BATCH_DIR = PROJECT_ROOT / "batches"
 
 
 def create_grammars_and_samples(
     sizes: list[int] = [5, 10, 50, 100],
     grammars_per_size: int = 2,
     rng_seed: int = 80,
-    n_samples: int = 200,
+    n_samples_per_depth: int = 200,
+    min_depth: int = 0,
+    max_depth: int = 10,
 ):
     rng = random.Random(rng_seed)
     for s in sizes:
@@ -58,9 +63,9 @@ def create_grammars_and_samples(
                 generate_samples(
                     filepath=DATA_DIR / f"grammar_{grammar_name}.json",
                     rng_seed=g_seed,
-                    n_samples=n_samples,
                     min_depth=0,
                     max_depth=10,
+                    n_samples_per_depth=n_samples_per_depth,
                 )
 
 
@@ -126,12 +131,13 @@ def create_grammar(
 
 
 def generate_samples(
-    filepath: str = "grammar.json",
+    grammar_name: str,
     rng_seed: int = 42,
-    n_samples: int = 2,
     min_depth: int = 0,
     max_depth: int = 10,
+    n_samples_per_depth: int = 2,
 ):
+    filepath = f"grammar_{grammar_name}.json"
     with open(DATA_DIR / filepath, "r") as f:
         data = json.load(f)
 
@@ -144,9 +150,11 @@ def generate_samples(
 
     samples: list[Dict[str, Union[str, int]]] = []
 
-    for _ in range(n_samples):
-        sample = scfg.sample(rng=rng, min_depth=min_depth, max_depth=max_depth)
-        samples.append(sample)
+    depths = list(range(min_depth, max_depth + 1))
+    for d in depths:
+        for _ in range(n_samples_per_depth):
+            sample = scfg.sample(rng=rng, min_depth=d, max_depth=d)
+            samples.append(sample)
 
     for s in samples:
         s["grammar_name"] = params.name
@@ -161,28 +169,68 @@ def generate_samples(
             f.write(json.dumps(s) + "\n")
 
 
-def load_grammar(filepath: str = "grammar.json", rng_seed: int = 42):
-    with open(DATA_DIR / filepath, "r") as f:
-        data = json.load(f)
+def generate_batchfile(
+    grammar_name: str,
+    prompt_type: str = "basic",
+    model: str = "o4-mini",
+    max_new_tokens: int | None = None,
+):
+    samples = []
+    with open(DATA_DIR / f"samples_{grammar_name}.jsonl", "r") as f:
+        for line in f:
+            sample = json.loads(line)
+            samples.append(sample)
 
-    log.info(f"Loaded grammar from {DATA_DIR / filepath}")
+    grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
+    with open(grammar_path, "r") as f:
+        grammar = json.load(f)
+    grammar_str = grammar["grammar_str"]
+    n_words = grammar["n_words"]
+    n_rules = grammar["n_rules"]
 
-    params = SCFGParams.from_dict(data)
-    scfg = SCFG(params)
+    df = pd.DataFrame(samples)
 
-    rng = random.Random(rng_seed)
-    for _ in range(2):
-        sample = scfg.sample(rng=rng)
-        print(sample["left_phonetic"])
-        print(sample["right_phonetic"], "\n")
+    if prompt_type == "basic":
+        prompt_func = basic_prompt
+    else:
+        raise ValueError(f"Unknown prompt type: {prompt_type}")
+    df["prompt"] = df.apply(
+        lambda row: prompt_func(grammar_str=grammar_str, sample=row["left_phonetic"]),
+        axis=1,
+    )
+    df["json"] = df.apply(
+        lambda row: ChatCompletionResponse(
+            user_prompt=row["prompt"],
+            max_new_tokens=max_new_tokens,
+            metadata={
+                "input_sentence": row["left_phonetic"],
+                "output_sentence": row["right_phonetic"],
+                "grammar_name": grammar_name,
+                "n_words": str(n_words),
+                "n_rules": str(n_rules),
+                "model": model,
+                "depth": str(row["depth"]),
+            },
+        ).to_openai_batched_json(model=model, custom_id=f"request-{row.name}"),
+        axis=1,
+    )
+
+    model_pathsafe_name = model.replace("/", "_")
+    batch_jsonl_filename = f"inputs_{grammar_name}_{model_pathsafe_name}.jsonl"
+    batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
+    log.info(f"Writing batch job to {batch_jsonl_path}")
+
+    with open(batch_jsonl_path, "w") as f:
+        for j in df["json"]:
+            f.write(f"{j}\n")
 
 
 if __name__ == "__main__":
     fire.Fire(
         {
             "create_grammar": create_grammar,
-            "load_grammar": load_grammar,
             "generate_samples": generate_samples,
+            "generate_batchfile": generate_batchfile,
             "cgs": create_grammars_and_samples,
         }
     )
