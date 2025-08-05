@@ -1,0 +1,150 @@
+{
+  "a": {
+    "head_initial": false,
+    "spec_initial": false,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CV*C",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9421,
+    "verbs": [
+      "qojvozzay",
+      "gejquwqih",
+      "hevkadkugtaf",
+      "badbacjicxukbux",
+      "toxkocmaqxes",
+      "favfufred",
+      "cemduzbos",
+      "cabwuh",
+      "vanbig",
+      "tagjed"
+    ],
+    "nouns": [
+      "livqaksev",
+      "yomqaccelyetdim",
+      "vabkayjuqbehbir",
+      "qorjox",
+      "ciwfec",
+      "tomzuc",
+      "sofcaz",
+      "yefrihqedvafcam",
+      "xerwabnamzij",
+      "lefliqsor"
+    ],
+    "propns": [
+      "suwrizjipfokcotpim",
+      "foxgizhikpal"
+    ],
+    "prons": [
+      "winnebpucfeb",
+      "zoksemtod"
+    ],
+    "adjs": [
+      "gimlom",
+      "veyfiz",
+      "potfipxersog",
+      "vagpub",
+      "kiyhajpapmuq",
+      "zaytejjuj",
+      "funlugboyxek",
+      "xeldomgajwuk",
+      "corget",
+      "mihner"
+    ],
+    "det_def": [
+      "rokvugyevsim",
+      "kiklic"
+    ],
+    "det_indef": [
+      "hixjinmutqal",
+      "tulmuxyuchudjufgac"
+    ],
+    "comps": [
+      "pepduxkey",
+      "fophaw"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": false,
+    "pro_drop": true,
+    "proper_with_det": false,
+    "syllable_structure": "CV*C",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9422,
+    "verbs": [
+      "vujficnaf",
+      "qakriwgibhuqgov",
+      "xegnez",
+      "zorqix",
+      "poqquhcat",
+      "xeqqozqocneqboh",
+      "zosjuv",
+      "fuxroplanhok",
+      "zilhuwnevdehsis",
+      "gizlosrek"
+    ],
+    "nouns": [
+      "fuzweccif",
+      "hevfuc",
+      "gejzanmubqodwoycumtod",
+      "susxigvawwax",
+      "wasdushot",
+      "vippob",
+      "lalhedluxmaq",
+      "falhoc",
+      "cetsekjem",
+      "sehfox"
+    ],
+    "propns": [
+      "sernimkof",
+      "fawyawnuf"
+    ],
+    "prons": [
+      "nogloglobfac",
+      "qabvemhan"
+    ],
+    "adjs": [
+      "lafxuwfuh",
+      "serkiqyanvax",
+      "facluh",
+      "rabhoptac",
+      "juxcanceltok",
+      "juxpabmar",
+      "yubyaw",
+      "suvlad",
+      "gulmikhictus",
+      "qijtabrun"
+    ],
+    "det_def": [
+      "wosluhbod",
+      "rovgircim"
+    ],
+    "det_indef": [
+      "padbed",
+      "jesyeh"
+    ],
+    "comps": [
+      "wakxit",
+      "sidzursutniksuhluh"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "name": "d2c73b78f2f3d965",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <TBAR NP_SUBJ, NP_SUBJ TBAR>\nTBAR -> <VP T, VP T>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> <VBAR ,  VBAR>\nVBAR -> <OBJ_PHRASE V, OBJ_PHRASE V>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> <DETBAR ,  DETBAR>\nDETBAR -> <NP DET, NP DET>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'rokvugyevsim', 'wosluhbod'>\nDET_def -> <'kiklic', 'rovgircim'>\nDET_indef -> <'hixjinmutqal', 'padbed'>\nDET_indef -> <'tulmuxyuchudjufgac', 'jesyeh'>\nT -> <'\u2205_T_pres', '\u2205_T_pres'>\nASP -> <'\u2205_Asp_prog', '\u2205_Asp_prog'>\nV -> <'qojvozzay', 'vujficnaf'>\nV -> <'gejquwqih', 'qakriwgibhuqgov'>\nV -> <'hevkadkugtaf', 'xegnez'>\nV -> <'badbacjicxukbux', 'zorqix'>\nV -> <'toxkocmaqxes', 'poqquhcat'>\nV -> <'favfufred', 'xeqqozqocneqboh'>\nV -> <'cemduzbos', 'zosjuv'>\nV -> <'cabwuh', 'fuxroplanhok'>\nV -> <'vanbig', 'zilhuwnevdehsis'>\nV -> <'tagjed', 'gizlosrek'>\nN -> <'livqaksev', 'fuzweccif'>\nN -> <'yomqaccelyetdim', 'hevfuc'>\nN -> <'vabkayjuqbehbir', 'gejzanmubqodwoycumtod'>\nN -> <'qorjox', 'susxigvawwax'>\nN -> <'ciwfec', 'wasdushot'>\nN -> <'tomzuc', 'vippob'>\nN -> <'sofcaz', 'lalhedluxmaq'>\nN -> <'yefrihqedvafcam', 'falhoc'>\nN -> <'xerwabnamzij', 'cetsekjem'>\nN -> <'lefliqsor', 'sehfox'>\nPROPN -> <'suwrizjipfokcotpim', 'sernimkof'>\nPROPN -> <'foxgizhikpal', 'fawyawnuf'>\nPRON -> <'winnebpucfeb', 'nogloglobfac'>\nPRON -> <'zoksemtod', 'qabvemhan'>\nADJ -> <'gimlom', 'lafxuwfuh'>\nADJ -> <'veyfiz', 'serkiqyanvax'>\nADJ -> <'potfipxersog', 'facluh'>\nADJ -> <'vagpub', 'rabhoptac'>\nADJ -> <'kiyhajpapmuq', 'juxcanceltok'>\nADJ -> <'zaytejjuj', 'juxpabmar'>\nADJ -> <'funlugboyxek', 'yubyaw'>\nADJ -> <'xeldomgajwuk', 'suvlad'>\nADJ -> <'corget', 'gulmikhictus'>\nADJ -> <'mihner', 'qijtabrun'>\nC -> <'pepduxkey', 'wakxit'>\nC -> <'fophaw', 'sidzursutniksuhluh'>\nCNULL -> <'\u2205', '\u2205'>\nPRO -> <'\u2205', '\u2205'>",
+  "n_rules": 26,
+  "n_words": 44
+}

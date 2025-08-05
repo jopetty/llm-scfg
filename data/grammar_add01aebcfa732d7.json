@@ -1,0 +1,150 @@
+{
+  "a": {
+    "head_initial": false,
+    "spec_initial": true,
+    "pro_drop": true,
+    "proper_with_det": false,
+    "syllable_structure": "C?V",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 8501,
+    "verbs": [
+      "kure",
+      "zegimepe",
+      "duqeho",
+      "doburo",
+      "soqihidude",
+      "moponeqike",
+      "suhugo",
+      "pokokicome",
+      "zipigazo",
+      "moko"
+    ],
+    "nouns": [
+      "cuhicafefa",
+      "hupupe",
+      "dahoheja",
+      "cijaduwitunope",
+      "moha",
+      "pelidi",
+      "bamekuwo",
+      "jimigeje",
+      "gisu",
+      "zutate"
+    ],
+    "propns": [
+      "fuxajova",
+      "yusato"
+    ],
+    "prons": [
+      "xezika",
+      "yozo"
+    ],
+    "adjs": [
+      "xatidoxewu",
+      "fetofazame",
+      "foya",
+      "tajovugo",
+      "dolevu",
+      "putoti",
+      "biwe",
+      "supewe",
+      "bedaticidobi",
+      "rayoti"
+    ],
+    "det_def": [
+      "vawole",
+      "cona"
+    ],
+    "det_indef": [
+      "sote",
+      "curire"
+    ],
+    "comps": [
+      "cekaritojuhitaca",
+      "puruyobi"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "b": {
+    "head_initial": false,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*V*C*",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 8502,
+    "verbs": [
+      "jobsoycas",
+      "riggolzapxov",
+      "decgug",
+      "naqfiz",
+      "durvekrim",
+      "vaszal",
+      "laphegnuxvub",
+      "kurcux",
+      "jajtidbaxboc",
+      "curwekpufgid"
+    ],
+    "nouns": [
+      "yeyzasjus",
+      "gukvun",
+      "lewfamgixqemrip",
+      "muttekham",
+      "beflexreg",
+      "geztugsoz",
+      "xatcen",
+      "nizton",
+      "masdednanfox",
+      "xevwom"
+    ],
+    "propns": [
+      "kohyagmafduwtoqfan",
+      "felgifnunsecmiwfod"
+    ],
+    "prons": [
+      "likkukxuhhez",
+      "jasyepkarqastuycarbanvoj"
+    ],
+    "adjs": [
+      "kavjot",
+      "getgezfoxney",
+      "vezson",
+      "deylozxafveg",
+      "qilguq",
+      "pazqon",
+      "yolyibcutwew",
+      "hamdam",
+      "qeqzerhaqmop",
+      "deplaxciz"
+    ],
+    "det_def": [
+      "nunpocpavpep",
+      "dicbafkanyajdec"
+    ],
+    "det_indef": [
+      "soyxupbibyox",
+      "torjelxupheymej"
+    ],
+    "comps": [
+      "wughunfir",
+      "zeqnalkuq"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "name": "add01aebcfa732d7",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, TBAR NP_SUBJ>\nTBAR -> <VP T, T VP>\nNP_SUBJ -> <PRO, PRO>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR, VBAR >\nVBAR -> <OBJ_PHRASE V, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> < DETBAR, DETBAR >\nDETBAR -> <NP DET, DET NP>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'vawole', 'nunpocpavpep'>\nDET_def -> <'cona', 'dicbafkanyajdec'>\nDET_indef -> <'sote', 'soyxupbibyox'>\nDET_indef -> <'curire', 'torjelxupheymej'>\nT -> <'\u2205_T_pres', '\u2205_T_pres'>\nASP -> <'\u2205_Asp_prog', '\u2205_Asp_prog'>\nV -> <'kure', 'jobsoycas'>\nV -> <'zegimepe', 'riggolzapxov'>\nV -> <'duqeho', 'decgug'>\nV -> <'doburo', 'naqfiz'>\nV -> <'soqihidude', 'durvekrim'>\nV -> <'moponeqike', 'vaszal'>\nV -> <'suhugo', 'laphegnuxvub'>\nV -> <'pokokicome', 'kurcux'>\nV -> <'zipigazo', 'jajtidbaxboc'>\nV -> <'moko', 'curwekpufgid'>\nN -> <'cuhicafefa', 'yeyzasjus'>\nN -> <'hupupe', 'gukvun'>\nN -> <'dahoheja', 'lewfamgixqemrip'>\nN -> <'cijaduwitunope', 'muttekham'>\nN -> <'moha', 'beflexreg'>\nN -> <'pelidi', 'geztugsoz'>\nN -> <'bamekuwo', 'xatcen'>\nN -> <'jimigeje', 'nizton'>\nN -> <'gisu', 'masdednanfox'>\nN -> <'zutate', 'xevwom'>\nPROPN -> <'fuxajova', 'kohyagmafduwtoqfan'>\nPROPN -> <'yusato', 'felgifnunsecmiwfod'>\nPRON -> <'xezika', 'likkukxuhhez'>\nPRON -> <'yozo', 'jasyepkarqastuycarbanvoj'>\nADJ -> <'xatidoxewu', 'kavjot'>\nADJ -> <'fetofazame', 'getgezfoxney'>\nADJ -> <'foya', 'vezson'>\nADJ -> <'tajovugo', 'deylozxafveg'>\nADJ -> <'dolevu', 'qilguq'>\nADJ -> <'putoti', 'pazqon'>\nADJ -> <'biwe', 'yolyibcutwew'>\nADJ -> <'supewe', 'hamdam'>\nADJ -> <'bedaticidobi', 'qeqzerhaqmop'>\nADJ -> <'rayoti', 'deplaxciz'>\nC -> <'cekaritojuhitaca', 'wughunfir'>\nC -> <'puruyobi', 'zeqnalkuq'>\nCNULL -> <'\u2205', '\u2205'>\nPRO -> <'\u2205', '\u2205'>",
+  "n_rules": 27,
+  "n_words": 44
+}

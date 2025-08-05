@@ -1,0 +1,120 @@
+{
+  "a": {
+    "head_initial": false,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC*",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9564,
+    "verbs": [
+      "lavbibper",
+      "guznaxloz",
+      "lennekmepfoy",
+      "picwobpil",
+      "tetcehpofjepvibwiz"
+    ],
+    "nouns": [
+      "xaffim",
+      "sijgaxgeb",
+      "petfawvab",
+      "yucxalxux",
+      "duvxurbiysimxuwmaj"
+    ],
+    "propns": [
+      "yodvaywatraf",
+      "kevxedzor"
+    ],
+    "prons": [
+      "kijwiw",
+      "xoqseszerfoplodkedjicwes"
+    ],
+    "adjs": [
+      "bebjakrijyicjokkel",
+      "vedloy",
+      "fifqivquvxup",
+      "qasyestaz",
+      "bawrux"
+    ],
+    "det_def": [
+      "jarjup",
+      "cagweg"
+    ],
+    "det_indef": [
+      "zarwitbikvewkop",
+      "roqtayzahtuczux"
+    ],
+    "comps": [
+      "gamvubhughudjik",
+      "guykurrogrufjub"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CV*",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9565,
+    "verbs": [
+      "qihige",
+      "lobu",
+      "hahucoda",
+      "lewemiwo",
+      "tepame"
+    ],
+    "nouns": [
+      "yabe",
+      "dozeri",
+      "zoguxugi",
+      "pora",
+      "pole"
+    ],
+    "propns": [
+      "yuta",
+      "gatejegifuca"
+    ],
+    "prons": [
+      "hutu",
+      "tumaxacubo"
+    ],
+    "adjs": [
+      "qelu",
+      "muqawo",
+      "hiso",
+      "gaso",
+      "fitapu"
+    ],
+    "det_def": [
+      "dofo",
+      "fazufowuta"
+    ],
+    "det_indef": [
+      "zime",
+      "vuni"
+    ],
+    "comps": [
+      "royeyoheqafa",
+      "betusido"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "name": "92502f29e56b7aac",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, TBAR NP_SUBJ>\nTBAR -> <VP T, VP T>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR, VBAR >\nVBAR -> <OBJ_PHRASE V, OBJ_PHRASE V>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> < DETBAR, DETBAR >\nDETBAR -> <NP DET, NP DET>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'jarjup', 'dofo'>\nDET_def -> <'cagweg', 'fazufowuta'>\nDET_indef -> <'zarwitbikvewkop', 'zime'>\nDET_indef -> <'roqtayzahtuczux', 'vuni'>\nT -> <'\u2205_T_pres', '\u2205_T_pres'>\nASP -> <'\u2205_Asp_prog', '\u2205_Asp_prog'>\nV -> <'lavbibper', 'qihige'>\nV -> <'guznaxloz', 'lobu'>\nV -> <'lennekmepfoy', 'hahucoda'>\nV -> <'picwobpil', 'lewemiwo'>\nV -> <'tetcehpofjepvibwiz', 'tepame'>\nN -> <'xaffim', 'yabe'>\nN -> <'sijgaxgeb', 'dozeri'>\nN -> <'petfawvab', 'zoguxugi'>\nN -> <'yucxalxux', 'pora'>\nN -> <'duvxurbiysimxuwmaj', 'pole'>\nPROPN -> <'yodvaywatraf', 'yuta'>\nPROPN -> <'kevxedzor', 'gatejegifuca'>\nPRON -> <'kijwiw', 'hutu'>\nPRON -> <'xoqseszerfoplodkedjicwes', 'tumaxacubo'>\nADJ -> <'bebjakrijyicjokkel', 'qelu'>\nADJ -> <'vedloy', 'muqawo'>\nADJ -> <'fifqivquvxup', 'hiso'>\nADJ -> <'qasyestaz', 'gaso'>\nADJ -> <'bawrux', 'fitapu'>\nC -> <'gamvubhughudjik', 'royeyoheqafa'>\nC -> <'guykurrogrufjub', 'betusido'>\nCNULL -> <'\u2205', '\u2205'>",
+  "n_rules": 26,
+  "n_words": 28
+}

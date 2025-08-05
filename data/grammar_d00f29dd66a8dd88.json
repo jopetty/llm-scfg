@@ -1,0 +1,150 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CV*",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 2626,
+    "verbs": [
+      "zinipi",
+      "sape",
+      "hejepawe",
+      "borule",
+      "kolozavo",
+      "yuzi",
+      "berajo",
+      "rodi",
+      "wejico",
+      "rupu"
+    ],
+    "nouns": [
+      "loyu",
+      "rocohoda",
+      "muxu",
+      "layonetiqayo",
+      "vopaxiyowiwojabe",
+      "borevihuja",
+      "qavi",
+      "zohuyogaropi",
+      "lohu",
+      "tizolawi"
+    ],
+    "propns": [
+      "yudavi",
+      "punuro"
+    ],
+    "prons": [
+      "xodo",
+      "rigira"
+    ],
+    "adjs": [
+      "fale",
+      "degifupa",
+      "lanaturexofo",
+      "pekiwojuqa",
+      "hirufupaxo",
+      "gova",
+      "kodokalera",
+      "tepeye",
+      "retefu",
+      "mubiwa"
+    ],
+    "det_def": [
+      "racamuqi",
+      "zeqi"
+    ],
+    "det_indef": [
+      "koqepataze",
+      "rorata"
+    ],
+    "comps": [
+      "kiquso",
+      "vavezoqade"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": false,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CV",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 2627,
+    "verbs": [
+      "sekodide",
+      "falamuxi",
+      "jali",
+      "luyu",
+      "sowahe",
+      "navima",
+      "zajuqa",
+      "pocofo",
+      "zuzofizi",
+      "jaho"
+    ],
+    "nouns": [
+      "hasirupu",
+      "digosuva",
+      "loxuyoqe",
+      "peto",
+      "leyogi",
+      "wofaye",
+      "tituheyu",
+      "mexe",
+      "zugasu",
+      "heqa"
+    ],
+    "propns": [
+      "kikomigo",
+      "rewuyuxa"
+    ],
+    "prons": [
+      "duroxunagujaci",
+      "cihexi"
+    ],
+    "adjs": [
+      "giyeyu",
+      "yobu",
+      "vijimepiki",
+      "segopixi",
+      "jecezova",
+      "mixafizide",
+      "zeda",
+      "jesoji",
+      "rawoje",
+      "mayo"
+    ],
+    "det_def": [
+      "daputewo",
+      "kaxigogi"
+    ],
+    "det_indef": [
+      "povasu",
+      "zakiworo"
+    ],
+    "comps": [
+      "ledote",
+      "rimo"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "name": "d00f29dd66a8dd88",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, NP_SUBJ TBAR>\nTBAR -> <T VP, VP T>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR,  VBAR>\nVBAR -> <V OBJ_PHRASE, OBJ_PHRASE V>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> < DETBAR,  DETBAR>\nDETBAR -> <DET NP, NP DET>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'racamuqi', 'daputewo'>\nDET_def -> <'zeqi', 'kaxigogi'>\nDET_indef -> <'koqepataze', 'povasu'>\nDET_indef -> <'rorata', 'zakiworo'>\nT -> <'\u2205_T_pres', '\u2205_T_pres'>\nASP -> <'\u2205_Asp_prog', '\u2205_Asp_prog'>\nV -> <'zinipi', 'sekodide'>\nV -> <'sape', 'falamuxi'>\nV -> <'hejepawe', 'jali'>\nV -> <'borule', 'luyu'>\nV -> <'kolozavo', 'sowahe'>\nV -> <'yuzi', 'navima'>\nV -> <'berajo', 'zajuqa'>\nV -> <'rodi', 'pocofo'>\nV -> <'wejico', 'zuzofizi'>\nV -> <'rupu', 'jaho'>\nN -> <'loyu', 'hasirupu'>\nN -> <'rocohoda', 'digosuva'>\nN -> <'muxu', 'loxuyoqe'>\nN -> <'layonetiqayo', 'peto'>\nN -> <'vopaxiyowiwojabe', 'leyogi'>\nN -> <'borevihuja', 'wofaye'>\nN -> <'qavi', 'tituheyu'>\nN -> <'zohuyogaropi', 'mexe'>\nN -> <'lohu', 'zugasu'>\nN -> <'tizolawi', 'heqa'>\nPROPN -> <'yudavi', 'kikomigo'>\nPROPN -> <'punuro', 'rewuyuxa'>\nPRON -> <'xodo', 'duroxunagujaci'>\nPRON -> <'rigira', 'cihexi'>\nADJ -> <'fale', 'giyeyu'>\nADJ -> <'degifupa', 'yobu'>\nADJ -> <'lanaturexofo', 'vijimepiki'>\nADJ -> <'pekiwojuqa', 'segopixi'>\nADJ -> <'hirufupaxo', 'jecezova'>\nADJ -> <'gova', 'mixafizide'>\nADJ -> <'kodokalera', 'zeda'>\nADJ -> <'tepeye', 'jesoji'>\nADJ -> <'retefu', 'rawoje'>\nADJ -> <'mubiwa', 'mayo'>\nC -> <'kiquso', 'ledote'>\nC -> <'vavezoqade', 'rimo'>\nCNULL -> <'\u2205', '\u2205'>",
+  "n_rules": 26,
+  "n_words": 43
+}

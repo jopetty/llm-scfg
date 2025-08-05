@@ -1,0 +1,120 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": false,
+    "pro_drop": true,
+    "proper_with_det": false,
+    "syllable_structure": "C?V",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 3341,
+    "verbs": [
+      "jefivi",
+      "yoza",
+      "vatetuja",
+      "bixu",
+      "xehedani"
+    ],
+    "nouns": [
+      "dusirobafa",
+      "keya",
+      "zowanu",
+      "coroxo",
+      "fozi"
+    ],
+    "propns": [
+      "gegutade",
+      "wogurivi"
+    ],
+    "prons": [
+      "geja",
+      "falugemufezema"
+    ],
+    "adjs": [
+      "nitixi",
+      "fakova",
+      "hicekaya",
+      "qegomi",
+      "nebeli"
+    ],
+    "det_def": [
+      "yorufu",
+      "koqe"
+    ],
+    "det_indef": [
+      "subime",
+      "caqoko"
+    ],
+    "comps": [
+      "yofobu",
+      "duno"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "b": {
+    "head_initial": false,
+    "spec_initial": false,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CV",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 3342,
+    "verbs": [
+      "zasi",
+      "gobe",
+      "tofuye",
+      "tofuxa",
+      "xigifa"
+    ],
+    "nouns": [
+      "lodeyafi",
+      "zedo",
+      "wejicu",
+      "tizukavi",
+      "hama"
+    ],
+    "propns": [
+      "kexiya",
+      "fopuqalano"
+    ],
+    "prons": [
+      "yuqayu",
+      "dofa"
+    ],
+    "adjs": [
+      "naku",
+      "tinu",
+      "jahuzaza",
+      "nolinofo",
+      "jecoli"
+    ],
+    "det_def": [
+      "cumiwa",
+      "hocufa"
+    ],
+    "det_indef": [
+      "kizuge",
+      "yoko"
+    ],
+    "comps": [
+      "dihilecero",
+      "tudesu"
+    ],
+    "tenses": [
+      "\u2205_T_pres"
+    ],
+    "asps": [
+      "\u2205_Asp_prog"
+    ]
+  },
+  "name": "057a192ce184e05f",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <TBAR NP_SUBJ, NP_SUBJ TBAR>\nTBAR -> <T VP, T VP>\nNP_SUBJ -> <PRO, PRO>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> <VBAR ,  VBAR>\nVBAR -> <V OBJ_PHRASE, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> <DETBAR ,  DETBAR>\nDETBAR -> <DET NP, DET NP>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'yorufu', 'cumiwa'>\nDET_def -> <'koqe', 'hocufa'>\nDET_indef -> <'subime', 'kizuge'>\nDET_indef -> <'caqoko', 'yoko'>\nT -> <'\u2205_T_pres', '\u2205_T_pres'>\nASP -> <'\u2205_Asp_prog', '\u2205_Asp_prog'>\nV -> <'jefivi', 'zasi'>\nV -> <'yoza', 'gobe'>\nV -> <'vatetuja', 'tofuye'>\nV -> <'bixu', 'tofuxa'>\nV -> <'xehedani', 'xigifa'>\nN -> <'dusirobafa', 'lodeyafi'>\nN -> <'keya', 'zedo'>\nN -> <'zowanu', 'wejicu'>\nN -> <'coroxo', 'tizukavi'>\nN -> <'fozi', 'hama'>\nPROPN -> <'gegutade', 'kexiya'>\nPROPN -> <'wogurivi', 'fopuqalano'>\nPRON -> <'geja', 'yuqayu'>\nPRON -> <'falugemufezema', 'dofa'>\nADJ -> <'nitixi', 'naku'>\nADJ -> <'fakova', 'tinu'>\nADJ -> <'hicekaya', 'jahuzaza'>\nADJ -> <'qegomi', 'nolinofo'>\nADJ -> <'nebeli', 'jecoli'>\nC -> <'yofobu', 'dihilecero'>\nC -> <'duno', 'tudesu'>\nCNULL -> <'\u2205', '\u2205'>\nPRO -> <'\u2205', '\u2205'>",
+  "n_rules": 27,
+  "n_words": 29
+}

@@ -285,6 +285,8 @@ class SCFGParams:
             "b": self.b.to_dict(),
             "name": self.name,
             "grammar_str": grammar_str,
+            "n_rules": len(rules),
+            "n_words": len(lexicon),
         }
 
     @classmethod
