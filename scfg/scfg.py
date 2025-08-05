@@ -1,8 +1,8 @@
 import random
 import re
 import secrets
-from dataclasses import dataclass, field, asdict
-from typing import Dict, Set, Tuple, Any, Union
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, Set, Tuple, Union
 
 import numpy as np
 
@@ -72,9 +72,9 @@ class CFGParams:
         param_dict["asps"] = self.asp_lex
 
         return param_dict
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CFGParams':
+    def from_dict(cls, data: Dict[str, Any]) -> "CFGParams":
         return cls(**data)
 
     # Properties
@@ -119,7 +119,7 @@ class CFGParams:
             if isinstance(val, int):
                 return [self._sample_string() for _ in range(val)]
             return list(val)
-        
+
         self.rng = random.Random(self.rng_seed)
 
         # Determine syllable structure
@@ -275,17 +275,16 @@ class SCFGParams:
             # generate a random 16-character hash
             self.name = secrets.token_hex(8)
 
-
     def to_dict(self) -> dict[str, Any]:
         builder = RuleBuilder(self)
         rules = builder.build_rules()
         lexicon = builder.build_lexicon()
         grammar_str = "\n".join(rules + lexicon)
         return {
-            "a": self.a.to_dict(), 
-            "b": self.b.to_dict(), 
+            "a": self.a.to_dict(),
+            "b": self.b.to_dict(),
             "name": self.name,
-            "grammar_str": grammar_str
+            "grammar_str": grammar_str,
         }
 
     @classmethod

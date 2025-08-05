@@ -11,7 +11,6 @@ import pyrootutils
 from scfg.scfg import SCFG, CFGParams, SCFGParams
 from scfg.utils import get_logger, set_all_seeds
 
-
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     datefmt="%Y-%d-%m %H:%M:%S",
@@ -33,10 +32,10 @@ def create_grammar(
     n_verbs: int = 10,
     n_nouns: int = 10,
     n_adjectives: int = 10,
-    n_propns: int = 5
+    n_propns: int = 5,
 ):
     set_all_seeds(rng_seed)
-    
+
     a_params = CFGParams(
         rng_seed=rng_seed,
         syllable_structure=syllable_structure_a,
@@ -57,7 +56,7 @@ def create_grammar(
 
     with open(DATA_DIR / f"grammar_{params.name}.json", "w") as f:
         json.dump(params.to_dict(), f, indent=2)
-    
+
     log.info(f"Grammar saved to {DATA_DIR / f'grammar_{params.name}.json'}")
 
 
@@ -70,9 +69,9 @@ def generate_samples(
 ):
     with open(DATA_DIR / filepath, "r") as f:
         data = json.load(f)
-    
+
     log.info(f"Loaded grammar from {DATA_DIR / filepath}")
-    
+
     params = SCFGParams.from_dict(data)
     scfg = SCFG(params)
 
@@ -83,13 +82,13 @@ def generate_samples(
     for _ in range(n_samples):
         sample = scfg.sample(rng=rng, min_depth=min_depth, max_depth=max_depth)
         samples.append(sample)
-    
+
     for s in samples:
         s["grammar_name"] = params.name
         s["min_depth"] = min_depth
         s["max_depth"] = max_depth
         s["rng_seed"] = rng_seed
-    
+
     # Save samples to a file
     samples_filepath = DATA_DIR / f"samples_{params.name}.jsonl"
     with open(samples_filepath, "w") as f:
@@ -97,15 +96,12 @@ def generate_samples(
             f.write(json.dumps(s) + "\n")
 
 
-def load_grammar(
-    filepath: str = "grammar.json",
-    rng_seed: int = 42
-):
+def load_grammar(filepath: str = "grammar.json", rng_seed: int = 42):
     with open(DATA_DIR / filepath, "r") as f:
         data = json.load(f)
-    
+
     log.info(f"Loaded grammar from {DATA_DIR / filepath}")
-    
+
     params = SCFGParams.from_dict(data)
     scfg = SCFG(params)
 
@@ -115,9 +111,12 @@ def load_grammar(
         print(sample["left_phonetic"])
         print(sample["right_phonetic"], "\n")
 
+
 if __name__ == "__main__":
-    fire.Fire({
-        "create_grammar": create_grammar,
-        "load_grammar": load_grammar,
-        "generate_samples": generate_samples,
-    })
+    fire.Fire(
+        {
+            "create_grammar": create_grammar,
+            "load_grammar": load_grammar,
+            "generate_samples": generate_samples,
+        }
+    )
