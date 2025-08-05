@@ -1,0 +1,35 @@
+[project]
+name = "scfg"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fire>=0.7.0",
+    "ipykernel>=6.30.0",
+    "ipywidgets>=8.1.7",
+    "nbstripout>=0.8.1",
+    "openai>=1.98.0",
+    "pandas>=2.3.1",
+    "pyrootutils>=1.0.4",
+    "python-dotenv>=1.1.1",
+    "ruff>=0.12.7",
+    "seaborn>=0.13.2",
+    "setuptools>=80.9.0",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=3.8.0"
+]
+
+[tool.ruff]
+line-length = 88
+extend-include = ["*.ipynb"]
+extend-exclude = ["data/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
