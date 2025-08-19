@@ -9,13 +9,17 @@ dependencies = [
     "ipykernel>=6.30.0",
     "ipywidgets>=8.1.7",
     "nbstripout>=0.8.1",
+    "numpy>=2.3.2",
     "openai>=1.98.0",
     "pandas>=2.3.1",
     "pyrootutils>=1.0.4",
     "python-dotenv>=1.1.1",
+    "qdrant-client>=1.15.1",
     "ruff>=0.12.7",
     "seaborn>=0.13.2",
     "setuptools>=80.9.0",
+    "torch>=2.8.0",
+    "transformers>=4.55.0",
 ]
 
 [dependency-groups]

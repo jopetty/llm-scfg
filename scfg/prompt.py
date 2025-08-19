@@ -19,7 +19,7 @@ class ChatCompletionResponse:
                 "body": {
                     "model": model,
                     "messages": [{"role": "user", "content": self.user_prompt}],
-                    "max_tokens": self.max_new_tokens,
+                    "max_completion_tokens": self.max_new_tokens,
                     "metadata": self.metadata,
                     "store": True if self.metadata else False,
                 },
