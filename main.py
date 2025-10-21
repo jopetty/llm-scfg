@@ -31,7 +31,7 @@ BATCH_DIR = PROJECT_ROOT / "batches"
 
 def create_wordorder_data(
     max_depth: int = 5,
-    n_grammars_per_size: int = 2,
+    n_grammars_per_size: int = 1,
     n_sentences_per_depth: int = 20,
 ):
     """
@@ -56,33 +56,33 @@ def create_wordorder_data(
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
-                syllable_structure_b=syllable_structure,
-                head_initial_a=source_head_spec_params[0],
-                head_initial_b=hi_b,
-                spec_initial_a=source_head_spec_params[1],
-                spec_initial_b=si_b,
-                pro_drop_a=False,
-                pro_drop_b=False,
-                n_verbs=g_size // 5,
-                n_nouns=g_size // 5,
-                n_adjectives=g_size // 5,
-                n_propns=max(2, g_size // 5),
-                n_det_def=2,
-                n_det_indef=2,
-                n_prons=2,
-                n_comps=2,
-            )
-            log.info(
-                f"Created grammar {grammar_name} with hi_b={hi_b}, si_b={si_b}, seed={g_seed}"
-            )
-            generate_samples(
-                grammar_name=grammar_name,
-                rng_seed=g_seed,
-                min_depth=0,
-                max_depth=max_depth,
-                n_samples_per_depth=n_sentences_per_depth,
-            )
-            grammar_names.append(grammar_name)
+                    syllable_structure_b=syllable_structure,
+                    head_initial_a=source_head_spec_params[0],
+                    head_initial_b=hi_b,
+                    spec_initial_a=source_head_spec_params[1],
+                    spec_initial_b=si_b,
+                    pro_drop_a=False,
+                    pro_drop_b=False,
+                    n_verbs=g_size // 5,
+                    n_nouns=g_size // 5,
+                    n_adjectives=g_size // 5,
+                    n_propns=max(2, g_size // 5),
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=2,
+                    n_comps=2,
+                )
+                log.info(
+                    f"Created grammar {grammar_name} with hi_b={hi_b}, si_b={si_b}, seed={g_seed}"
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=g_seed,
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_sentences_per_depth,
+                )
+                grammar_names.append(grammar_name)
 
     with open(DATA_DIR / "wordorder_grammars.txt", "w") as f:
         for name in grammar_names:
