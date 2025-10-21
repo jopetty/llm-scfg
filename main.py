@@ -38,7 +38,7 @@ def create_wordorder_data(
     Generates grammars which systematically vary word order parameters.
     """
 
-    syllable_structure: str = "CVC"
+    syllable_structure: str = "C*VC"
     g_sizes: list[int] = [7500, 10000]
     source_head_spec_params: tuple[bool, bool] = (True, True)
     target_head_spec_params: list[tuple[bool, bool]] = [
@@ -218,96 +218,6 @@ def create_large_complexity_data(
     with open(DATA_DIR / "complexity_grammars_large.txt", "w") as f:
         for name in grammar_names:
             f.write(f"{name}\n")
-
-
-def create_headfinality_data():
-    """
-    Grammars which test whether head-finality impacts transduction performance.
-    """
-
-    syllable_structures: list[str] = ["CV","CVC",]
-    n_lexical_words: list[int] = [5, 10, 25, 50, 100]
-    head_finality: list[bool] = [True, False]
-
-    grammar_names: list[str] = []
-
-    for ss_a, ss_b in product(syllable_structures, repeat=2):
-        for hf_a, hf_b in product(head_finality, repeat=2):
-            for n_words in n_lexical_words:
-                g_seed = 42 + hash((ss_a, ss_b, hf_a, hf_b, n_words)) % 10000
-                grammar_name = create_grammar(
-                    rng_seed=g_seed,
-                    syllable_structure_a=ss_a,
-                    syllable_structure_b=ss_b,
-                    head_initial_a=hf_a,
-                    head_initial_b=hf_b,
-                    spec_initial_a=True,
-                    spec_initial_b=True,
-                    pro_drop_a=False,
-                    pro_drop_b=False,
-                    n_verbs=n_words,
-                    n_nouns=n_words,
-                    n_adjectives=n_words,
-                    n_propns=max(2, n_words // 5),
-                    n_det_def=max(2, n_words // 5),
-                    n_det_indef=max(2, n_words // 5),
-                    n_prons=max(2, n_words // 5),
-                    n_comps=max(2, n_words // 5),
-                )
-                log.info(
-                    f"Created grammar {grammar_name} with ss_a={ss_a}, ss_b={ss_b}, hf_a={hf_a}, hf_b={hf_b}, n_words={n_words}"
-                )
-                generate_samples(
-                    grammar_name=grammar_name,
-                    rng_seed=g_seed,
-                    min_depth=0,
-                    max_depth=10,
-                    n_samples_per_depth=10,
-                )
-                grammar_names.append(grammar_name)
-    
-    with open(DATA_DIR / "headfinality_grammars.txt", "w") as f:
-        for name in grammar_names:
-            f.write(f"{name}\n")
-
-
-def create_grammars_and_samples(
-    sizes: list[int] = [5, 50, 100],
-    grammars_per_size: int = 1,
-    rng_seed: int = 80,
-    n_samples_per_depth: int = 10,
-):
-    rng = random.Random(rng_seed)
-    for s in sizes:
-        for _ in range(grammars_per_size):
-            # enumerate choices for head_initial, spec_initial, pro_drop
-            for ha, hb, sa, sb, pa, pb in product([True, False], repeat=6):
-                g_seed = rng.randint(0, 10000)
-                grammar_name = create_grammar(
-                    rng_seed=g_seed,
-                    head_initial_a=ha,
-                    head_initial_b=hb,
-                    spec_initial_a=sa,
-                    spec_initial_b=sb,
-                    pro_drop_a=pa,
-                    pro_drop_b=pb,
-                    n_verbs=s,
-                    n_nouns=s,
-                    n_adjectives=s,
-                    n_propns=max(2, s // 5),
-                    n_det_def=max(2, s // 5),
-                    n_det_indef=max(2, s // 5),
-                    n_prons=max(2, s // 5),
-                    n_comps=max(2, s // 5),
-                )
-                generate_samples(
-                    grammar_name=grammar_name,
-                    rng_seed=g_seed,
-                    min_depth=0,
-                    max_depth=10,
-                    n_samples_per_depth=n_samples_per_depth,
-                )
-
 
 def create_grammar(
     rng_seed: int = 80,
@@ -565,16 +475,19 @@ def demo_random():
 if __name__ == "__main__":
     fire.Fire(
         {
+            # Core functionality
             "create_grammar": create_grammar,
-            "generate_samples": generate_samples,
-            "generate_batchfile": generate_batchfile,
-            "cgs": create_grammars_and_samples,
-            "chf": create_headfinality_data,
+            "gen_samples": generate_samples,
+            "gen_batchfile": generate_batchfile,
+            "gen_exp_batchfile": generate_experiment_batchfile,
+            
+            # Demos
             "demo": demo,
             "demo_random": demo_random,
+
+            # Experiments
             "exp_complexity": create_complexity_data,
             "exp_large_complexity": create_large_complexity_data,
             "exp_wordorder": create_wordorder_data,
-            "generate_exp_batchfile": generate_experiment_batchfile,
         }
     )
