@@ -115,8 +115,9 @@ class CFGParams:
     comps: list[str] | int = 2
     tenses: list[str] = field(default_factory=lambda: ["∅_T_pres"])
     asps: list[str] = field(default_factory=lambda: ["∅_Asp_prog"])
-    p_space: float = 0.1
     orthography: str = "latin"
+    space_alpha: float = 0.5
+    space_beta: float = 3.0
 
     def to_dict(self) -> Dict[str, Any]:
         param_dict = asdict(self)
@@ -260,17 +261,44 @@ class CFGParams:
             u: float = np.random.uniform(np.exp(-rate), 1)
             t: float = -np.log(u)
             return 1 + np.random.poisson(rate - t)
+        
+        def _beta_binomial(n: int) -> int:
+            p: float = np.random.beta(self.space_alpha, self.space_beta)
+            return np.random.binomial(n, p)
+        
+        def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
+            """
+            Randomly interleave spaces among syllable boundaries. Never places
+            spaces at the beginning or ends of the word, and never places multiple
+            spaces in a row.
+            """
+            
+            if n_spaces <= 0:
+                return "".join(syllables)
+            positions: list[int] = list(range(1, len(syllables)))
+            chosen_positions: set[int] = set(
+                random.sample(positions, min(n_spaces, len(positions)))
+            )
+            result_parts: list[str] = []
+            for i, syllable in enumerate(syllables):
+                result_parts.append(syllable)
+                if i + 1 in chosen_positions:
+                    result_parts.append(" ")
+            word = "".join(result_parts)
+            if n_spaces > 0:
+                print(f"Generated word with spaces: '{word}'")
+            return word
 
-        string: str = ""
+        syllables: list[str] = []
         lambda_poisson: float = self.avg_syllables_per_word
         num_syllables: int = _zero_truncated_poisson(lambda_poisson)
         for _ in range(num_syllables + 1):
-            if self.rng.random() < self.p_space:
-                string += " "
-            string += self._generate_syllable(
+            syllables.append(self._generate_syllable(
                 self.syllable_structure,
-            )
+            ))
 
+        n_spaces: int = _beta_binomial(num_syllables - 1)
+        string: str = _interleave_spaces(syllables, n_spaces)
         return string
 
     # Class instances
