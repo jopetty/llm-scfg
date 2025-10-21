@@ -8,8 +8,68 @@ import numpy as np
 
 Rule = Tuple[Tuple[str, ...], Tuple[str, ...]]
 
-CONSONANTS: list[str] = list("bcdfghjklmnpqrstvwxyz")
-VOWELS: list[str] = list("aeiou")
+LATIN_CONSONANTS: list[str] = list("bcdfghjklmnpqrstvwxyz")
+LATIN_VOWELS: list[str] = list("aeiou")
+LATIN_SONORITY_HIERARCHY: dict[str, float] = {
+    "l": 0.15,
+    "m": 0.3,
+    "n": 0.3,
+    "v": 0.45,
+    "z": 0.45,
+    "f": 0.6,
+    "s": 0.6,
+    "b": 0.75,
+    "d": 0.75,
+    "g": 0.75,
+    "p": 0.9,
+    "t": 0.9,
+    "k": 0.9,
+}
+
+CYRILLIC_CONSONANTS: list[str] = list(
+    "бвгджзйклмнпрстфхцчшщ"
+)
+CYRILLIC_VOWELS: list[str] = list("аеёиоуыэюя")
+CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
+    "п": 0.1, "б": 0.15,
+    "т": 0.1, "д": 0.15,
+    "к": 0.1, "г": 0.15,
+    "ф": 0.2, "в": 0.25,
+    "с": 0.2, "з": 0.25,
+    "ш": 0.2, "ж": 0.25,
+    "х": 0.2,
+    "ц": 0.2, "ч": 0.3, "щ": 0.3,
+    "м": 0.4, "н": 0.4,
+    "р": 0.5, "л": 0.5,
+    "й": 0.6
+}
+
+YIDDISH_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
+YIDDISH_VOWELS: list[str] = list("אַאָוּיִײײַױע")
+YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
+    "פּ": 0.10,  # p (stop)
+    "ב": 0.15,   # b (stop)
+    "ט": 0.10,   # t (stop)
+    "ד": 0.15,   # d (stop)
+    "כּ": 0.10,  # k (stop)
+    "ג": 0.15,   # g (stop)
+    "ק": 0.10,   # k (stop)
+    "פֿ": 0.20,  # f (fricative)
+    "װ": 0.25,  # v (fricative)
+    "ס": 0.20,  # s (fricative)
+    "ז": 0.25,  # z (fricative)
+    "ש": 0.20,  # sh (fricative)
+    "כ": 0.20,  # kh (fricative)
+    "ח": 0.20,  # kh (fricative)
+    "ה": 0.20,  # h (fricative)
+    "צ": 0.30,  # ts (affricate)
+    "מ": 0.40,  # m (nasal)
+    "נ": 0.40,  # n (nasal)
+    "ל": 0.50,  # l (liquid)
+    "ר": 0.50,  # r (liquid)
+    "י": 0.60   # y (glide)
+}
+
 SYLLABLE_STRUCTURES: list[str] = [
     "CVC",
     "CV*C",
@@ -56,6 +116,7 @@ class CFGParams:
     tenses: list[str] = field(default_factory=lambda: ["∅_T_pres"])
     asps: list[str] = field(default_factory=lambda: ["∅_Asp_prog"])
     p_space: float = 0.1
+    orthography: str = "latin"
 
     def to_dict(self) -> Dict[str, Any]:
         param_dict = asdict(self)
@@ -123,6 +184,22 @@ class CFGParams:
 
         self.rng = random.Random(self.rng_seed)
 
+        # Set vowels, consonants, and sonority hierarchy based on orthography
+        if self.orthography == "latin":
+            self.consonants = LATIN_CONSONANTS
+            self.vowels = LATIN_VOWELS
+            self.sonority_hierarchy = LATIN_SONORITY_HIERARCHY
+        elif self.orthography == "cyrillic":
+            self.consonants = CYRILLIC_CONSONANTS
+            self.vowels = CYRILLIC_VOWELS
+            self.sonority_hierarchy = CYRILLIC_SONORITY_HIERARCHY
+        elif self.orthography == "yiddish":
+            self.consonants = YIDDISH_CONSONANTS
+            self.vowels = YIDDISH_VOWELS
+            self.sonority_hierarchy = YIDDISH_SONORITY_HIERARCHY
+        else:
+            raise ValueError(f"Unknown orthography: {self.orthography}")
+
         # Determine syllable structure
         if self.syllable_structure is None:
             self.syllable_structure = self.rng.choice(SYLLABLE_STRUCTURES)
@@ -143,24 +220,10 @@ class CFGParams:
         return tokens
 
     def _generate_cluster(self, size) -> str:
-        sonority_hierarchy: dict[str, float] = {
-            "l": 0.15,
-            "m": 0.3,
-            "n": 0.3,
-            "v": 0.45,
-            "z": 0.45,
-            "f": 0.6,
-            "s": 0.6,
-            "b": 0.75,
-            "d": 0.75,
-            "g": 0.75,
-            "p": 0.9,
-            "t": 0.9,
-            "k": 0.9,
-        }
+        
 
-        chars: list[str] = list(sonority_hierarchy.keys())
-        weights: list[float] = [sonority_hierarchy[c] for c in chars]
+        chars: list[str] = list(self.sonority_hierarchy.keys())
+        weights: list[float] = [self.sonority_hierarchy[c] for c in chars]
         cluster: str = ""
 
         for _ in range(size):
@@ -174,21 +237,21 @@ class CFGParams:
 
         for token in tokens:
             if token == "C":
-                result.append(self.rng.choice(CONSONANTS))
+                result.append(self.rng.choice(self.consonants))
             elif token == "V":
-                result.append(self.rng.choice(VOWELS))
+                result.append(self.rng.choice(self.vowels))
             elif token == "C*":
                 n: int = self.rng.randint(0, self.max_consonants)
                 result.extend(self._generate_cluster(n))
             elif token == "V*":
                 n: int = self.rng.randint(1, 2)
-                result.extend(self.rng.choices(VOWELS, k=n))
+                result.extend(self.rng.choices(self.vowels, k=n))
             elif token == "C?":
                 if self.rng.random() < 0.5:
-                    result.append(self.rng.choice(CONSONANTS))
+                    result.append(self.rng.choice(self.consonants))
             elif token == "V?":
                 if self.rng.random() < 0.5:
-                    result.append(self.rng.choice(VOWELS))
+                    result.append(self.rng.choice(self.vowels))
         return "".join(result)
 
     def _sample_string(self):
