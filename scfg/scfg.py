@@ -285,8 +285,6 @@ class CFGParams:
                 if i + 1 in chosen_positions:
                     result_parts.append(" ")
             word = "".join(result_parts)
-            if n_spaces > 0:
-                print(f"Generated word with spaces: '{word}'")
             return word
 
         syllables: list[str] = []
