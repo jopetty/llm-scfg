@@ -26,34 +26,42 @@ LATIN_SONORITY_HIERARCHY: dict[str, float] = {
     "k": 0.9,
 }
 
-CYRILLIC_CONSONANTS: list[str] = list(
-    "бвгджзйклмнпрстфхцчшщ"
-)
+CYRILLIC_CONSONANTS: list[str] = list("бвгджзйклмнпрстфхцчшщ")
 CYRILLIC_VOWELS: list[str] = list("аеёиоуыэюя")
 CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
-    "п": 0.1, "б": 0.15,
-    "т": 0.1, "д": 0.15,
-    "к": 0.1, "г": 0.15,
-    "ф": 0.2, "в": 0.25,
-    "с": 0.2, "з": 0.25,
-    "ш": 0.2, "ж": 0.25,
+    "п": 0.1,
+    "б": 0.15,
+    "т": 0.1,
+    "д": 0.15,
+    "к": 0.1,
+    "г": 0.15,
+    "ф": 0.2,
+    "в": 0.25,
+    "с": 0.2,
+    "з": 0.25,
+    "ш": 0.2,
+    "ж": 0.25,
     "х": 0.2,
-    "ц": 0.2, "ч": 0.3, "щ": 0.3,
-    "м": 0.4, "н": 0.4,
-    "р": 0.5, "л": 0.5,
-    "й": 0.6
+    "ц": 0.2,
+    "ч": 0.3,
+    "щ": 0.3,
+    "м": 0.4,
+    "н": 0.4,
+    "р": 0.5,
+    "л": 0.5,
+    "й": 0.6,
 }
 
 YIDDISH_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
 YIDDISH_VOWELS: list[str] = list("אַאָוּיִײײַױע")
 YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
     "פּ": 0.10,  # p (stop)
-    "ב": 0.15,   # b (stop)
-    "ט": 0.10,   # t (stop)
-    "ד": 0.15,   # d (stop)
+    "ב": 0.15,  # b (stop)
+    "ט": 0.10,  # t (stop)
+    "ד": 0.15,  # d (stop)
     "כּ": 0.10,  # k (stop)
-    "ג": 0.15,   # g (stop)
-    "ק": 0.10,   # k (stop)
+    "ג": 0.15,  # g (stop)
+    "ק": 0.10,  # k (stop)
     "פֿ": 0.20,  # f (fricative)
     "װ": 0.25,  # v (fricative)
     "ס": 0.20,  # s (fricative)
@@ -67,7 +75,7 @@ YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
     "נ": 0.40,  # n (nasal)
     "ל": 0.50,  # l (liquid)
     "ר": 0.50,  # r (liquid)
-    "י": 0.60   # y (glide)
+    "י": 0.60,  # y (glide)
 }
 
 SYLLABLE_STRUCTURES: list[str] = [
@@ -221,8 +229,6 @@ class CFGParams:
         return tokens
 
     def _generate_cluster(self, size) -> str:
-        
-
         chars: list[str] = list(self.sonority_hierarchy.keys())
         weights: list[float] = [self.sonority_hierarchy[c] for c in chars]
         cluster: str = ""
@@ -261,18 +267,18 @@ class CFGParams:
             u: float = np.random.uniform(np.exp(-rate), 1)
             t: float = -np.log(u)
             return 1 + np.random.poisson(rate - t)
-        
+
         def _beta_binomial(n: int) -> int:
             p: float = np.random.beta(self.space_alpha, self.space_beta)
             return np.random.binomial(n, p)
-        
+
         def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
             """
             Randomly interleave spaces among syllable boundaries. Never places
             spaces at the beginning or ends of the word, and never places multiple
             spaces in a row.
             """
-            
+
             if n_spaces <= 0:
                 return "".join(syllables)
             positions: list[int] = list(range(1, len(syllables)))
@@ -291,9 +297,11 @@ class CFGParams:
         lambda_poisson: float = self.avg_syllables_per_word
         num_syllables: int = _zero_truncated_poisson(lambda_poisson)
         for _ in range(num_syllables + 1):
-            syllables.append(self._generate_syllable(
-                self.syllable_structure,
-            ))
+            syllables.append(
+                self._generate_syllable(
+                    self.syllable_structure,
+                )
+            )
 
         n_spaces: int = _beta_binomial(num_syllables - 1)
         string: str = _interleave_spaces(syllables, n_spaces)

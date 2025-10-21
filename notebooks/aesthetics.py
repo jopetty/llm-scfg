@@ -40,11 +40,9 @@ rcs = {
     "ytick.labelsize": "small",
 }
 
+
 def darken(
-    color: str
-    | Color
-    | dict[str, Any]
-    | SNSPalette,
+    color: str | Color | dict[str, Any] | SNSPalette,
     by: float = 0.2,
 ):
     """
@@ -86,37 +84,43 @@ def darken(
 
 # Palettes
 PALETTE_METRICS_BASE: BasePalette = "Set2"
-PALETTE_METRICS: Palette = darken({
-    "Exact Match": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[0],
-    "Bag of Words": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[1],
-    "BLEU Score": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[3],
-    "chrF++": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[4],
-    # "Edit Similarity": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[2],
-    "Edit Similarity": "#ffcc66",
-}, by=0.4)
-
-PALETTE_MODELS: Palette = darken({
-    "gpt-5-nano": sns.color_palette("Reds", n_colors=4)[0],
-    "gpt-5-mini": sns.color_palette("Reds", n_colors=4)[1],
-    "gpt-5": sns.color_palette("Reds", n_colors=4)[2],
-    "gemini-2.5-flash": sns.color_palette("Blues", n_colors=2)[0],
-    "gemini-2.5-pro": sns.color_palette("Blues", n_colors=2)[1],
-})
-
-PALETTE_WORDORDER_BASE = sns.color_palette(
-    palette="Dark2", n_colors=4
+PALETTE_METRICS: Palette = darken(
+    {
+        "Exact Match": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[0],
+        "Bag of Words": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[1],
+        "BLEU Score": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[3],
+        "chrF++": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[4],
+        # "Edit Similarity": sns.color_palette(PALETTE_METRICS_BASE, n_colors=5)[2],
+        "Edit Similarity": "#ffcc66",
+    },
+    by=0.4,
 )
-PALETTE_WORDORDER: Palette = darken({
-    "all-same": PALETTE_WORDORDER_BASE[0],
-    "head-diff": PALETTE_WORDORDER_BASE[1],
-    "all-diff": PALETTE_WORDORDER_BASE[2],
-})
 
-PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(
-    palette="rainbow", n_colors=3
+PALETTE_MODELS: Palette = darken(
+    {
+        "gpt-5-nano": sns.color_palette("Reds", n_colors=4)[0],
+        "gpt-5-mini": sns.color_palette("Reds", n_colors=4)[1],
+        "gpt-5": sns.color_palette("Reds", n_colors=4)[2],
+        "gemini-2.5-flash": sns.color_palette("Blues", n_colors=2)[0],
+        "gemini-2.5-pro": sns.color_palette("Blues", n_colors=2)[1],
+    }
 )
-PALETTE_ORTHOGRAPHY: Palette = darken({
-    "latin": PALETTE_ORTHOGRAPHY_BASE[0],
-    "cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
-    "yiddish": PALETTE_ORTHOGRAPHY_BASE[2],
-}, by=0.4)
+
+PALETTE_WORDORDER_BASE = sns.color_palette(palette="Dark2", n_colors=4)
+PALETTE_WORDORDER: Palette = darken(
+    {
+        "all-same": PALETTE_WORDORDER_BASE[0],
+        "head-diff": PALETTE_WORDORDER_BASE[1],
+        "all-diff": PALETTE_WORDORDER_BASE[2],
+    }
+)
+
+PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(palette="rainbow", n_colors=3)
+PALETTE_ORTHOGRAPHY: Palette = darken(
+    {
+        "latin": PALETTE_ORTHOGRAPHY_BASE[0],
+        "cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
+        "yiddish": PALETTE_ORTHOGRAPHY_BASE[2],
+    },
+    by=0.4,
+)
