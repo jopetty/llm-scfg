@@ -55,6 +55,7 @@ class CFGParams:
     comps: list[str] | int = 2
     tenses: list[str] = field(default_factory=lambda: ["∅_T_pres"])
     asps: list[str] = field(default_factory=lambda: ["∅_Asp_prog"])
+    p_space: float = 0.1
 
     def to_dict(self) -> Dict[str, Any]:
         param_dict = asdict(self)
@@ -201,7 +202,9 @@ class CFGParams:
         lambda_poisson: float = self.avg_syllables_per_word
         num_syllables: int = _zero_truncated_poisson(lambda_poisson)
         for _ in range(num_syllables + 1):
-            string: str = string + self._generate_syllable(
+            if self.rng.random() < self.p_space:
+                string += " "
+            string += self._generate_syllable(
                 self.syllable_structure,
             )
 
@@ -223,6 +226,23 @@ class CFGParams:
             det_def=["the"],
             det_indef=["a"],
             comps=["that"],
+        )
+
+    @classmethod
+    def german(cls):
+        return cls(
+            head_initial=True,
+            spec_initial=True,
+            pro_drop=False,
+            proper_with_det=False,
+            verbs=["isst", "sieht", "liebt", "hört"],
+            nouns=["baum", "pferd", "hund", "katze", "apfel"],
+            propns=["john", "maria", "sue", "bob"],
+            prons=["er", "sie", "sie", "es"],
+            adjs=["gross", "klein", "rot", "grün", "blau", "unscharf", "rund"],
+            det_def=["der"],
+            det_indef=["ein"],
+            comps=["dass"],
         )
 
     @classmethod
