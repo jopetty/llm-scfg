@@ -96,11 +96,27 @@ PALETTE_METRICS: Palette = darken({
 }, by=0.4)
 
 PALETTE_MODELS: Palette = darken({
-    "gpt-5-nano": sns.color_palette("Greens", n_colors=4)[0],
-    "gpt-5-mini": sns.color_palette("Greens", n_colors=4)[1],
-    "gpt-5": sns.color_palette("Greens", n_colors=4)[2],
+    "gpt-5-nano": sns.color_palette("Reds", n_colors=4)[0],
+    "gpt-5-mini": sns.color_palette("Reds", n_colors=4)[1],
+    "gpt-5": sns.color_palette("Reds", n_colors=4)[2],
     "gemini-2.5-flash": sns.color_palette("Blues", n_colors=2)[0],
     "gemini-2.5-pro": sns.color_palette("Blues", n_colors=2)[1],
 })
 
+PALETTE_WORDORDER_BASE = sns.color_palette(
+    palette="Dark2", n_colors=4
+)
+PALETTE_WORDORDER: Palette = darken({
+    "all-same": PALETTE_WORDORDER_BASE[0],
+    "head-diff": PALETTE_WORDORDER_BASE[1],
+    "all-diff": PALETTE_WORDORDER_BASE[2],
+})
 
+PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(
+    palette="rainbow", n_colors=3
+)
+PALETTE_ORTHOGRAPHY: Palette = darken({
+    "latin": PALETTE_ORTHOGRAPHY_BASE[0],
+    "cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
+    "yiddish": PALETTE_ORTHOGRAPHY_BASE[2],
+}, by=0.4)
