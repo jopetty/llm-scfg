@@ -124,8 +124,13 @@ class CFGParams:
     tenses: list[str] = field(default_factory=lambda: ["∅_T_pres"])
     asps: list[str] = field(default_factory=lambda: ["∅_Asp_prog"])
     orthography: str = "latin"
+
     space_alpha: float = 0.5
     space_beta: float = 3.0
+
+    # syllable_alpha: float = 3.0
+    # syllable_beta: float = 1.0
+    syllable_max: int = 4
 
     def to_dict(self) -> Dict[str, Any]:
         param_dict = asdict(self)
@@ -268,8 +273,8 @@ class CFGParams:
             t: float = -np.log(u)
             return 1 + np.random.poisson(rate - t)
 
-        def _beta_binomial(n: int) -> int:
-            p: float = np.random.beta(self.space_alpha, self.space_beta)
+        def _beta_binomial(n: int, alpha: float, beta: float) -> int:
+            p: float = np.random.beta(alpha, beta)
             return np.random.binomial(n, p)
 
         def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
@@ -295,7 +300,11 @@ class CFGParams:
 
         syllables: list[str] = []
         lambda_poisson: float = self.avg_syllables_per_word
-        num_syllables: int = _zero_truncated_poisson(lambda_poisson)
+        num_syllables: int = min(
+            _zero_truncated_poisson(lambda_poisson),
+            self.syllable_max,
+        )
+
         for _ in range(num_syllables + 1):
             syllables.append(
                 self._generate_syllable(
@@ -303,7 +312,11 @@ class CFGParams:
                 )
             )
 
-        n_spaces: int = _beta_binomial(num_syllables - 1)
+        n_spaces: int = _beta_binomial(
+            num_syllables - 1,
+            self.space_alpha,
+            self.space_beta
+        )
         string: str = _interleave_spaces(syllables, n_spaces)
         return string
 
