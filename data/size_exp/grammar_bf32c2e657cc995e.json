@@ -1,0 +1,134 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 6059,
+    "verbs": [
+      "yuydakvovxer",
+      "vejdetwuk",
+      "wesfefdil",
+      "qegzutcasrof",
+      "xewbis"
+    ],
+    "nouns": [
+      "jezkuq",
+      "xasyucvoy",
+      "sabfuc",
+      "vizbuzxazcat",
+      "yutpot"
+    ],
+    "propns": [
+      "yaqpen",
+      "bedlivhuj",
+      "lufpar",
+      "mebguq",
+      "tarfedtosyohsir"
+    ],
+    "prons": [
+      "lobnit",
+      "xilwictof"
+    ],
+    "adjs": [
+      "jocrixxil",
+      "rizwevjew",
+      "kasrutsaldiylam",
+      "pin nayzep",
+      "juy kasrom"
+    ],
+    "det_def": [
+      "hayxutlutbur",
+      "napvijnay"
+    ],
+    "det_indef": [
+      "pigtoyqix",
+      "rucwey"
+    ],
+    "comps": [
+      "yos vuwnus",
+      "pitqug"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": false,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 6060,
+    "verbs": [
+      "fehdex fum gun",
+      "lezmir",
+      "tujcib",
+      "vuhledkob",
+      "wostuv"
+    ],
+    "nouns": [
+      "rolkerpib",
+      "yuclaj",
+      "mezlos",
+      "qilwalful",
+      "tevdarwozlizfub"
+    ],
+    "propns": [
+      "cuzpejluflig",
+      "yunvac",
+      "faqhur",
+      "bahcodsomjechek",
+      "muljuzhej"
+    ],
+    "prons": [
+      "pigtefziw",
+      "zatpuj"
+    ],
+    "adjs": [
+      "piznedhuf mup",
+      "moclab",
+      "tepwekjil",
+      "bodnod",
+      "fuwtaddaptar"
+    ],
+    "det_def": [
+      "habgaxwixsik",
+      "wuzfejmarjiy"
+    ],
+    "det_indef": [
+      "yisraz zihqomjub",
+      "dibdez"
+    ],
+    "comps": [
+      "focqer",
+      "sorken"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "bf32c2e657cc995e",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, TBAR NP_SUBJ>\nTBAR -> <T VP, T VP>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR, VBAR >\nVBAR -> <V OBJ_PHRASE, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDETP -> < DETBAR, DETBAR >\nDETBAR -> <DET NP, DET NP>\nDP -> <DP_def, DP_def>\nDP -> <DP_indef, DP_indef>\nDP_def -> <DET_def NP, DET_def NP>\nDP_indef -> <DET_indef NP, DET_indef NP>\nDP_def -> <PROPN, PROPN>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP NP, AdjP NP>\nNP_COMMON -> <N, N>\nNP_COMMON -> <AdjP NP_COMMON, AdjP NP_COMMON>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET_def -> <'hayxutlutbur', 'habgaxwixsik'>\nDET_def -> <'napvijnay', 'wuzfejmarjiy'>\nDET_indef -> <'pigtoyqix', 'yisraz zihqomjub'>\nDET_indef -> <'rucwey', 'dibdez'>\nT -> <'∅_T_pres', '∅_T_pres'>\nASP -> <'∅_Asp_prog', '∅_Asp_prog'>\nV -> <'yuydakvovxer', 'fehdex fum gun'>\nV -> <'vejdetwuk', 'lezmir'>\nV -> <'wesfefdil', 'tujcib'>\nV -> <'qegzutcasrof', 'vuhledkob'>\nV -> <'xewbis', 'wostuv'>\nN -> <'jezkuq', 'rolkerpib'>\nN -> <'xasyucvoy', 'yuclaj'>\nN -> <'sabfuc', 'mezlos'>\nN -> <'vizbuzxazcat', 'qilwalful'>\nN -> <'yutpot', 'tevdarwozlizfub'>\nPROPN -> <'yaqpen', 'cuzpejluflig'>\nPROPN -> <'bedlivhuj', 'yunvac'>\nPROPN -> <'lufpar', 'faqhur'>\nPROPN -> <'mebguq', 'bahcodsomjechek'>\nPROPN -> <'tarfedtosyohsir', 'muljuzhej'>\nPRON -> <'lobnit', 'pigtefziw'>\nPRON -> <'xilwictof', 'zatpuj'>\nADJ -> <'jocrixxil', 'piznedhuf mup'>\nADJ -> <'rizwevjew', 'moclab'>\nADJ -> <'kasrutsaldiylam', 'tepwekjil'>\nADJ -> <'pin nayzep', 'bodnod'>\nADJ -> <'juy kasrom', 'fuwtaddaptar'>\nC -> <'yos vuwnus', 'focqer'>\nC -> <'pitqug', 'sorken'>\nCNULL -> <'∅', '∅'>",
+  "n_rules": 26,
+  "n_words": 31
+}
