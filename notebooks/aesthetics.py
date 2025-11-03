@@ -82,6 +82,8 @@ def darken(
         return _darken_color(color, by)
 
 
+NONSEMANTIC_COLOR: str = darken("#ffcc66", by=0.3)
+
 # Palettes
 PALETTE_METRICS_BASE: BasePalette = "Set2"
 PALETTE_METRICS: Palette = darken(
@@ -110,8 +112,11 @@ PALETTE_WORDORDER_BASE = sns.color_palette(palette="Dark2", n_colors=4)
 PALETTE_WORDORDER: Palette = darken(
     {
         "all-same": PALETTE_WORDORDER_BASE[0],
+        "SVO": PALETTE_WORDORDER_BASE[0],
         "head-diff": PALETTE_WORDORDER_BASE[1],
+        "SOV": PALETTE_WORDORDER_BASE[1],
         "all-diff": PALETTE_WORDORDER_BASE[2],
+        "OVS": PALETTE_WORDORDER_BASE[2],
     }
 )
 
