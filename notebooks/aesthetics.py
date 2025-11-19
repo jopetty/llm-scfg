@@ -27,7 +27,7 @@ SNSPalette = sns.palettes._ColorPalette
 
 FIGURES_DIR = PROJECT_ROOT / "notebooks" / "figures"
 PAPER_WIDTH_IN: float = 5.5
-FIG_HEIGHT_SINGLEROW_IN: float = 1.5
+FIG_HEIGHT_SINGLEROW_IN: float = 1.2
 
 NICE_FORMATTER = mtick.EngFormatter(places=0, sep="")
 PCT_FORMATTER = mtick.PercentFormatter(1.0)
