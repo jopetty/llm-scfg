@@ -8,8 +8,76 @@ import numpy as np
 
 Rule = Tuple[Tuple[str, ...], Tuple[str, ...]]
 
-CONSONANTS: list[str] = list("bcdfghjklmnpqrstvwxyz")
-VOWELS: list[str] = list("aeiou")
+LATIN_CONSONANTS: list[str] = list("bcdfghjklmnpqrstvwxyz")
+LATIN_VOWELS: list[str] = list("aeiou")
+LATIN_SONORITY_HIERARCHY: dict[str, float] = {
+    "l": 0.15,
+    "m": 0.3,
+    "n": 0.3,
+    "v": 0.45,
+    "z": 0.45,
+    "f": 0.6,
+    "s": 0.6,
+    "b": 0.75,
+    "d": 0.75,
+    "g": 0.75,
+    "p": 0.9,
+    "t": 0.9,
+    "k": 0.9,
+}
+
+CYRILLIC_CONSONANTS: list[str] = list("бвгджзйклмнпрстфхцчшщ")
+CYRILLIC_VOWELS: list[str] = list("аеёиоуыэюя")
+CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
+    "п": 0.1,
+    "б": 0.15,
+    "т": 0.1,
+    "д": 0.15,
+    "к": 0.1,
+    "г": 0.15,
+    "ф": 0.2,
+    "в": 0.25,
+    "с": 0.2,
+    "з": 0.25,
+    "ш": 0.2,
+    "ж": 0.25,
+    "х": 0.2,
+    "ц": 0.2,
+    "ч": 0.3,
+    "щ": 0.3,
+    "м": 0.4,
+    "н": 0.4,
+    "р": 0.5,
+    "л": 0.5,
+    "й": 0.6,
+}
+
+YIDDISH_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
+YIDDISH_VOWELS: list[str] = list("אַאָוּיִײײַױע")
+YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
+    "פּ": 0.10,  # p (stop)
+    "ב": 0.15,  # b (stop)
+    "ט": 0.10,  # t (stop)
+    "ד": 0.15,  # d (stop)
+    "כּ": 0.10,  # k (stop)
+    "ג": 0.15,  # g (stop)
+    "ק": 0.10,  # k (stop)
+    "פֿ": 0.20,  # f (fricative)
+    "װ": 0.25,  # v (fricative)
+    "ס": 0.20,  # s (fricative)
+    "ז": 0.25,  # z (fricative)
+    "ש": 0.20,  # sh (fricative)
+    "כ": 0.20,  # kh (fricative)
+    "ח": 0.20,  # kh (fricative)
+    "ה": 0.20,  # h (fricative)
+    "צ": 0.30,  # ts (affricate)
+    "מ": 0.40,  # m (nasal)
+    "נ": 0.40,  # n (nasal)
+    "ל": 0.50,  # l (liquid)
+    "ר": 0.50,  # r (liquid)
+    "י": 0.60,  # y (glide)
+}
+
 SYLLABLE_STRUCTURES: list[str] = [
     "CVC",
     "CV*C",
@@ -55,6 +123,14 @@ class CFGParams:
     comps: list[str] | int = 2
     tenses: list[str] = field(default_factory=lambda: ["∅_T_pres"])
     asps: list[str] = field(default_factory=lambda: ["∅_Asp_prog"])
+    orthography: str = "latin"
+
+    space_alpha: float = 0.5
+    space_beta: float = 3.0
+
+    # syllable_alpha: float = 3.0
+    # syllable_beta: float = 1.0
+    syllable_max: int = 4
 
     def to_dict(self) -> Dict[str, Any]:
         param_dict = asdict(self)
@@ -122,6 +198,22 @@ class CFGParams:
 
         self.rng = random.Random(self.rng_seed)
 
+        # Set vowels, consonants, and sonority hierarchy based on orthography
+        if self.orthography == "latin":
+            self.consonants = LATIN_CONSONANTS
+            self.vowels = LATIN_VOWELS
+            self.sonority_hierarchy = LATIN_SONORITY_HIERARCHY
+        elif self.orthography == "cyrillic":
+            self.consonants = CYRILLIC_CONSONANTS
+            self.vowels = CYRILLIC_VOWELS
+            self.sonority_hierarchy = CYRILLIC_SONORITY_HIERARCHY
+        elif self.orthography == "yiddish":
+            self.consonants = YIDDISH_CONSONANTS
+            self.vowels = YIDDISH_VOWELS
+            self.sonority_hierarchy = YIDDISH_SONORITY_HIERARCHY
+        else:
+            raise ValueError(f"Unknown orthography: {self.orthography}")
+
         # Determine syllable structure
         if self.syllable_structure is None:
             self.syllable_structure = self.rng.choice(SYLLABLE_STRUCTURES)
@@ -142,24 +234,8 @@ class CFGParams:
         return tokens
 
     def _generate_cluster(self, size) -> str:
-        sonority_hierarchy: dict[str, float] = {
-            "l": 0.15,
-            "m": 0.3,
-            "n": 0.3,
-            "v": 0.45,
-            "z": 0.45,
-            "f": 0.6,
-            "s": 0.6,
-            "b": 0.75,
-            "d": 0.75,
-            "g": 0.75,
-            "p": 0.9,
-            "t": 0.9,
-            "k": 0.9,
-        }
-
-        chars: list[str] = list(sonority_hierarchy.keys())
-        weights: list[float] = [sonority_hierarchy[c] for c in chars]
+        chars: list[str] = list(self.sonority_hierarchy.keys())
+        weights: list[float] = [self.sonority_hierarchy[c] for c in chars]
         cluster: str = ""
 
         for _ in range(size):
@@ -173,21 +249,21 @@ class CFGParams:
 
         for token in tokens:
             if token == "C":
-                result.append(self.rng.choice(CONSONANTS))
+                result.append(self.rng.choice(self.consonants))
             elif token == "V":
-                result.append(self.rng.choice(VOWELS))
+                result.append(self.rng.choice(self.vowels))
             elif token == "C*":
                 n: int = self.rng.randint(0, self.max_consonants)
                 result.extend(self._generate_cluster(n))
             elif token == "V*":
                 n: int = self.rng.randint(1, 2)
-                result.extend(self.rng.choices(VOWELS, k=n))
+                result.extend(self.rng.choices(self.vowels, k=n))
             elif token == "C?":
                 if self.rng.random() < 0.5:
-                    result.append(self.rng.choice(CONSONANTS))
+                    result.append(self.rng.choice(self.consonants))
             elif token == "V?":
                 if self.rng.random() < 0.5:
-                    result.append(self.rng.choice(VOWELS))
+                    result.append(self.rng.choice(self.vowels))
         return "".join(result)
 
     def _sample_string(self):
@@ -197,14 +273,51 @@ class CFGParams:
             t: float = -np.log(u)
             return 1 + np.random.poisson(rate - t)
 
-        string: str = ""
+        def _beta_binomial(n: int, alpha: float, beta: float) -> int:
+            p: float = np.random.beta(alpha, beta)
+            return np.random.binomial(n, p)
+
+        def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
+            """
+            Randomly interleave spaces among syllable boundaries. Never places
+            spaces at the beginning or ends of the word, and never places multiple
+            spaces in a row.
+            """
+
+            if n_spaces <= 0:
+                return "".join(syllables)
+            positions: list[int] = list(range(1, len(syllables)))
+            chosen_positions: set[int] = set(
+                random.sample(positions, min(n_spaces, len(positions)))
+            )
+            result_parts: list[str] = []
+            for i, syllable in enumerate(syllables):
+                result_parts.append(syllable)
+                if i + 1 in chosen_positions:
+                    result_parts.append(" ")
+            word = "".join(result_parts)
+            return word
+
+        syllables: list[str] = []
         lambda_poisson: float = self.avg_syllables_per_word
-        num_syllables: int = _zero_truncated_poisson(lambda_poisson)
+        num_syllables: int = min(
+            _zero_truncated_poisson(lambda_poisson),
+            self.syllable_max,
+        )
+
         for _ in range(num_syllables + 1):
-            string: str = string + self._generate_syllable(
-                self.syllable_structure,
+            syllables.append(
+                self._generate_syllable(
+                    self.syllable_structure,
+                )
             )
 
+        n_spaces: int = _beta_binomial(
+            num_syllables - 1,
+            self.space_alpha,
+            self.space_beta
+        )
+        string: str = _interleave_spaces(syllables, n_spaces)
         return string
 
     # Class instances
@@ -223,6 +336,23 @@ class CFGParams:
             det_def=["the"],
             det_indef=["a"],
             comps=["that"],
+        )
+
+    @classmethod
+    def german(cls):
+        return cls(
+            head_initial=True,
+            spec_initial=True,
+            pro_drop=False,
+            proper_with_det=False,
+            verbs=["isst", "sieht", "liebt", "hört"],
+            nouns=["baum", "pferd", "hund", "katze", "apfel"],
+            propns=["john", "maria", "sue", "bob"],
+            prons=["er", "sie", "sie", "es"],
+            adjs=["gross", "klein", "rot", "grün", "blau", "unscharf", "rund"],
+            det_def=["der"],
+            det_indef=["ein"],
+            comps=["dass"],
         )
 
     @classmethod

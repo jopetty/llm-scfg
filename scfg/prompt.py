@@ -8,23 +8,25 @@ import json
 class ChatCompletionResponse:
     user_prompt: str
     metadata: dict[str, str] | None = None
-    max_new_tokens: int | None = None
+    max_completion_tokens: int | None = None
+    n: int = 1
 
     def to_openai_batched_json(self, model: str, custom_id: str) -> str:
-        return json.dumps(
-            {
-                "custom_id": custom_id,
-                "method": "POST",
-                "url": "/v1/chat/completions",
-                "body": {
-                    "model": model,
-                    "messages": [{"role": "user", "content": self.user_prompt}],
-                    "max_tokens": self.max_new_tokens,
-                    "metadata": self.metadata,
-                    "store": True if self.metadata else False,
-                },
-            }
-        )
+        obj = {
+            "custom_id": custom_id,
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": {
+                "model": model,
+                "messages": [{"role": "user", "content": self.user_prompt}],
+                "max_completion_tokens": self.max_completion_tokens,
+                "n": self.n,
+            },
+        }
+        if self.metadata is not None:
+            obj["body"]["metadata"] = self.metadata
+            obj["body"]["store"] = True
+        return json.dumps(obj=obj)
 
 
 def basic_prompt(

@@ -211,3 +211,5 @@ __marimo__/
 
 # Ignore batch job files
 batches/
+
+data/old
