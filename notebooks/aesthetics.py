@@ -28,6 +28,7 @@ SNSPalette = sns.palettes._ColorPalette
 FIGURES_DIR = PROJECT_ROOT / "notebooks" / "figures"
 PAPER_WIDTH_IN: float = 5.5
 FIG_HEIGHT_SINGLEROW_IN: float = 1.2
+FIG_HEIGHT_DOUBLEROW_DIFFAXES_IN: float = 2.8
 
 NICE_FORMATTER = mtick.EngFormatter(places=0, sep="")
 PCT_FORMATTER = mtick.PercentFormatter(1.0)
@@ -120,12 +121,13 @@ PALETTE_WORDORDER: Palette = darken(
     }
 )
 
-PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(palette="rainbow", n_colors=3)
+PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(palette="rainbow", n_colors=4)
 PALETTE_ORTHOGRAPHY: Palette = darken(
     {
         "latin": PALETTE_ORTHOGRAPHY_BASE[0],
         "cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
         "yiddish": PALETTE_ORTHOGRAPHY_BASE[2],
+        "yiddish (no nikkud)": PALETTE_ORTHOGRAPHY_BASE[3],
     },
     by=0.4,
 )
