@@ -728,11 +728,11 @@ class RuleBuilder:
 
         if head_initial_b is not None and spec_initial_b is not None:
             lspec: str = f"{spec} {xbar}" if spec_initial else f"{xbar} {spec}"
-            rspec: str = f"{xbar} {spec}" if spec_initial_b else f"{spec} {xbar}"
+            rspec: str = f"{spec} {xbar}" if spec_initial_b else f"{xbar} {spec}"
             rules.append(f"{phrase} -> <{lspec}, {rspec}>")
 
             lhead: str = f"{head} {comp}" if head_initial else f"{comp} {head}"
-            rhead: str = f"{comp} {head}" if head_initial_b else f"{head} {comp}"
+            rhead: str = f"{head} {comp}" if head_initial_b else f"{comp} {head}"
             rules.append(f"{xbar} -> <{lhead}, {rhead}>")
         else:  # Monolingual rules
             if spec_initial:
