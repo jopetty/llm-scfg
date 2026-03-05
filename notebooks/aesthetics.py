@@ -121,13 +121,18 @@ PALETTE_WORDORDER: Palette = darken(
     }
 )
 
+#         "latin": "Latin → Latin",
+        # "cyrillic": "Latin → Cyrillic",
+        # "yiddish": "Latin → Hebrew (nikkud)",
+        # "yiddish (no nikkud)": "Latin → Hebrew (no nikkud)",
+
 PALETTE_ORTHOGRAPHY_BASE = sns.color_palette(palette="rainbow", n_colors=4)
 PALETTE_ORTHOGRAPHY: Palette = darken(
     {
-        "latin": PALETTE_ORTHOGRAPHY_BASE[0],
-        "cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
-        "yiddish": PALETTE_ORTHOGRAPHY_BASE[2],
-        "yiddish (no nikkud)": PALETTE_ORTHOGRAPHY_BASE[3],
+        "Latin → Latin": PALETTE_ORTHOGRAPHY_BASE[0],
+        "Latin → Cyrillic": PALETTE_ORTHOGRAPHY_BASE[1],
+        "Latin → Hebrew (nikkud)": PALETTE_ORTHOGRAPHY_BASE[2],
+        "Latin → Hebrew (no nikkud)": PALETTE_ORTHOGRAPHY_BASE[3],
     },
     by=0.4,
 )
