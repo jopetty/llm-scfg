@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from scfg.agreement import FeatureBundle, FeatureUnifier
 from scfg.scfg import CFGParams
@@ -77,6 +78,29 @@ class AgreementCoreTest(unittest.TestCase):
             overt_forms["number=sg|person=3|gender=masc"],
             overt_forms["number=sg|person=3|gender=fem"],
         )
+
+    def test_sample_string_respects_sampled_syllable_count(self):
+        params = CFGParams(
+            syllable_structure="CV",
+            avg_syllables_per_word=1,
+            syllable_max=3,
+            verbs=1,
+            nouns=1,
+            propns=1,
+            prons=1,
+            adjs=1,
+            det_def=1,
+            det_indef=1,
+            comps=1,
+        )
+        with patch("numpy.random.uniform", return_value=0.8), patch(
+            "numpy.random.poisson", return_value=1
+        ), patch("numpy.random.beta", return_value=0.0), patch(
+            "numpy.random.binomial", return_value=0
+        ), patch.object(
+            params, "_generate_syllable", return_value="ba"
+        ):
+            self.assertEqual("baba", params._sample_string())
 
 
 if __name__ == "__main__":

@@ -412,7 +412,7 @@ class CFGParams:
             _zero_truncated_poisson(self.avg_syllables_per_word),
             self.syllable_max,
         )
-        for _ in range(num_syllables + 1):
+        for _ in range(num_syllables):
             syllables.append(self._generate_syllable(self.syllable_structure))
         n_spaces: int = _beta_binomial(num_syllables - 1, self.space_alpha, self.space_beta)
         return _interleave_spaces(syllables, n_spaces)
