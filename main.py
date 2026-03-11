@@ -2,21 +2,19 @@
 
 import json
 import logging
+import pathlib
 import random
 import secrets
-from itertools import product
 from typing import Dict, Union
 
 import fire
 import numpy as np
-import pathlib
 import pandas as pd
 import pyrootutils
 
 from scfg.prompt import ChatCompletionResponse, basic_prompt
 from scfg.scfg import SCFG, CFGParams, SCFGParams
 from scfg.utils import get_logger, set_all_seeds
-
 
 Path = pathlib.Path
 
@@ -149,6 +147,75 @@ def create_wordorder_data(
                 grammar_names.append(grammar_name)
 
     with open(DATA_DIR / "wordorder_grammars.txt", "w") as f:
+        for name in grammar_names:
+            f.write(f"{name}\n")
+
+
+def create_agreement_data(
+    grammar_sizes: list[int] = [100, 1000],
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
+):
+    """
+    Generates grammars which vary overt agreement marking.
+    """
+
+    syllable_structure: str = "CVC"
+    exp_name = "agreement"
+    exp_dir: Path = DATA_DIR / f"{exp_name}_exp"
+    exp_dir.mkdir(parents=True, exist_ok=True)
+
+    grammar_names: list[str] = []
+    configurations = [
+        {"agreement_enabled_a": False, "agreement_enabled_b": True},
+        {"agreement_enabled_a": True, "agreement_enabled_b": True},
+    ]
+
+    for config in configurations:
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = 42 + hash((g_size, index, tuple(sorted(config.items())))) % 10000
+                grammar_name = create_grammar(
+                    rng_seed=g_seed,
+                    syllable_structure_a=syllable_structure,
+                    syllable_structure_b=syllable_structure,
+                    head_initial_a=True,
+                    head_initial_b=True,
+                    spec_initial_a=True,
+                    spec_initial_b=True,
+                    pro_drop_a=False,
+                    pro_drop_b=False,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(1, g_size // 10),
+                    n_propns=max(2, g_size // 10),
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=2,
+                    n_comps=2,
+                    exp_name=exp_name,
+                    agreement_enabled_a=config["agreement_enabled_a"],
+                    agreement_enabled_b=config["agreement_enabled_b"],
+                )
+                log.info(
+                    "Created grammar %s with agreement_a=%s agreement_b=%s seed=%s",
+                    grammar_name,
+                    config["agreement_enabled_a"],
+                    config["agreement_enabled_b"],
+                    g_seed,
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=g_seed,
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
+                )
+                grammar_names.append(grammar_name)
+
+    with open(exp_dir / f"{exp_name}_grammars.txt", "w") as f:
         for name in grammar_names:
             f.write(f"{name}\n")
 
@@ -363,6 +430,12 @@ def create_grammar(
     orthography_a: str = "latin",
     orthography_b: str = "latin",
     exp_name: str | None = None,
+    agreement_enabled_a: bool = False,
+    agreement_enabled_b: bool = False,
+    latent_gender_a: bool = False,
+    latent_gender_b: bool = False,
+    realize_gender_a: bool = False,
+    realize_gender_b: bool = False,
 ) -> str:
     set_all_seeds(rng_seed)
 
@@ -381,6 +454,9 @@ def create_grammar(
         prons=n_prons,
         comps=n_comps,
         orthography=orthography_a,
+        agreement_enabled=agreement_enabled_a,
+        latent_gender=latent_gender_a,
+        realize_gender=realize_gender_a,
     )
     b_params = CFGParams(
         rng_seed=rng_seed + 1,
@@ -397,6 +473,9 @@ def create_grammar(
         prons=n_prons,
         comps=n_comps,
         orthography=orthography_b,
+        agreement_enabled=agreement_enabled_b,
+        latent_gender=latent_gender_b,
+        realize_gender=realize_gender_b,
     )
     params = SCFGParams(a=a_params, b=b_params)
 
@@ -410,10 +489,9 @@ def create_grammar(
 
     log.info(f"Grammar saved to {out_dir / f'grammar_{params.name}.json'}")
 
-    if path.name is None:
+    if params.name is None:
         raise ValueError("Grammar name is None")
-    else:
-        return str(params.name)
+    return str(params.name)
 
 
 def generate_samples(
@@ -481,6 +559,7 @@ def generate_batchfile(
     with open(grammar_path, "r") as f:
         grammar = json.load(f)
     grammar_str = grammar["grammar_str"]
+    agreement_metadata = grammar.get("agreement_metadata")
     n_words = grammar["n_words"]
     n_rules = grammar["n_rules"]
 
@@ -491,7 +570,11 @@ def generate_batchfile(
     else:
         raise ValueError(f"Unknown prompt type: {prompt_type}")
     df["prompt"] = df.apply(
-        lambda row: prompt_func(grammar_str=grammar_str, sample=row["left_phonetic"]),
+        lambda row: prompt_func(
+            grammar_str=grammar_str,
+            sample=row["left_phonetic"],
+            agreement_metadata=agreement_metadata,
+        ),
         axis=1,
     )
     df["json"] = df.apply(
@@ -679,6 +762,7 @@ if __name__ == "__main__":
             "exp_large_complexity": create_large_complexity_data,
             "exp_wordorder": create_wordorder_data,
             "exp_orthography": create_orthography_data,
+            "exp_agreement": create_agreement_data,
             "exp_size": create_size_data,
             # TODO: add hash id to input files, attach it to requiest custom id
             # to make grammar identificaiton easier for gemini
