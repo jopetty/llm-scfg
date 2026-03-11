@@ -761,6 +761,189 @@ class SCFG:
             rules.setdefault(lhs, []).append((a_symbols, b_symbols))
         return rules
 
+    def _choose_aligned_index(
+        self,
+        rng: random.Random,
+        left_count: int,
+        right_count: int,
+        label: str,
+    ) -> int:
+        count = min(left_count, right_count)
+        if count <= 0:
+            raise ValueError(f"No aligned {label} entries are available")
+        return rng.randrange(count)
+
+    def _choose_aligned_simple(
+        self,
+        rng: random.Random,
+        left_items: list[str],
+        right_items: list[str],
+        label: str,
+    ) -> tuple[str, str]:
+        index = self._choose_aligned_index(rng, len(left_items), len(right_items), label)
+        return left_items[index], right_items[index]
+
+    def _choose_aligned_pronoun(self, rng: random.Random) -> tuple[str, str, FeatureBundle]:
+        if not self.agreement_enabled:
+            left_surface, right_surface = self._choose_aligned_simple(
+                rng,
+                self.params.a.pron_lex,
+                self.params.b.pron_lex,
+                "pronoun",
+            )
+            return left_surface, right_surface, FeatureBundle()
+
+        left_paradigms = self.params.a.pronoun_paradigms
+        right_paradigms = self.params.b.pronoun_paradigms
+        index = self._choose_aligned_index(
+            rng,
+            len(left_paradigms),
+            len(right_paradigms),
+            "pronoun",
+        )
+        left_entry = left_paradigms[index]
+        right_entry = right_paradigms[index]
+        features = (
+            FeatureUnifier.unify(left_entry["features"], right_entry["features"])
+            or left_entry["features"]
+            or right_entry["features"]
+        )
+        return left_entry["form"], right_entry["form"], features
+
+    def _choose_aligned_propn(self, rng: random.Random) -> tuple[str, str, FeatureBundle]:
+        if not self.agreement_enabled:
+            left_surface, right_surface = self._choose_aligned_simple(
+                rng,
+                self.params.a.propn_lex,
+                self.params.b.propn_lex,
+                "proper noun",
+            )
+            return left_surface, right_surface, FeatureBundle(person="3", number="sg")
+
+        left_paradigms = self.params.a.propn_paradigms
+        right_paradigms = self.params.b.propn_paradigms
+        index = self._choose_aligned_index(
+            rng,
+            len(left_paradigms),
+            len(right_paradigms),
+            "proper noun",
+        )
+        left_entry = left_paradigms[index]
+        right_entry = right_paradigms[index]
+        left_features = left_entry.get("features", FeatureBundle(person="3", number="sg"))
+        right_features = right_entry.get("features", FeatureBundle(person="3", number="sg"))
+        features = FeatureUnifier.unify(left_features, right_features) or left_features
+        return left_entry["lemma"], right_entry["lemma"], FeatureBundle(
+            person=features.person or "3",
+            number=features.number or "sg",
+            gender=features.gender,
+        )
+
+    def _choose_aligned_noun(
+        self,
+        rng: random.Random,
+        number: str | None = None,
+    ) -> tuple[str, str, FeatureBundle]:
+        chosen_number = number or rng.choice(("sg", "pl"))
+        if not self.agreement_enabled:
+            left_surface, right_surface = self._choose_aligned_simple(
+                rng,
+                self.params.a.noun_lex,
+                self.params.b.noun_lex,
+                "noun",
+            )
+            return left_surface, right_surface, FeatureBundle(person="3", number=chosen_number)
+
+        left_paradigms = self.params.a.noun_paradigms
+        right_paradigms = self.params.b.noun_paradigms
+        index = self._choose_aligned_index(
+            rng,
+            len(left_paradigms),
+            len(right_paradigms),
+            "noun",
+        )
+        left_entry = left_paradigms[index]
+        right_entry = right_paradigms[index]
+        left_surface = left_entry["forms"][f"number={chosen_number}"]
+        right_surface = right_entry["forms"][f"number={chosen_number}"]
+        left_features = left_entry.get("features", FeatureBundle(person="3"))
+        right_features = right_entry.get("features", FeatureBundle(person="3"))
+        features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+        return left_surface, right_surface, FeatureBundle(
+            person=features.person or "3",
+            number=chosen_number,
+            gender=features.gender,
+        )
+
+    def _choose_aligned_verb(
+        self,
+        rng: random.Random,
+        features: FeatureBundle | None = None,
+    ) -> tuple[str, str, FeatureBundle]:
+        target = FeatureUnifier.unify(features or FeatureBundle(), FeatureBundle()) or FeatureBundle()
+        resolved_gender = target.gender
+        if "gender" in self.params.a.latent_axes or "gender" in self.params.b.latent_axes:
+            if resolved_gender is None:
+                gender_values = self.params.a.gender_values or self.params.b.gender_values
+                resolved_gender = gender_values[0]
+        resolved = FeatureBundle(
+            person=target.person or "3",
+            number=target.number or "sg",
+            gender=resolved_gender,
+        )
+
+        if not self.agreement_enabled:
+            left_surface, right_surface = self._choose_aligned_simple(
+                rng,
+                self.params.a.verb_lex,
+                self.params.b.verb_lex,
+                "verb",
+            )
+            return left_surface, right_surface, resolved
+
+        left_paradigms = self.params.a.verb_paradigms
+        right_paradigms = self.params.b.verb_paradigms
+        index = self._choose_aligned_index(
+            rng,
+            len(left_paradigms),
+            len(right_paradigms),
+            "verb",
+        )
+        left_entry = left_paradigms[index]
+        right_entry = right_paradigms[index]
+        left_key = resolved.key(self.params.a.latent_axes)
+        right_key = resolved.key(self.params.b.latent_axes)
+        return left_entry["forms"][left_key], right_entry["forms"][right_key], resolved
+
+    def _choose_aligned_det(self, rng: random.Random, definite: bool) -> tuple[str, str]:
+        left_items = self.params.a.det_def_lex if definite else self.params.a.det_indef_lex
+        right_items = self.params.b.det_def_lex if definite else self.params.b.det_indef_lex
+        return self._choose_aligned_simple(rng, left_items, right_items, "determiner")
+
+    def _choose_aligned_adj(self, rng: random.Random) -> tuple[str, str]:
+        return self._choose_aligned_simple(
+            rng,
+            self.params.a.adj_lex,
+            self.params.b.adj_lex,
+            "adjective",
+        )
+
+    def _choose_aligned_comp(self, rng: random.Random) -> tuple[str, str]:
+        return self._choose_aligned_simple(
+            rng,
+            self.params.a.comp_lex,
+            self.params.b.comp_lex,
+            "complementizer",
+        )
+
+    def _choose_aligned_tense(self, rng: random.Random) -> tuple[str, str]:
+        return self._choose_aligned_simple(
+            rng,
+            self.params.a.tense_lex,
+            self.params.b.tense_lex,
+            "tense marker",
+        )
+
     def sample(
         self,
         min_depth: int = 0,
@@ -979,10 +1162,11 @@ class SCFG:
             return self._combine_derivations("CP_matrix", [cnull, tp], [cnull, tp], features=tp.features, trace=tp.trace)
 
         if symbol == "CP_embed":
+            left_comp, right_comp = self._choose_aligned_comp(rng)
             comp = self._terminal_derivation(
                 "C",
-                self.params.a.choose_comp(rng),
-                self.params.b.choose_comp(rng),
+                left_comp,
+                right_comp,
                 current_depth,
             )
             tp = self._sample_agreement_recursive("TP", rng, current_depth + 1, min_depth, max_depth)
@@ -997,10 +1181,11 @@ class SCFG:
                 max_depth,
                 role="subject",
             )
+            left_t, right_t = self._choose_aligned_tense(rng)
             t = self._terminal_derivation(
                 "T",
-                self.params.a.choose_t(rng),
-                self.params.b.choose_t(rng),
+                left_t,
+                right_t,
                 current_depth,
             )
             vp = self._sample_agreement_recursive(
@@ -1032,14 +1217,10 @@ class SCFG:
             if choice == "PRO":
                 return self._terminal_derivation("PRO", "∅", "∅", current_depth, FeatureBundle(person="3", number="sg"), trace="pro")
             if choice == "PRON":
-                left_surface, left_features = self.params.a.choose_pronoun(rng)
-                right_surface, right_features = self.params.b.choose_pronoun(rng)
-                features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+                left_surface, right_surface, features = self._choose_aligned_pronoun(rng)
                 return self._terminal_derivation("PRON", left_surface, right_surface, current_depth, features=features, trace=f"pron={features.key()}")
             if choice == "PROPN":
-                left_surface, left_features = self.params.a.choose_propn(rng)
-                right_surface, right_features = self.params.b.choose_propn(rng)
-                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                left_surface, right_surface, features = self._choose_aligned_propn(rng)
                 return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="propn=3sg")
             return self._sample_agreement_recursive("DP", rng, current_depth, min_depth, max_depth, role=role)
 
@@ -1058,9 +1239,7 @@ class SCFG:
             return self._combine_derivations("VP", left_children, right_children, features=inherited_features or FeatureBundle(), trace=verb.trace)
 
         if symbol == "V":
-            left_surface, left_features = self.params.a.choose_verb(rng, inherited_features)
-            right_surface, right_features = self.params.b.choose_verb(rng, inherited_features)
-            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            left_surface, right_surface, features = self._choose_aligned_verb(rng, inherited_features)
             return self._terminal_derivation("V", left_surface, right_surface, current_depth, features=features, trace=f"verb={features.key()}")
 
         if symbol == "OBJ_PHRASE":
@@ -1075,22 +1254,22 @@ class SCFG:
         if symbol == "DP":
             use_propn = rng.random() < 0.25
             if use_propn:
-                left_surface, features = self.params.a.choose_propn(rng)
-                right_surface, _ = self.params.b.choose_propn(rng)
+                left_surface, right_surface, features = self._choose_aligned_propn(rng)
                 left_children = [self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features)]
                 right_children = list(left_children)
                 if self.params.a.proper_with_det:
-                    left_det = self._terminal_derivation("DET_def", self.params.a.choose_det(rng, True), self.params.a.choose_det(rng, True), current_depth)
+                    left_det_surface, _ = self._choose_aligned_det(rng, True)
+                    left_det = self._terminal_derivation("DET_def", left_det_surface, left_det_surface, current_depth)
                     left_children = [left_det, left_children[0]]
                 if self.params.b.proper_with_det:
-                    right_det = self._terminal_derivation("DET_def", self.params.b.choose_det(rng, True), self.params.b.choose_det(rng, True), current_depth)
+                    _, right_det_surface = self._choose_aligned_det(rng, True)
+                    right_det = self._terminal_derivation("DET_def", right_det_surface, right_det_surface, current_depth)
                     right_children = [right_det, right_children[0]]
                 return self._combine_derivations("DP", left_children, right_children, features=features, trace="dp-propn")
 
             definite = rng.random() < 0.5
             number = rng.choice(("sg", "pl")) if self.agreement_enabled else None
-            left_det_surface = self.params.a.choose_det(rng, definite)
-            right_det_surface = self.params.b.choose_det(rng, definite)
+            left_det_surface, right_det_surface = self._choose_aligned_det(rng, definite)
             left_det = self._terminal_derivation("DET", left_det_surface, right_det_surface, current_depth)
             noun = self._sample_agreement_recursive(
                 "NP",
@@ -1119,21 +1298,18 @@ class SCFG:
 
         if symbol == "N_HEAD":
             if rng.random() < 0.25:
-                left_surface, left_features = self.params.a.choose_propn(rng)
-                right_surface, right_features = self.params.b.choose_propn(rng)
-                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                left_surface, right_surface, features = self._choose_aligned_propn(rng)
                 return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="nhead-propn")
             target_number = inherited_features.number if inherited_features else None
-            left_surface, left_features = self.params.a.choose_noun(rng, target_number)
-            right_surface, right_features = self.params.b.choose_noun(rng, target_number)
-            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            left_surface, right_surface, features = self._choose_aligned_noun(rng, target_number)
             return self._terminal_derivation("N", left_surface, right_surface, current_depth, features=features, trace=f"noun={features.key()}")
 
         if symbol == "AdjP":
+            left_adj, right_adj = self._choose_aligned_adj(rng)
             return self._terminal_derivation(
                 "ADJ",
-                self.params.a.choose_adj(rng),
-                self.params.b.choose_adj(rng),
+                left_adj,
+                right_adj,
                 current_depth,
             )
 

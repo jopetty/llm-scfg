@@ -645,6 +645,7 @@ def generate_experiment_batchfile(
         with open(grammar_path, "r") as f:
             grammar = json.load(f)
         grammar_str = grammar["grammar_str"]
+        agreement_metadata = grammar.get("agreement_metadata")
         n_words = grammar["n_words"]
         n_rules = grammar["n_rules"]
 
@@ -656,7 +657,9 @@ def generate_experiment_batchfile(
             raise ValueError(f"Unknown prompt type: {prompt_type}")
         df["prompt"] = df.apply(
             lambda row: prompt_func(
-                grammar_str=grammar_str, sample=row["left_phonetic"]
+                grammar_str=grammar_str,
+                sample=row["left_phonetic"],
+                agreement_metadata=agreement_metadata,
             ),
             axis=1,
         )

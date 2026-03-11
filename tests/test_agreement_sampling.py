@@ -1,6 +1,7 @@
 import random
 import unittest
 
+from scfg.agreement import FeatureBundle
 from scfg.scfg import SCFG, CFGParams, SCFGParams
 
 
@@ -87,6 +88,46 @@ class AgreementSamplingTest(unittest.TestCase):
                 self.assertEqual(sample["subject_features"], sample["verb_features"])
                 return
         self.fail("Did not encounter a gendered nominal subject in 100 draws")
+
+    def test_verb_sampling_uses_aligned_paradigm_entries(self):
+        plural_third_key = FeatureBundle(person="3", number="pl").key(
+            self.params.a.latent_axes
+        )
+        expected_pairs = {
+            (
+                self.params.a.verb_paradigms[index]["forms"][plural_third_key],
+                self.params.b.verb_paradigms[index]["forms"][plural_third_key],
+            )
+            for index in range(
+                min(
+                    len(self.params.a.verb_paradigms),
+                    len(self.params.b.verb_paradigms),
+                )
+            )
+        }
+        for seed in range(20):
+            derivation = self.scfg._sample_agreement_recursive(
+                "V",
+                rng=random.Random(seed),
+                current_depth=0,
+                min_depth=0,
+                max_depth=0,
+                inherited_features=FeatureBundle(person="3", number="pl"),
+            )
+            self.assertIn((derivation.left_full, derivation.right_full), expected_pairs)
+
+    def test_simple_lexical_categories_use_aligned_pairs(self):
+        adj_pairs = set(zip(self.params.a.adj_lex, self.params.b.adj_lex))
+        comp_pairs = set(zip(self.params.a.comp_lex, self.params.b.comp_lex))
+        tense_pairs = set(zip(self.params.a.tense_lex, self.params.b.tense_lex))
+        det_pairs = set(zip(self.params.a.det_def_lex, self.params.b.det_def_lex))
+
+        for seed in range(10):
+            rng = random.Random(seed)
+            self.assertIn(self.scfg._choose_aligned_adj(rng), adj_pairs)
+            self.assertIn(self.scfg._choose_aligned_comp(rng), comp_pairs)
+            self.assertIn(self.scfg._choose_aligned_tense(rng), tense_pairs)
+            self.assertIn(self.scfg._choose_aligned_det(rng, True), det_pairs)
 
 
 if __name__ == "__main__":
