@@ -1,9 +1,9 @@
+import importlib.util
 import logging
 import os
 import random
 
 import numpy as np
-import pkg_resources
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -25,8 +25,7 @@ def set_all_seeds(seed: int):
     np.random.seed(seed)
     random.seed(seed)
 
-    installed = {pkg.key for pkg in pkg_resources.working_set}
-    if "torch" in installed:
+    if importlib.util.find_spec("torch") is not None:
         import torch
 
         torch.manual_seed(seed)
