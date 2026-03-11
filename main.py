@@ -5,6 +5,7 @@ import logging
 import pathlib
 import random
 import secrets
+from hashlib import blake2b
 from typing import Dict, Union
 
 import fire
@@ -33,6 +34,12 @@ DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
 
 
+def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_000) -> int:
+    payload = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str)
+    digest = blake2b(payload.encode("utf-8"), digest_size=8).digest()
+    return base_seed + (int.from_bytes(digest, "big") % modulus)
+
+
 def create_orthography_data(
     max_depth: int = 5,
     n_grammars_per_size: int = 2,
@@ -53,7 +60,7 @@ def create_orthography_data(
     for orthography in target_orthographies:
         for g_size in g_sizes:
             for _ in range(n_grammars_per_size):
-                g_seed = 42 + hash((orthography, g_size, _)) % 10000
+                g_seed = deterministic_seed("orthography", orthography, g_size, _)
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
@@ -114,7 +121,7 @@ def create_wordorder_data(
     for hi_b, si_b in target_head_spec_params:
         for g_size in g_sizes:
             for _ in range(n_grammars_per_size):
-                g_seed = 42 + hash((hi_b, si_b, g_size, _)) % 10000
+                g_seed = deterministic_seed("wordorder", hi_b, si_b, g_size, _)
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
@@ -175,7 +182,12 @@ def create_agreement_data(
     for config in configurations:
         for g_size in grammar_sizes:
             for index in range(n_grammars_per_size):
-                g_seed = 42 + hash((g_size, index, tuple(sorted(config.items())))) % 10000
+                g_seed = deterministic_seed(
+                    "agreement",
+                    g_size,
+                    index,
+                    tuple(sorted(config.items())),
+                )
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
@@ -240,7 +252,7 @@ def create_size_data(
     grammar_names: list[str] = []
     for g_size in grammar_sizes:
         for _ in range(n_grammars_per_size):
-            g_seed = 42 + hash((g_size, _)) % 10000
+            g_seed = deterministic_seed(exp_name, g_size, _)
             grammar_name = create_grammar(
                 rng_seed=g_seed,
                 syllable_structure_a=syllable_structure,
@@ -307,7 +319,7 @@ def create_complexity_data(
 
     for g_size in grammar_sizes:
         for _ in range(n_grammars_per_size):
-            g_seed = 42 + hash((g_size, _)) % 10000
+            g_seed = deterministic_seed("complexity", g_size, _)
             grammar_name = create_grammar(
                 rng_seed=g_seed,
                 syllable_structure_a=syllable_structure,
@@ -372,7 +384,7 @@ def create_large_complexity_data(
 
     for g_size in grammar_sizes:
         for _ in range(n_grammars_per_size):
-            g_seed = 42 + hash((g_size, _)) % 10000
+            g_seed = deterministic_seed("large_complexity", g_size, _)
             grammar_name = create_grammar(
                 rng_seed=g_seed,
                 syllable_structure_a=syllable_structure,
