@@ -159,9 +159,9 @@ def create_wordorder_data(
 
 
 def create_agreement_data(
-    grammar_sizes: list[int] = [100, 1000],
-    max_depth: int = 5,
-    n_grammars_per_size: int = 2,
+    grammar_sizes: list[int] = [25, 50, 100, 1_000, 5_000, 7_500, 10_000],
+    max_depth: int = 6,
+    n_grammars_per_size: int = 5,
     n_sentences_per_depth: int = 20,
 ):
     """
@@ -175,7 +175,9 @@ def create_agreement_data(
 
     grammar_names: list[str] = []
     configurations = [
+        {"agreement_enabled_a": False, "agreement_enabled_b": False},
         {"agreement_enabled_a": False, "agreement_enabled_b": True},
+        {"agreement_enabled_a": True, "agreement_enabled_b": False},
         {"agreement_enabled_a": True, "agreement_enabled_b": True},
     ]
 
@@ -204,8 +206,10 @@ def create_agreement_data(
                     n_propns=max(2, g_size // 10),
                     n_det_def=2,
                     n_det_indef=2,
-                    n_prons=2,
+                    n_prons=6,
                     n_comps=2,
+                    orthography_a="latin",
+                    orthography_b="latin",
                     exp_name=exp_name,
                     agreement_enabled_a=config["agreement_enabled_a"],
                     agreement_enabled_b=config["agreement_enabled_b"],
