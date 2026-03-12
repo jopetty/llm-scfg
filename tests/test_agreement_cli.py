@@ -58,6 +58,8 @@ class AgreementCliTest(unittest.TestCase):
                     first = json.loads(handle.readline())
                 self.assertIn("agreement_ok", first)
                 self.assertIn("subject_features", first)
+                self.assertIn("possible_right_phonetic", first)
+                self.assertGreaterEqual(len(first["possible_right_phonetic"]), 1)
             finally:
                 main.DATA_DIR = original_data_dir
 
@@ -111,6 +113,16 @@ class AgreementCliTest(unittest.TestCase):
                     payload = json.loads(handle.readline())
                 prompt = payload["body"]["messages"][0]["content"]
                 self.assertIn("Some lexical items in this grammar inflect", prompt)
+                self.assertEqual(
+                    {
+                        "grammar_name": grammar_name,
+                        "sample_id": "0",
+                        "depth": "0",
+                    },
+                    payload["body"]["metadata"],
+                )
+                self.assertTrue(payload["custom_id"].startswith(f"{grammar_name}-"))
+                self.assertIn("-sample-0", payload["custom_id"])
             finally:
                 main.PROJECT_ROOT = original_project_root
                 main.DATA_DIR = original_data_dir

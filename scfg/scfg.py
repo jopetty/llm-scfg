@@ -4,6 +4,7 @@ import random
 import re
 import secrets
 from dataclasses import asdict, dataclass, field
+from itertools import product
 from typing import Any
 
 import numpy as np
@@ -704,6 +705,8 @@ class Derivation:
     depth: int
     features: FeatureBundle = field(default_factory=FeatureBundle)
     trace: str = ""
+    possible_right_full: tuple[str, ...] = field(default_factory=tuple)
+    possible_right_phonetic: tuple[str, ...] = field(default_factory=tuple)
 
 
 class SCFG:
@@ -782,6 +785,58 @@ class SCFG:
     ) -> tuple[str, str]:
         index = self._choose_aligned_index(rng, len(left_items), len(right_items), label)
         return left_items[index], right_items[index]
+
+    def _dedupe_preserve_order(self, values: list[str]) -> tuple[str, ...]:
+        return tuple(dict.fromkeys(values))
+
+    def _possible_pronoun_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        if self.params.a.pronoun_paradigms and self.params.b.pronoun_paradigms:
+            left_form = self.params.a.pronoun_paradigms[index]["form"]
+            right_form = self.params.b.pronoun_paradigms[index]["form"]
+            return (right_form,) if left_form == left_surface else tuple()
+        if self.params.a.pron_lex and self.params.b.pron_lex:
+            return (self.params.b.pron_lex[index],) if self.params.a.pron_lex[index] == left_surface else tuple()
+        return tuple()
+
+    def _possible_propn_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        if self.params.a.propn_paradigms and self.params.b.propn_paradigms:
+            left_form = self.params.a.propn_paradigms[index]["lemma"]
+            right_form = self.params.b.propn_paradigms[index]["lemma"]
+            return (right_form,) if left_form == left_surface else tuple()
+        if self.params.a.propn_lex and self.params.b.propn_lex:
+            return (self.params.b.propn_lex[index],) if self.params.a.propn_lex[index] == left_surface else tuple()
+        return tuple()
+
+    def _possible_noun_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        candidates: list[str] = []
+        for number in ("sg", "pl"):
+            left_form, _ = self._noun_entry(self.params.a, index, number)
+            right_form, _ = self._noun_entry(self.params.b, index, number)
+            if left_form == left_surface:
+                candidates.append(right_form)
+        return self._dedupe_preserve_order(candidates)
+
+    def _verb_bundle_space(self) -> list[FeatureBundle]:
+        if self.params.a.verb_paradigms:
+            return feature_inventory(
+                self.params.a.latent_axes,
+                gender_values=self.params.a.gender_values,
+            )
+        if self.params.b.verb_paradigms:
+            return feature_inventory(
+                self.params.b.latent_axes,
+                gender_values=self.params.b.gender_values,
+            )
+        return [FeatureBundle(person="3", number="sg")]
+
+    def _possible_verb_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        candidates: list[str] = []
+        for bundle in self._verb_bundle_space():
+            left_form, _ = self._verb_entry(self.params.a, index, bundle)
+            right_form, _ = self._verb_entry(self.params.b, index, bundle)
+            if left_form == left_surface:
+                candidates.append(right_form)
+        return self._dedupe_preserve_order(candidates)
 
     def _pronoun_count(self, params: CFGParams) -> int:
         if params.agreement_enabled and params.pronouns_are_featured and params.pronoun_paradigms:
@@ -993,6 +1048,8 @@ class SCFG:
                 "depth": result.depth,
                 "subject_features": result.features.to_dict(),
                 "verb_features": result.features.to_dict(),
+                "possible_right": [" ".join(option.split()) for option in result.possible_right_full],
+                "possible_right_phonetic": [" ".join(option.split()) for option in result.possible_right_phonetic],
                 "agreement_ok": True,
                 "agreement_trace": result.trace,
             }
@@ -1009,6 +1066,8 @@ class SCFG:
             "left_phonetic": " ".join(result["left_phonetic"].split()),
             "right": " ".join(result["right_full"].split()),
             "right_phonetic": " ".join(result["right_phonetic"].split()),
+            "possible_right": [" ".join(result["right_full"].split())],
+            "possible_right_phonetic": [" ".join(result["right_phonetic"].split())],
             "left_tree": " ".join(result["left_tree"].split()),
             "right_tree": " ".join(result["right_tree"].split()),
             "depth": result["depth"],
@@ -1114,9 +1173,19 @@ class SCFG:
         depth: int,
         features: FeatureBundle | None = None,
         trace: str = "",
+        possible_right_surfaces: tuple[str, ...] | None = None,
     ) -> Derivation:
         left_phonetic = "" if left_surface.startswith("∅") else left_surface
         right_phonetic = "" if right_surface.startswith("∅") else right_surface
+        if possible_right_surfaces is None:
+            possible_right_surfaces = (right_surface,)
+        possible_right_phonetic = tuple(
+            surface
+            for surface in (
+                "" if candidate.startswith("∅") else candidate
+                for candidate in possible_right_surfaces
+            )
+        )
         return Derivation(
             left_full=left_surface,
             left_phonetic=left_phonetic,
@@ -1127,6 +1196,8 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
+            possible_right_full=possible_right_surfaces,
+            possible_right_phonetic=possible_right_phonetic,
         )
 
     def _combine_derivations(
@@ -1146,6 +1217,18 @@ class SCFG:
         right_phonetic = " ".join([child.right_phonetic for child in right_children if child.right_phonetic])
         left_tree = f"({symbol} {' '.join(child.left_tree for child in left_children if child.left_tree)})"
         right_tree = f"({symbol} {' '.join(child.right_tree for child in right_children if child.right_tree)})"
+        possible_right_full = self._dedupe_preserve_order(
+            [
+                " ".join(part for part in parts if part).strip()
+                for parts in product(*(child.possible_right_full or ("",) for child in right_children))
+            ]
+        )
+        possible_right_phonetic = self._dedupe_preserve_order(
+            [
+                " ".join(part for part in parts if part).strip()
+                for parts in product(*(child.possible_right_phonetic or ("",) for child in right_children))
+            ]
+        )
         return Derivation(
             left_full=left_full,
             left_phonetic=left_phonetic,
@@ -1156,6 +1239,8 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
+            possible_right_full=possible_right_full,
+            possible_right_phonetic=possible_right_phonetic,
         )
 
     def _order_head_comp(self, head: Derivation, comp: Derivation, head_initial: bool) -> list[Derivation]:
@@ -1238,11 +1323,43 @@ class SCFG:
             if choice == "PRO":
                 return self._terminal_derivation("PRO", "∅", "∅", current_depth, FeatureBundle(person="3", number="sg"), trace="pro")
             if choice == "PRON":
-                left_surface, right_surface, features = self._choose_aligned_pronoun(rng)
-                return self._terminal_derivation("PRON", left_surface, right_surface, current_depth, features=features, trace=f"pron={features.key()}")
+                pron_index = self._choose_aligned_index(
+                    rng,
+                    self._pronoun_count(self.params.a),
+                    self._pronoun_count(self.params.b),
+                    "pronoun",
+                )
+                left_surface, left_features = self._pronoun_entry(self.params.a, pron_index)
+                right_surface, right_features = self._pronoun_entry(self.params.b, pron_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+                return self._terminal_derivation(
+                    "PRON",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace=f"pron={features.key()}",
+                    possible_right_surfaces=self._possible_pronoun_right_surfaces(pron_index, left_surface) or (right_surface,),
+                )
             if choice == "PROPN":
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
-                return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="propn=3sg")
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                return self._terminal_derivation(
+                    "PROPN",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace="propn=3sg",
+                    possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                )
             return self._sample_agreement_recursive("DP", rng, current_depth, min_depth, max_depth, role=role)
 
         if symbol == "VP":
@@ -1260,8 +1377,35 @@ class SCFG:
             return self._combine_derivations("VP", left_children, right_children, features=inherited_features or FeatureBundle(), trace=verb.trace)
 
         if symbol == "V":
-            left_surface, right_surface, features = self._choose_aligned_verb(rng, inherited_features)
-            return self._terminal_derivation("V", left_surface, right_surface, current_depth, features=features, trace=f"verb={features.key()}")
+            target = FeatureUnifier.unify(inherited_features or FeatureBundle(), FeatureBundle()) or FeatureBundle()
+            resolved_gender = target.gender
+            if "gender" in self.params.a.latent_axes or "gender" in self.params.b.latent_axes:
+                if resolved_gender is None:
+                    gender_values = self.params.a.gender_values or self.params.b.gender_values
+                    resolved_gender = gender_values[0]
+            resolved = FeatureBundle(
+                person=target.person or "3",
+                number=target.number or "sg",
+                gender=resolved_gender,
+            )
+            verb_index = self._choose_aligned_index(
+                rng,
+                self._verb_count(self.params.a),
+                self._verb_count(self.params.b),
+                "verb",
+            )
+            left_surface, left_features = self._verb_entry(self.params.a, verb_index, resolved)
+            right_surface, right_features = self._verb_entry(self.params.b, verb_index, resolved)
+            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            return self._terminal_derivation(
+                "V",
+                left_surface,
+                right_surface,
+                current_depth,
+                features=features,
+                trace=f"verb={features.key()}",
+                possible_right_surfaces=self._possible_verb_right_surfaces(verb_index, left_surface) or (right_surface,),
+            )
 
         if symbol == "OBJ_PHRASE":
             if current_depth < min_depth:
@@ -1275,8 +1419,26 @@ class SCFG:
         if symbol == "DP":
             use_propn = rng.random() < 0.25
             if use_propn:
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
                 left_children = [self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features)]
+                left_children = [
+                    self._terminal_derivation(
+                        "PROPN",
+                        left_surface,
+                        right_surface,
+                        current_depth,
+                        features=features,
+                        possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                    )
+                ]
                 right_children = list(left_children)
                 if self.params.a.proper_with_det:
                     left_det_surface, _ = self._choose_aligned_det(rng, True)
@@ -1319,11 +1481,44 @@ class SCFG:
 
         if symbol == "N_HEAD":
             if rng.random() < 0.25:
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
-                return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="nhead-propn")
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                return self._terminal_derivation(
+                    "PROPN",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace="nhead-propn",
+                    possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                )
             target_number = inherited_features.number if inherited_features else None
-            left_surface, right_surface, features = self._choose_aligned_noun(rng, target_number)
-            return self._terminal_derivation("N", left_surface, right_surface, current_depth, features=features, trace=f"noun={features.key()}")
+            chosen_number = target_number or rng.choice(("sg", "pl"))
+            noun_index = self._choose_aligned_index(
+                rng,
+                self._noun_count(self.params.a),
+                self._noun_count(self.params.b),
+                "noun",
+            )
+            left_surface, left_features = self._noun_entry(self.params.a, noun_index, chosen_number)
+            right_surface, right_features = self._noun_entry(self.params.b, noun_index, chosen_number)
+            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            return self._terminal_derivation(
+                "N",
+                left_surface,
+                right_surface,
+                current_depth,
+                features=features,
+                trace=f"noun={features.key()}",
+                possible_right_surfaces=self._possible_noun_right_surfaces(noun_index, left_surface) or (right_surface,),
+            )
 
         if symbol == "AdjP":
             left_adj, right_adj = self._choose_aligned_adj(rng)

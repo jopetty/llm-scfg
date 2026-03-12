@@ -160,8 +160,8 @@ def create_wordorder_data(
 
 def create_agreement_data(
     grammar_sizes: list[int] = [25, 50, 100, 1_000, 5_000, 7_500, 10_000],
-    max_depth: int = 6,
-    n_grammars_per_size: int = 5,
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
     n_sentences_per_depth: int = 20,
 ):
     """
@@ -599,15 +599,13 @@ def generate_batchfile(
             max_completion_tokens=max_completion_tokens,
             n=n,
             metadata={
-                "input_sentence": row["left_phonetic"],
-                "output_sentence": row["right_phonetic"],
                 "grammar_name": grammar_name,
-                "n_words": str(n_words),
-                "n_rules": str(n_rules),
-                "model": model,
+                "sample_id": str(row.name),
                 "depth": str(row["depth"]),
             },
-        ).to_openai_batched_json(model=model, custom_id=f"request-{row.name}"),
+        ).to_openai_batched_json(
+            model=model, custom_id=f"{grammar_name}-sample-{row.name}"
+        ),
         axis=1,
     )
 
@@ -685,18 +683,14 @@ def generate_experiment_batchfile(
                 max_completion_tokens=max_completion_tokens,
                 n=n,
                 metadata={
-                    "input_sentence": row["left_phonetic"],
-                    "output_sentence": row["right_phonetic"],
                     "grammar_name": grammar_name,
-                    "n_words": str(n_words),
-                    "n_rules": str(n_rules),
-                    "model": model,
+                    "sample_id": str(row.name),
                     "depth": str(row["depth"]),
                 }
                 if model.startswith("gpt")
                 else None,
             ).to_openai_batched_json(
-                model=model, custom_id=f"{grammar_name}-request-{row.name}"
+                model=model, custom_id=f"{grammar_name}-sample-{row.name}"
             ),
             axis=1,
         )

@@ -37,6 +37,7 @@ class BackwardCompatTest(unittest.TestCase):
         params = SCFGParams(a=CFGParams(rng_seed=3), b=CFGParams(rng_seed=4))
         sample = SCFG(params).sample(min_depth=0, max_depth=0)
         self.assertIn("left_phonetic", sample)
+        self.assertEqual([sample["right_phonetic"]], sample["possible_right_phonetic"])
         self.assertNotIn("agreement_ok", sample)
 
 
