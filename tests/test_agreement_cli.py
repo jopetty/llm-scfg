@@ -128,6 +128,60 @@ class AgreementCliTest(unittest.TestCase):
                 main.DATA_DIR = original_data_dir
                 main.BATCH_DIR = original_batch_dir
 
+    def test_compact_prompt_grammar_is_smaller_than_full_grammar(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            data_dir = Path(tmpdir)
+            original_data_dir = main.DATA_DIR
+            try:
+                main.DATA_DIR = data_dir
+                grammar_name = main.create_grammar(
+                    rng_seed=41,
+                    n_verbs=12,
+                    n_nouns=12,
+                    n_adjectives=2,
+                    n_propns=4,
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=6,
+                    n_comps=2,
+                    agreement_enabled_a=False,
+                    agreement_enabled_b=True,
+                )
+                main.generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=41,
+                    min_depth=0,
+                    max_depth=0,
+                    n_samples_per_depth=1,
+                )
+                with open(data_dir / f"grammar_{grammar_name}.json") as handle:
+                    grammar = json.load(handle)
+                with open(data_dir / f"samples_{grammar_name}.jsonl") as handle:
+                    sample = json.loads(handle.readline())
+
+                full_prompt = main.basic_prompt(
+                    grammar_str=main.prompt_grammar_str(
+                        grammar, sample["left_phonetic"], prompt_type="basic"
+                    ),
+                    sample=sample["left_phonetic"],
+                    agreement_metadata=grammar.get("agreement_metadata"),
+                )
+                compact_prompt = main.basic_prompt(
+                    grammar_str=main.prompt_grammar_str(
+                        grammar, sample["left_phonetic"], prompt_type="compact"
+                    ),
+                    sample=sample["left_phonetic"],
+                    agreement_metadata=grammar.get("agreement_metadata"),
+                )
+
+                self.assertLess(len(compact_prompt), len(full_prompt))
+                self.assertIn(sample["left_phonetic"], compact_prompt)
+                self.assertIn(" -> <", compact_prompt)
+                self.assertIn("1.sg=<'", compact_prompt)
+                self.assertNotIn("[1.sg] -> <", compact_prompt)
+            finally:
+                main.DATA_DIR = original_data_dir
+
 
 if __name__ == "__main__":
     unittest.main()

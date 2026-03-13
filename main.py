@@ -12,9 +12,10 @@ import fire
 import numpy as np
 import pandas as pd
 import pyrootutils
+import tiktoken
 
 from scfg.prompt import ChatCompletionResponse, basic_prompt
-from scfg.scfg import SCFG, CFGParams, SCFGParams
+from scfg.scfg import SCFG, CFGParams, SCFGParams, RuleBuilder
 from scfg.utils import get_logger, set_all_seeds
 
 Path = pathlib.Path
@@ -33,11 +34,66 @@ PROJECT_ROOT = path = pyrootutils.find_root(
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
 
+GPT_MESSAGE_TOKEN_LIMIT = 272_000
+
 
 def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_000) -> int:
     payload = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str)
     digest = blake2b(payload.encode("utf-8"), digest_size=8).digest()
     return base_seed + (int.from_bytes(digest, "big") % modulus)
+
+
+def prompt_grammar_str(
+    grammar: dict[str, object],
+    sample: str,
+    prompt_type: str,
+) -> str:
+    if prompt_type == "basic":
+        return str(grammar["grammar_str"])
+    if prompt_type == "compact":
+        params = SCFGParams.from_dict(grammar)
+        return RuleBuilder(params).build_compact_prompt_grammar(sample)
+    raise ValueError(f"Unknown prompt type: {prompt_type}")
+
+
+def estimate_prompt_tokens(prompt: str, model: str) -> int:
+    try:
+        encoder = tiktoken.encoding_for_model(model)
+    except KeyError:
+        encoder = tiktoken.get_encoding("cl100k_base")
+    return len(encoder.encode(prompt))
+
+
+def warn_for_large_prompts(
+    df: pd.DataFrame,
+    model: str,
+    grammar_name: str,
+    threshold: int = GPT_MESSAGE_TOKEN_LIMIT,
+) -> None:
+    if not model.startswith("gpt") or "prompt" not in df:
+        return
+    token_estimates = df["prompt"].apply(lambda prompt: estimate_prompt_tokens(prompt, model))
+    max_tokens = int(token_estimates.max())
+    over_limit = int((token_estimates > threshold).sum())
+    near_limit = int((token_estimates > int(0.8 * threshold)).sum())
+    if near_limit:
+        log.warning(
+            "Grammar %s has %s prompts above 80%% of the %s-token limit for %s; max estimate=%s",
+            grammar_name,
+            near_limit,
+            threshold,
+            model,
+            max_tokens,
+        )
+    if over_limit:
+        log.warning(
+            "Grammar %s has %s prompts estimated above the %s-token limit for %s; max estimate=%s",
+            grammar_name,
+            over_limit,
+            threshold,
+            model,
+            max_tokens,
+        )
 
 
 def create_orthography_data(
@@ -574,25 +630,22 @@ def generate_batchfile(
     grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
     with open(grammar_path, "r") as f:
         grammar = json.load(f)
-    grammar_str = grammar["grammar_str"]
     agreement_metadata = grammar.get("agreement_metadata")
     n_words = grammar["n_words"]
     n_rules = grammar["n_rules"]
 
     df = pd.DataFrame(samples)
+    prompt_func = basic_prompt
 
-    if prompt_type == "basic":
-        prompt_func = basic_prompt
-    else:
-        raise ValueError(f"Unknown prompt type: {prompt_type}")
     df["prompt"] = df.apply(
         lambda row: prompt_func(
-            grammar_str=grammar_str,
+            grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
             sample=row["left_phonetic"],
             agreement_metadata=agreement_metadata,
         ),
         axis=1,
     )
+    warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
     df["json"] = df.apply(
         lambda row: ChatCompletionResponse(
             user_prompt=row["prompt"],
@@ -610,7 +663,8 @@ def generate_batchfile(
     )
 
     model_pathsafe_name = model.replace("/", "_")
-    batch_jsonl_filename = f"inputs_{grammar_name}_{model_pathsafe_name}.jsonl"
+    prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+    batch_jsonl_filename = f"inputs_{grammar_name}{prompt_label}_{model_pathsafe_name}.jsonl"
     batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
     log.info(f"Writing batch job to {batch_jsonl_path}")
 
@@ -658,25 +712,22 @@ def generate_experiment_batchfile(
         grammar_path = exp_dir / f"grammar_{grammar_name}.json"
         with open(grammar_path, "r") as f:
             grammar = json.load(f)
-        grammar_str = grammar["grammar_str"]
         agreement_metadata = grammar.get("agreement_metadata")
         n_words = grammar["n_words"]
         n_rules = grammar["n_rules"]
 
         df = pd.DataFrame(samples)
+        prompt_func = basic_prompt
 
-        if prompt_type == "basic":
-            prompt_func = basic_prompt
-        else:
-            raise ValueError(f"Unknown prompt type: {prompt_type}")
         df["prompt"] = df.apply(
             lambda row: prompt_func(
-                grammar_str=grammar_str,
+                grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
                 sample=row["left_phonetic"],
                 agreement_metadata=agreement_metadata,
             ),
             axis=1,
         )
+        warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
         df["json"] = df.apply(
             lambda row: ChatCompletionResponse(
                 user_prompt=row["prompt"],
@@ -733,7 +784,8 @@ def generate_experiment_batchfile(
         )
 
         model_pathsafe_name: str = model.replace("/", "_")
-        base_fname: str = f"inputs_{exp}_{model_pathsafe_name}_part{i+1}_of_{num_files}"
+        prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+        base_fname: str = f"inputs_{exp}{prompt_label}_{model_pathsafe_name}_part{i+1}_of_{num_files}"
         fname: str = f"{base_fname}_{fname_hash}.jsonl"
         fpath: Path = exp_batch_dir / fname
         log.info(f"Writing batch job to {fpath}")

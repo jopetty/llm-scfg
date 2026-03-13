@@ -31,6 +31,29 @@ FIG_HEIGHT_SINGLEROW_IN: float = 1.2
 FIG_HEIGHT_DOUBLEROW_DIFFAXES_IN: float = 2.8
 
 NICE_FORMATTER = mtick.EngFormatter(places=0, sep="")
+
+
+def format_kmb(value: float, pos: int | None = None) -> str:
+    abs_value = abs(value)
+    if abs_value >= 1_000_000_000:
+        scaled = value / 1_000_000_000
+        suffix = "B"
+    elif abs_value >= 1_000_000:
+        scaled = value / 1_000_000
+        suffix = "M"
+    elif abs_value >= 1_000:
+        scaled = value / 1_000
+        suffix = "k"
+    else:
+        scaled = value
+        suffix = ""
+
+    if scaled == int(scaled):
+        return f"{int(scaled)}{suffix}"
+    return f"{scaled:.1f}{suffix}"
+
+
+KMB_FORMATTER = mtick.FuncFormatter(format_kmb)
 PCT_FORMATTER = mtick.PercentFormatter(1.0)
 
 rcs = {

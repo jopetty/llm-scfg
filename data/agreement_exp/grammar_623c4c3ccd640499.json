@@ -1,0 +1,1401 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CVC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 4876,
+    "verbs": [
+      "taxdeqpus",
+      "bihjaj",
+      "ras",
+      "naz",
+      "lodfaxcur",
+      "kujyabhuz",
+      "xijros",
+      "qaqmez",
+      "yay",
+      "cihnig",
+      "wanhav",
+      "todtam pem",
+      "rebfay",
+      "nec",
+      "cud",
+      "mitvesxihjiy",
+      "gixbujdac",
+      "guq nab",
+      "yav",
+      "taq witgux cug"
+    ],
+    "nouns": [
+      "luswiv",
+      "demtenjahxed",
+      "mofkuwguhmuv",
+      "voq",
+      "begderbot",
+      "hegzukduq",
+      "cudduh",
+      "tuw",
+      "xiz",
+      "zaltufzuh",
+      "semjen",
+      "luh",
+      "kaq paxyuhrox",
+      "yupvucbickeb",
+      "yepxev",
+      "sof gam",
+      "gaq",
+      "wuvjelsutlep",
+      "pad",
+      "xex"
+    ],
+    "propns": [
+      "wabbuh",
+      "xamkov",
+      "rigyol",
+      "rew mez yar",
+      "qolwih",
+      "tuyxikxel",
+      "son",
+      "qadded",
+      "xaz tijkordac",
+      "bamdol peg"
+    ],
+    "prons": [
+      "hangih",
+      "ciflompah",
+      "wiz",
+      "rolqujyolgop",
+      "gon",
+      "qij"
+    ],
+    "adjs": [
+      "zov yabnimwoz",
+      "kij vekwol",
+      "qeptofqeb",
+      "vaf",
+      "zovkaq",
+      "web",
+      "sadwuyluh",
+      "higzezyad",
+      "wovhatpih",
+      "buywoy"
+    ],
+    "det_def": [
+      "bawkir",
+      "kuyvirwez"
+    ],
+    "det_indef": [
+      "tunsem",
+      "yemxacyud"
+    ],
+    "comps": [
+      "sokjow",
+      "xewbil"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "CVC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 4877,
+    "verbs": [
+      "jukbuqfingam",
+      "cav",
+      "yuf lif",
+      "taybijxab",
+      "jalgagsuytiz",
+      "ziwxen",
+      "veljad",
+      "juyvud",
+      "dow",
+      "qic",
+      "marsigxagrer",
+      "kof pen",
+      "diqlogqiygiy",
+      "wiqxoj",
+      "rozhay",
+      "hes",
+      "pewbuf",
+      "henjoz",
+      "sonhud",
+      "puz"
+    ],
+    "nouns": [
+      "vedzitvic",
+      "tigtam",
+      "tugwedpoyxof",
+      "pujpobpuqlil",
+      "sigsaj",
+      "rutyej",
+      "vocxoh quh",
+      "tex quq",
+      "valkinkan",
+      "jux",
+      "vavpennof",
+      "zar",
+      "tokmef",
+      "neq",
+      "kin",
+      "jarhes yeksik",
+      "soc",
+      "moz",
+      "momvib",
+      "yudyizsew gug"
+    ],
+    "propns": [
+      "lazfok",
+      "xekqoh",
+      "bet",
+      "bex qom tuhpax",
+      "xop",
+      "merfiy",
+      "fithezcalxow",
+      "luwcel",
+      "tox",
+      "tihnuj"
+    ],
+    "prons": [
+      "her xaf",
+      "jegyimqow",
+      "yibwathamwoz",
+      "palxok",
+      "kettog peswin",
+      "wap"
+    ],
+    "adjs": [
+      "zuztodyakwuj",
+      "bes",
+      "qeb",
+      "dabsey",
+      "pocnoqyazvak",
+      "fubzuj",
+      "zoywabhus",
+      "conxut",
+      "ropgonjim",
+      "depsaqhegjat"
+    ],
+    "det_def": [
+      "zok",
+      "zosqiw"
+    ],
+    "det_indef": [
+      "hoq",
+      "gok"
+    ],
+    "comps": [
+      "yecmethaz hah",
+      "xiftazxok"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": true,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [
+      {
+        "lemma": "jukbuqfingam",
+        "forms": {
+          "number=sg|person=1": "jukbuqfingamhul",
+          "number=pl|person=1": "jukbuqfingamked",
+          "number=sg|person=2": "jukbuqfingamhew",
+          "number=pl|person=2": "jukbuqfingamfiw",
+          "number=sg|person=3": "jukbuqfingamtub",
+          "number=pl|person=3": "jukbuqfingamfam"
+        }
+      },
+      {
+        "lemma": "cav",
+        "forms": {
+          "number=sg|person=1": "cavhul",
+          "number=pl|person=1": "cavked",
+          "number=sg|person=2": "cavhew",
+          "number=pl|person=2": "cavfiw",
+          "number=sg|person=3": "cavtub",
+          "number=pl|person=3": "cavfam"
+        }
+      },
+      {
+        "lemma": "yuf lif",
+        "forms": {
+          "number=sg|person=1": "yuf lifhul",
+          "number=pl|person=1": "yuf lifked",
+          "number=sg|person=2": "yuf lifhew",
+          "number=pl|person=2": "yuf liffiw",
+          "number=sg|person=3": "yuf liftub",
+          "number=pl|person=3": "yuf liffam"
+        }
+      },
+      {
+        "lemma": "taybijxab",
+        "forms": {
+          "number=sg|person=1": "taybijxabhul",
+          "number=pl|person=1": "taybijxabked",
+          "number=sg|person=2": "taybijxabhew",
+          "number=pl|person=2": "taybijxabfiw",
+          "number=sg|person=3": "taybijxabtub",
+          "number=pl|person=3": "taybijxabfam"
+        }
+      },
+      {
+        "lemma": "jalgagsuytiz",
+        "forms": {
+          "number=sg|person=1": "jalgagsuytizhul",
+          "number=pl|person=1": "jalgagsuytizked",
+          "number=sg|person=2": "jalgagsuytizhew",
+          "number=pl|person=2": "jalgagsuytizfiw",
+          "number=sg|person=3": "jalgagsuytiztub",
+          "number=pl|person=3": "jalgagsuytizfam"
+        }
+      },
+      {
+        "lemma": "ziwxen",
+        "forms": {
+          "number=sg|person=1": "ziwxenhul",
+          "number=pl|person=1": "ziwxenked",
+          "number=sg|person=2": "ziwxenhew",
+          "number=pl|person=2": "ziwxenfiw",
+          "number=sg|person=3": "ziwxentub",
+          "number=pl|person=3": "ziwxenfam"
+        }
+      },
+      {
+        "lemma": "veljad",
+        "forms": {
+          "number=sg|person=1": "veljadhul",
+          "number=pl|person=1": "veljadked",
+          "number=sg|person=2": "veljadhew",
+          "number=pl|person=2": "veljadfiw",
+          "number=sg|person=3": "veljadtub",
+          "number=pl|person=3": "veljadfam"
+        }
+      },
+      {
+        "lemma": "juyvud",
+        "forms": {
+          "number=sg|person=1": "juyvudhul",
+          "number=pl|person=1": "juyvudked",
+          "number=sg|person=2": "juyvudhew",
+          "number=pl|person=2": "juyvudfiw",
+          "number=sg|person=3": "juyvudtub",
+          "number=pl|person=3": "juyvudfam"
+        }
+      },
+      {
+        "lemma": "dow",
+        "forms": {
+          "number=sg|person=1": "dowhul",
+          "number=pl|person=1": "dowked",
+          "number=sg|person=2": "dowhew",
+          "number=pl|person=2": "dowfiw",
+          "number=sg|person=3": "dowtub",
+          "number=pl|person=3": "dowfam"
+        }
+      },
+      {
+        "lemma": "qic",
+        "forms": {
+          "number=sg|person=1": "qichul",
+          "number=pl|person=1": "qicked",
+          "number=sg|person=2": "qichew",
+          "number=pl|person=2": "qicfiw",
+          "number=sg|person=3": "qictub",
+          "number=pl|person=3": "qicfam"
+        }
+      },
+      {
+        "lemma": "marsigxagrer",
+        "forms": {
+          "number=sg|person=1": "marsigxagrerhul",
+          "number=pl|person=1": "marsigxagrerked",
+          "number=sg|person=2": "marsigxagrerhew",
+          "number=pl|person=2": "marsigxagrerfiw",
+          "number=sg|person=3": "marsigxagrertub",
+          "number=pl|person=3": "marsigxagrerfam"
+        }
+      },
+      {
+        "lemma": "kof pen",
+        "forms": {
+          "number=sg|person=1": "kof penhul",
+          "number=pl|person=1": "kof penked",
+          "number=sg|person=2": "kof penhew",
+          "number=pl|person=2": "kof penfiw",
+          "number=sg|person=3": "kof pentub",
+          "number=pl|person=3": "kof penfam"
+        }
+      },
+      {
+        "lemma": "diqlogqiygiy",
+        "forms": {
+          "number=sg|person=1": "diqlogqiygiyhul",
+          "number=pl|person=1": "diqlogqiygiyked",
+          "number=sg|person=2": "diqlogqiygiyhew",
+          "number=pl|person=2": "diqlogqiygiyfiw",
+          "number=sg|person=3": "diqlogqiygiytub",
+          "number=pl|person=3": "diqlogqiygiyfam"
+        }
+      },
+      {
+        "lemma": "wiqxoj",
+        "forms": {
+          "number=sg|person=1": "wiqxojhul",
+          "number=pl|person=1": "wiqxojked",
+          "number=sg|person=2": "wiqxojhew",
+          "number=pl|person=2": "wiqxojfiw",
+          "number=sg|person=3": "wiqxojtub",
+          "number=pl|person=3": "wiqxojfam"
+        }
+      },
+      {
+        "lemma": "rozhay",
+        "forms": {
+          "number=sg|person=1": "rozhayhul",
+          "number=pl|person=1": "rozhayked",
+          "number=sg|person=2": "rozhayhew",
+          "number=pl|person=2": "rozhayfiw",
+          "number=sg|person=3": "rozhaytub",
+          "number=pl|person=3": "rozhayfam"
+        }
+      },
+      {
+        "lemma": "hes",
+        "forms": {
+          "number=sg|person=1": "heshul",
+          "number=pl|person=1": "hesked",
+          "number=sg|person=2": "heshew",
+          "number=pl|person=2": "hesfiw",
+          "number=sg|person=3": "hestub",
+          "number=pl|person=3": "hesfam"
+        }
+      },
+      {
+        "lemma": "pewbuf",
+        "forms": {
+          "number=sg|person=1": "pewbufhul",
+          "number=pl|person=1": "pewbufked",
+          "number=sg|person=2": "pewbufhew",
+          "number=pl|person=2": "pewbuffiw",
+          "number=sg|person=3": "pewbuftub",
+          "number=pl|person=3": "pewbuffam"
+        }
+      },
+      {
+        "lemma": "henjoz",
+        "forms": {
+          "number=sg|person=1": "henjozhul",
+          "number=pl|person=1": "henjozked",
+          "number=sg|person=2": "henjozhew",
+          "number=pl|person=2": "henjozfiw",
+          "number=sg|person=3": "henjoztub",
+          "number=pl|person=3": "henjozfam"
+        }
+      },
+      {
+        "lemma": "sonhud",
+        "forms": {
+          "number=sg|person=1": "sonhudhul",
+          "number=pl|person=1": "sonhudked",
+          "number=sg|person=2": "sonhudhew",
+          "number=pl|person=2": "sonhudfiw",
+          "number=sg|person=3": "sonhudtub",
+          "number=pl|person=3": "sonhudfam"
+        }
+      },
+      {
+        "lemma": "puz",
+        "forms": {
+          "number=sg|person=1": "puzhul",
+          "number=pl|person=1": "puzked",
+          "number=sg|person=2": "puzhew",
+          "number=pl|person=2": "puzfiw",
+          "number=sg|person=3": "puztub",
+          "number=pl|person=3": "puzfam"
+        }
+      }
+    ],
+    "noun_paradigms": [
+      {
+        "lemma": "vedzitvic",
+        "forms": {
+          "number=sg": "vedzitvic",
+          "number=pl": "vedzitvicvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "tigtam",
+        "forms": {
+          "number=sg": "tigtam",
+          "number=pl": "tigtamvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "tugwedpoyxof",
+        "forms": {
+          "number=sg": "tugwedpoyxof",
+          "number=pl": "tugwedpoyxofvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "pujpobpuqlil",
+        "forms": {
+          "number=sg": "pujpobpuqlil",
+          "number=pl": "pujpobpuqlilvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "sigsaj",
+        "forms": {
+          "number=sg": "sigsaj",
+          "number=pl": "sigsajvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "rutyej",
+        "forms": {
+          "number=sg": "rutyej",
+          "number=pl": "rutyejvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "vocxoh quh",
+        "forms": {
+          "number=sg": "vocxoh quh",
+          "number=pl": "vocxoh quhvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "tex quq",
+        "forms": {
+          "number=sg": "tex quq",
+          "number=pl": "tex quqvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "valkinkan",
+        "forms": {
+          "number=sg": "valkinkan",
+          "number=pl": "valkinkanvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "jux",
+        "forms": {
+          "number=sg": "jux",
+          "number=pl": "juxvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "vavpennof",
+        "forms": {
+          "number=sg": "vavpennof",
+          "number=pl": "vavpennofvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "zar",
+        "forms": {
+          "number=sg": "zar",
+          "number=pl": "zarvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "tokmef",
+        "forms": {
+          "number=sg": "tokmef",
+          "number=pl": "tokmefvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "neq",
+        "forms": {
+          "number=sg": "neq",
+          "number=pl": "neqvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "kin",
+        "forms": {
+          "number=sg": "kin",
+          "number=pl": "kinvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "jarhes yeksik",
+        "forms": {
+          "number=sg": "jarhes yeksik",
+          "number=pl": "jarhes yeksikvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "soc",
+        "forms": {
+          "number=sg": "soc",
+          "number=pl": "socvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "moz",
+        "forms": {
+          "number=sg": "moz",
+          "number=pl": "mozvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "momvib",
+        "forms": {
+          "number=sg": "momvib",
+          "number=pl": "momvibvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      },
+      {
+        "lemma": "yudyizsew gug",
+        "forms": {
+          "number=sg": "yudyizsew gug",
+          "number=pl": "yudyizsew gugvac"
+        },
+        "features": {
+          "person": "3"
+        }
+      }
+    ],
+    "propn_paradigms": [
+      {
+        "lemma": "lazfok",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "xekqoh",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "bet",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "bex qom tuhpax",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "xop",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "merfiy",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "fithezcalxow",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "luwcel",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "tox",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      },
+      {
+        "lemma": "tihnuj",
+        "features": {
+          "person": "3",
+          "number": "sg"
+        }
+      }
+    ],
+    "pronoun_paradigms": [
+      {
+        "features": {
+          "person": "1",
+          "number": "sg"
+        },
+        "form": "her xaf"
+      },
+      {
+        "features": {
+          "person": "1",
+          "number": "pl"
+        },
+        "form": "jegyimqow"
+      },
+      {
+        "features": {
+          "person": "2",
+          "number": "sg"
+        },
+        "form": "yibwathamwoz"
+      },
+      {
+        "features": {
+          "person": "2",
+          "number": "pl"
+        },
+        "form": "palxok"
+      },
+      {
+        "features": {
+          "person": "3",
+          "number": "sg"
+        },
+        "form": "kettog peswin"
+      },
+      {
+        "features": {
+          "person": "3",
+          "number": "pl"
+        },
+        "form": "wap"
+      }
+    ],
+    "agreement_suffixes": {
+      "noun_plural": "vac",
+      "number=sg|person=1": "hul",
+      "number=pl|person=1": "ked",
+      "number=sg|person=2": "hew",
+      "number=pl|person=2": "fiw",
+      "number=sg|person=3": "tub",
+      "number=pl|person=3": "fam"
+    },
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "623c4c3ccd640499",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, NP_SUBJ TBAR>\nTBAR -> <T VP, T VP>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR,  VBAR>\nVBAR -> <V OBJ_PHRASE, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDP -> <DET NP, DET NP>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP N_HEAD, AdjP N_HEAD>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET -> <'bawkir', 'zok'>\nDET -> <'kuyvirwez', 'zosqiw'>\nT -> <'∅_T_pres', '∅_T_pres'>\nV1[lemma] -> <'taxdeqpus', 'jukbuqfingam'>\nV1[1.sg] -> <'taxdeqpus', 'jukbuqfingamhul'>\nV1[1.pl] -> <'taxdeqpus', 'jukbuqfingamked'>\nV1[2.sg] -> <'taxdeqpus', 'jukbuqfingamhew'>\nV1[2.pl] -> <'taxdeqpus', 'jukbuqfingamfiw'>\nV1[3.sg] -> <'taxdeqpus', 'jukbuqfingamtub'>\nV1[3.pl] -> <'taxdeqpus', 'jukbuqfingamfam'>\nV2[lemma] -> <'bihjaj', 'cav'>\nV2[1.sg] -> <'bihjaj', 'cavhul'>\nV2[1.pl] -> <'bihjaj', 'cavked'>\nV2[2.sg] -> <'bihjaj', 'cavhew'>\nV2[2.pl] -> <'bihjaj', 'cavfiw'>\nV2[3.sg] -> <'bihjaj', 'cavtub'>\nV2[3.pl] -> <'bihjaj', 'cavfam'>\nV3[lemma] -> <'ras', 'yuf lif'>\nV3[1.sg] -> <'ras', 'yuf lifhul'>\nV3[1.pl] -> <'ras', 'yuf lifked'>\nV3[2.sg] -> <'ras', 'yuf lifhew'>\nV3[2.pl] -> <'ras', 'yuf liffiw'>\nV3[3.sg] -> <'ras', 'yuf liftub'>\nV3[3.pl] -> <'ras', 'yuf liffam'>\nV4[lemma] -> <'naz', 'taybijxab'>\nV4[1.sg] -> <'naz', 'taybijxabhul'>\nV4[1.pl] -> <'naz', 'taybijxabked'>\nV4[2.sg] -> <'naz', 'taybijxabhew'>\nV4[2.pl] -> <'naz', 'taybijxabfiw'>\nV4[3.sg] -> <'naz', 'taybijxabtub'>\nV4[3.pl] -> <'naz', 'taybijxabfam'>\nV5[lemma] -> <'lodfaxcur', 'jalgagsuytiz'>\nV5[1.sg] -> <'lodfaxcur', 'jalgagsuytizhul'>\nV5[1.pl] -> <'lodfaxcur', 'jalgagsuytizked'>\nV5[2.sg] -> <'lodfaxcur', 'jalgagsuytizhew'>\nV5[2.pl] -> <'lodfaxcur', 'jalgagsuytizfiw'>\nV5[3.sg] -> <'lodfaxcur', 'jalgagsuytiztub'>\nV5[3.pl] -> <'lodfaxcur', 'jalgagsuytizfam'>\nV6[lemma] -> <'kujyabhuz', 'ziwxen'>\nV6[1.sg] -> <'kujyabhuz', 'ziwxenhul'>\nV6[1.pl] -> <'kujyabhuz', 'ziwxenked'>\nV6[2.sg] -> <'kujyabhuz', 'ziwxenhew'>\nV6[2.pl] -> <'kujyabhuz', 'ziwxenfiw'>\nV6[3.sg] -> <'kujyabhuz', 'ziwxentub'>\nV6[3.pl] -> <'kujyabhuz', 'ziwxenfam'>\nV7[lemma] -> <'xijros', 'veljad'>\nV7[1.sg] -> <'xijros', 'veljadhul'>\nV7[1.pl] -> <'xijros', 'veljadked'>\nV7[2.sg] -> <'xijros', 'veljadhew'>\nV7[2.pl] -> <'xijros', 'veljadfiw'>\nV7[3.sg] -> <'xijros', 'veljadtub'>\nV7[3.pl] -> <'xijros', 'veljadfam'>\nV8[lemma] -> <'qaqmez', 'juyvud'>\nV8[1.sg] -> <'qaqmez', 'juyvudhul'>\nV8[1.pl] -> <'qaqmez', 'juyvudked'>\nV8[2.sg] -> <'qaqmez', 'juyvudhew'>\nV8[2.pl] -> <'qaqmez', 'juyvudfiw'>\nV8[3.sg] -> <'qaqmez', 'juyvudtub'>\nV8[3.pl] -> <'qaqmez', 'juyvudfam'>\nV9[lemma] -> <'yay', 'dow'>\nV9[1.sg] -> <'yay', 'dowhul'>\nV9[1.pl] -> <'yay', 'dowked'>\nV9[2.sg] -> <'yay', 'dowhew'>\nV9[2.pl] -> <'yay', 'dowfiw'>\nV9[3.sg] -> <'yay', 'dowtub'>\nV9[3.pl] -> <'yay', 'dowfam'>\nV10[lemma] -> <'cihnig', 'qic'>\nV10[1.sg] -> <'cihnig', 'qichul'>\nV10[1.pl] -> <'cihnig', 'qicked'>\nV10[2.sg] -> <'cihnig', 'qichew'>\nV10[2.pl] -> <'cihnig', 'qicfiw'>\nV10[3.sg] -> <'cihnig', 'qictub'>\nV10[3.pl] -> <'cihnig', 'qicfam'>\nV11[lemma] -> <'wanhav', 'marsigxagrer'>\nV11[1.sg] -> <'wanhav', 'marsigxagrerhul'>\nV11[1.pl] -> <'wanhav', 'marsigxagrerked'>\nV11[2.sg] -> <'wanhav', 'marsigxagrerhew'>\nV11[2.pl] -> <'wanhav', 'marsigxagrerfiw'>\nV11[3.sg] -> <'wanhav', 'marsigxagrertub'>\nV11[3.pl] -> <'wanhav', 'marsigxagrerfam'>\nV12[lemma] -> <'todtam pem', 'kof pen'>\nV12[1.sg] -> <'todtam pem', 'kof penhul'>\nV12[1.pl] -> <'todtam pem', 'kof penked'>\nV12[2.sg] -> <'todtam pem', 'kof penhew'>\nV12[2.pl] -> <'todtam pem', 'kof penfiw'>\nV12[3.sg] -> <'todtam pem', 'kof pentub'>\nV12[3.pl] -> <'todtam pem', 'kof penfam'>\nV13[lemma] -> <'rebfay', 'diqlogqiygiy'>\nV13[1.sg] -> <'rebfay', 'diqlogqiygiyhul'>\nV13[1.pl] -> <'rebfay', 'diqlogqiygiyked'>\nV13[2.sg] -> <'rebfay', 'diqlogqiygiyhew'>\nV13[2.pl] -> <'rebfay', 'diqlogqiygiyfiw'>\nV13[3.sg] -> <'rebfay', 'diqlogqiygiytub'>\nV13[3.pl] -> <'rebfay', 'diqlogqiygiyfam'>\nV14[lemma] -> <'nec', 'wiqxoj'>\nV14[1.sg] -> <'nec', 'wiqxojhul'>\nV14[1.pl] -> <'nec', 'wiqxojked'>\nV14[2.sg] -> <'nec', 'wiqxojhew'>\nV14[2.pl] -> <'nec', 'wiqxojfiw'>\nV14[3.sg] -> <'nec', 'wiqxojtub'>\nV14[3.pl] -> <'nec', 'wiqxojfam'>\nV15[lemma] -> <'cud', 'rozhay'>\nV15[1.sg] -> <'cud', 'rozhayhul'>\nV15[1.pl] -> <'cud', 'rozhayked'>\nV15[2.sg] -> <'cud', 'rozhayhew'>\nV15[2.pl] -> <'cud', 'rozhayfiw'>\nV15[3.sg] -> <'cud', 'rozhaytub'>\nV15[3.pl] -> <'cud', 'rozhayfam'>\nV16[lemma] -> <'mitvesxihjiy', 'hes'>\nV16[1.sg] -> <'mitvesxihjiy', 'heshul'>\nV16[1.pl] -> <'mitvesxihjiy', 'hesked'>\nV16[2.sg] -> <'mitvesxihjiy', 'heshew'>\nV16[2.pl] -> <'mitvesxihjiy', 'hesfiw'>\nV16[3.sg] -> <'mitvesxihjiy', 'hestub'>\nV16[3.pl] -> <'mitvesxihjiy', 'hesfam'>\nV17[lemma] -> <'gixbujdac', 'pewbuf'>\nV17[1.sg] -> <'gixbujdac', 'pewbufhul'>\nV17[1.pl] -> <'gixbujdac', 'pewbufked'>\nV17[2.sg] -> <'gixbujdac', 'pewbufhew'>\nV17[2.pl] -> <'gixbujdac', 'pewbuffiw'>\nV17[3.sg] -> <'gixbujdac', 'pewbuftub'>\nV17[3.pl] -> <'gixbujdac', 'pewbuffam'>\nV18[lemma] -> <'guq nab', 'henjoz'>\nV18[1.sg] -> <'guq nab', 'henjozhul'>\nV18[1.pl] -> <'guq nab', 'henjozked'>\nV18[2.sg] -> <'guq nab', 'henjozhew'>\nV18[2.pl] -> <'guq nab', 'henjozfiw'>\nV18[3.sg] -> <'guq nab', 'henjoztub'>\nV18[3.pl] -> <'guq nab', 'henjozfam'>\nV19[lemma] -> <'yav', 'sonhud'>\nV19[1.sg] -> <'yav', 'sonhudhul'>\nV19[1.pl] -> <'yav', 'sonhudked'>\nV19[2.sg] -> <'yav', 'sonhudhew'>\nV19[2.pl] -> <'yav', 'sonhudfiw'>\nV19[3.sg] -> <'yav', 'sonhudtub'>\nV19[3.pl] -> <'yav', 'sonhudfam'>\nV20[lemma] -> <'taq witgux cug', 'puz'>\nV20[1.sg] -> <'taq witgux cug', 'puzhul'>\nV20[1.pl] -> <'taq witgux cug', 'puzked'>\nV20[2.sg] -> <'taq witgux cug', 'puzhew'>\nV20[2.pl] -> <'taq witgux cug', 'puzfiw'>\nV20[3.sg] -> <'taq witgux cug', 'puztub'>\nV20[3.pl] -> <'taq witgux cug', 'puzfam'>\nN1[lemma] -> <'luswiv', 'vedzitvic'>\nN1[sg] -> <'luswiv', 'vedzitvic'>\nN1[pl] -> <'luswiv', 'vedzitvicvac'>\nN2[lemma] -> <'demtenjahxed', 'tigtam'>\nN2[sg] -> <'demtenjahxed', 'tigtam'>\nN2[pl] -> <'demtenjahxed', 'tigtamvac'>\nN3[lemma] -> <'mofkuwguhmuv', 'tugwedpoyxof'>\nN3[sg] -> <'mofkuwguhmuv', 'tugwedpoyxof'>\nN3[pl] -> <'mofkuwguhmuv', 'tugwedpoyxofvac'>\nN4[lemma] -> <'voq', 'pujpobpuqlil'>\nN4[sg] -> <'voq', 'pujpobpuqlil'>\nN4[pl] -> <'voq', 'pujpobpuqlilvac'>\nN5[lemma] -> <'begderbot', 'sigsaj'>\nN5[sg] -> <'begderbot', 'sigsaj'>\nN5[pl] -> <'begderbot', 'sigsajvac'>\nN6[lemma] -> <'hegzukduq', 'rutyej'>\nN6[sg] -> <'hegzukduq', 'rutyej'>\nN6[pl] -> <'hegzukduq', 'rutyejvac'>\nN7[lemma] -> <'cudduh', 'vocxoh quh'>\nN7[sg] -> <'cudduh', 'vocxoh quh'>\nN7[pl] -> <'cudduh', 'vocxoh quhvac'>\nN8[lemma] -> <'tuw', 'tex quq'>\nN8[sg] -> <'tuw', 'tex quq'>\nN8[pl] -> <'tuw', 'tex quqvac'>\nN9[lemma] -> <'xiz', 'valkinkan'>\nN9[sg] -> <'xiz', 'valkinkan'>\nN9[pl] -> <'xiz', 'valkinkanvac'>\nN10[lemma] -> <'zaltufzuh', 'jux'>\nN10[sg] -> <'zaltufzuh', 'jux'>\nN10[pl] -> <'zaltufzuh', 'juxvac'>\nN11[lemma] -> <'semjen', 'vavpennof'>\nN11[sg] -> <'semjen', 'vavpennof'>\nN11[pl] -> <'semjen', 'vavpennofvac'>\nN12[lemma] -> <'luh', 'zar'>\nN12[sg] -> <'luh', 'zar'>\nN12[pl] -> <'luh', 'zarvac'>\nN13[lemma] -> <'kaq paxyuhrox', 'tokmef'>\nN13[sg] -> <'kaq paxyuhrox', 'tokmef'>\nN13[pl] -> <'kaq paxyuhrox', 'tokmefvac'>\nN14[lemma] -> <'yupvucbickeb', 'neq'>\nN14[sg] -> <'yupvucbickeb', 'neq'>\nN14[pl] -> <'yupvucbickeb', 'neqvac'>\nN15[lemma] -> <'yepxev', 'kin'>\nN15[sg] -> <'yepxev', 'kin'>\nN15[pl] -> <'yepxev', 'kinvac'>\nN16[lemma] -> <'sof gam', 'jarhes yeksik'>\nN16[sg] -> <'sof gam', 'jarhes yeksik'>\nN16[pl] -> <'sof gam', 'jarhes yeksikvac'>\nN17[lemma] -> <'gaq', 'soc'>\nN17[sg] -> <'gaq', 'soc'>\nN17[pl] -> <'gaq', 'socvac'>\nN18[lemma] -> <'wuvjelsutlep', 'moz'>\nN18[sg] -> <'wuvjelsutlep', 'moz'>\nN18[pl] -> <'wuvjelsutlep', 'mozvac'>\nN19[lemma] -> <'pad', 'momvib'>\nN19[sg] -> <'pad', 'momvib'>\nN19[pl] -> <'pad', 'momvibvac'>\nN20[lemma] -> <'xex', 'yudyizsew gug'>\nN20[sg] -> <'xex', 'yudyizsew gug'>\nN20[pl] -> <'xex', 'yudyizsew gugvac'>\nPROPN1[3.sg] -> <'wabbuh', 'lazfok'>\nPROPN2[3.sg] -> <'xamkov', 'xekqoh'>\nPROPN3[3.sg] -> <'rigyol', 'bet'>\nPROPN4[3.sg] -> <'rew mez yar', 'bex qom tuhpax'>\nPROPN5[3.sg] -> <'qolwih', 'xop'>\nPROPN6[3.sg] -> <'tuyxikxel', 'merfiy'>\nPROPN7[3.sg] -> <'son', 'fithezcalxow'>\nPROPN8[3.sg] -> <'qadded', 'luwcel'>\nPROPN9[3.sg] -> <'xaz tijkordac', 'tox'>\nPROPN10[3.sg] -> <'bamdol peg', 'tihnuj'>\nPRON[1.sg] -> <'hangih', 'her xaf'>\nPRON[1.pl] -> <'ciflompah', 'jegyimqow'>\nPRON[2.sg] -> <'wiz', 'yibwathamwoz'>\nPRON[2.pl] -> <'rolqujyolgop', 'palxok'>\nPRON[3.sg] -> <'gon', 'kettog peswin'>\nPRON[3.pl] -> <'qij', 'wap'>\nADJ -> <'zov yabnimwoz', 'zuztodyakwuj'>\nADJ -> <'kij vekwol', 'bes'>\nADJ -> <'qeptofqeb', 'qeb'>\nADJ -> <'vaf', 'dabsey'>\nADJ -> <'zovkaq', 'pocnoqyazvak'>\nADJ -> <'web', 'fubzuj'>\nADJ -> <'sadwuyluh', 'zoywabhus'>\nADJ -> <'higzezyad', 'conxut'>\nADJ -> <'wovhatpih', 'ropgonjim'>\nADJ -> <'buywoy', 'depsaqhegjat'>\nC -> <'sokjow', 'yecmethaz hah'>\nC -> <'xewbil', 'xiftazxok'>\nCNULL -> <'∅', '∅'>\n# Agreement metadata:\n# a.active_axes=number,person latent_gender=False realize_gender=False\n# b.active_axes=number,person latent_gender=False realize_gender=False\n# Verb paradigms are realized via synthetic suffixation keyed by person/number.",
+  "n_rules": 18,
+  "n_words": 192,
+  "agreement_metadata": {
+    "enabled": true,
+    "a": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    },
+    "b": {
+      "config": {
+        "enabled": true,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {
+        "noun_plural": "vac",
+        "number=sg|person=1": "hul",
+        "number=pl|person=1": "ked",
+        "number=sg|person=2": "hew",
+        "number=pl|person=2": "fiw",
+        "number=sg|person=3": "tub",
+        "number=pl|person=3": "fam"
+      },
+      "pronoun_paradigms": [
+        {
+          "features": {
+            "person": "1",
+            "number": "sg"
+          },
+          "form": "her xaf"
+        },
+        {
+          "features": {
+            "person": "1",
+            "number": "pl"
+          },
+          "form": "jegyimqow"
+        },
+        {
+          "features": {
+            "person": "2",
+            "number": "sg"
+          },
+          "form": "yibwathamwoz"
+        },
+        {
+          "features": {
+            "person": "2",
+            "number": "pl"
+          },
+          "form": "palxok"
+        },
+        {
+          "features": {
+            "person": "3",
+            "number": "sg"
+          },
+          "form": "kettog peswin"
+        },
+        {
+          "features": {
+            "person": "3",
+            "number": "pl"
+          },
+          "form": "wap"
+        }
+      ],
+      "verb_paradigms": [
+        {
+          "lemma": "jukbuqfingam",
+          "forms": {
+            "number=sg|person=1": "jukbuqfingamhul",
+            "number=pl|person=1": "jukbuqfingamked",
+            "number=sg|person=2": "jukbuqfingamhew",
+            "number=pl|person=2": "jukbuqfingamfiw",
+            "number=sg|person=3": "jukbuqfingamtub",
+            "number=pl|person=3": "jukbuqfingamfam"
+          }
+        },
+        {
+          "lemma": "cav",
+          "forms": {
+            "number=sg|person=1": "cavhul",
+            "number=pl|person=1": "cavked",
+            "number=sg|person=2": "cavhew",
+            "number=pl|person=2": "cavfiw",
+            "number=sg|person=3": "cavtub",
+            "number=pl|person=3": "cavfam"
+          }
+        },
+        {
+          "lemma": "yuf lif",
+          "forms": {
+            "number=sg|person=1": "yuf lifhul",
+            "number=pl|person=1": "yuf lifked",
+            "number=sg|person=2": "yuf lifhew",
+            "number=pl|person=2": "yuf liffiw",
+            "number=sg|person=3": "yuf liftub",
+            "number=pl|person=3": "yuf liffam"
+          }
+        },
+        {
+          "lemma": "taybijxab",
+          "forms": {
+            "number=sg|person=1": "taybijxabhul",
+            "number=pl|person=1": "taybijxabked",
+            "number=sg|person=2": "taybijxabhew",
+            "number=pl|person=2": "taybijxabfiw",
+            "number=sg|person=3": "taybijxabtub",
+            "number=pl|person=3": "taybijxabfam"
+          }
+        },
+        {
+          "lemma": "jalgagsuytiz",
+          "forms": {
+            "number=sg|person=1": "jalgagsuytizhul",
+            "number=pl|person=1": "jalgagsuytizked",
+            "number=sg|person=2": "jalgagsuytizhew",
+            "number=pl|person=2": "jalgagsuytizfiw",
+            "number=sg|person=3": "jalgagsuytiztub",
+            "number=pl|person=3": "jalgagsuytizfam"
+          }
+        },
+        {
+          "lemma": "ziwxen",
+          "forms": {
+            "number=sg|person=1": "ziwxenhul",
+            "number=pl|person=1": "ziwxenked",
+            "number=sg|person=2": "ziwxenhew",
+            "number=pl|person=2": "ziwxenfiw",
+            "number=sg|person=3": "ziwxentub",
+            "number=pl|person=3": "ziwxenfam"
+          }
+        },
+        {
+          "lemma": "veljad",
+          "forms": {
+            "number=sg|person=1": "veljadhul",
+            "number=pl|person=1": "veljadked",
+            "number=sg|person=2": "veljadhew",
+            "number=pl|person=2": "veljadfiw",
+            "number=sg|person=3": "veljadtub",
+            "number=pl|person=3": "veljadfam"
+          }
+        },
+        {
+          "lemma": "juyvud",
+          "forms": {
+            "number=sg|person=1": "juyvudhul",
+            "number=pl|person=1": "juyvudked",
+            "number=sg|person=2": "juyvudhew",
+            "number=pl|person=2": "juyvudfiw",
+            "number=sg|person=3": "juyvudtub",
+            "number=pl|person=3": "juyvudfam"
+          }
+        },
+        {
+          "lemma": "dow",
+          "forms": {
+            "number=sg|person=1": "dowhul",
+            "number=pl|person=1": "dowked",
+            "number=sg|person=2": "dowhew",
+            "number=pl|person=2": "dowfiw",
+            "number=sg|person=3": "dowtub",
+            "number=pl|person=3": "dowfam"
+          }
+        },
+        {
+          "lemma": "qic",
+          "forms": {
+            "number=sg|person=1": "qichul",
+            "number=pl|person=1": "qicked",
+            "number=sg|person=2": "qichew",
+            "number=pl|person=2": "qicfiw",
+            "number=sg|person=3": "qictub",
+            "number=pl|person=3": "qicfam"
+          }
+        },
+        {
+          "lemma": "marsigxagrer",
+          "forms": {
+            "number=sg|person=1": "marsigxagrerhul",
+            "number=pl|person=1": "marsigxagrerked",
+            "number=sg|person=2": "marsigxagrerhew",
+            "number=pl|person=2": "marsigxagrerfiw",
+            "number=sg|person=3": "marsigxagrertub",
+            "number=pl|person=3": "marsigxagrerfam"
+          }
+        },
+        {
+          "lemma": "kof pen",
+          "forms": {
+            "number=sg|person=1": "kof penhul",
+            "number=pl|person=1": "kof penked",
+            "number=sg|person=2": "kof penhew",
+            "number=pl|person=2": "kof penfiw",
+            "number=sg|person=3": "kof pentub",
+            "number=pl|person=3": "kof penfam"
+          }
+        },
+        {
+          "lemma": "diqlogqiygiy",
+          "forms": {
+            "number=sg|person=1": "diqlogqiygiyhul",
+            "number=pl|person=1": "diqlogqiygiyked",
+            "number=sg|person=2": "diqlogqiygiyhew",
+            "number=pl|person=2": "diqlogqiygiyfiw",
+            "number=sg|person=3": "diqlogqiygiytub",
+            "number=pl|person=3": "diqlogqiygiyfam"
+          }
+        },
+        {
+          "lemma": "wiqxoj",
+          "forms": {
+            "number=sg|person=1": "wiqxojhul",
+            "number=pl|person=1": "wiqxojked",
+            "number=sg|person=2": "wiqxojhew",
+            "number=pl|person=2": "wiqxojfiw",
+            "number=sg|person=3": "wiqxojtub",
+            "number=pl|person=3": "wiqxojfam"
+          }
+        },
+        {
+          "lemma": "rozhay",
+          "forms": {
+            "number=sg|person=1": "rozhayhul",
+            "number=pl|person=1": "rozhayked",
+            "number=sg|person=2": "rozhayhew",
+            "number=pl|person=2": "rozhayfiw",
+            "number=sg|person=3": "rozhaytub",
+            "number=pl|person=3": "rozhayfam"
+          }
+        },
+        {
+          "lemma": "hes",
+          "forms": {
+            "number=sg|person=1": "heshul",
+            "number=pl|person=1": "hesked",
+            "number=sg|person=2": "heshew",
+            "number=pl|person=2": "hesfiw",
+            "number=sg|person=3": "hestub",
+            "number=pl|person=3": "hesfam"
+          }
+        },
+        {
+          "lemma": "pewbuf",
+          "forms": {
+            "number=sg|person=1": "pewbufhul",
+            "number=pl|person=1": "pewbufked",
+            "number=sg|person=2": "pewbufhew",
+            "number=pl|person=2": "pewbuffiw",
+            "number=sg|person=3": "pewbuftub",
+            "number=pl|person=3": "pewbuffam"
+          }
+        },
+        {
+          "lemma": "henjoz",
+          "forms": {
+            "number=sg|person=1": "henjozhul",
+            "number=pl|person=1": "henjozked",
+            "number=sg|person=2": "henjozhew",
+            "number=pl|person=2": "henjozfiw",
+            "number=sg|person=3": "henjoztub",
+            "number=pl|person=3": "henjozfam"
+          }
+        },
+        {
+          "lemma": "sonhud",
+          "forms": {
+            "number=sg|person=1": "sonhudhul",
+            "number=pl|person=1": "sonhudked",
+            "number=sg|person=2": "sonhudhew",
+            "number=pl|person=2": "sonhudfiw",
+            "number=sg|person=3": "sonhudtub",
+            "number=pl|person=3": "sonhudfam"
+          }
+        },
+        {
+          "lemma": "puz",
+          "forms": {
+            "number=sg|person=1": "puzhul",
+            "number=pl|person=1": "puzked",
+            "number=sg|person=2": "puzhew",
+            "number=pl|person=2": "puzfiw",
+            "number=sg|person=3": "puztub",
+            "number=pl|person=3": "puzfam"
+          }
+        }
+      ],
+      "noun_paradigms": [
+        {
+          "lemma": "vedzitvic",
+          "forms": {
+            "number=sg": "vedzitvic",
+            "number=pl": "vedzitvicvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "tigtam",
+          "forms": {
+            "number=sg": "tigtam",
+            "number=pl": "tigtamvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "tugwedpoyxof",
+          "forms": {
+            "number=sg": "tugwedpoyxof",
+            "number=pl": "tugwedpoyxofvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "pujpobpuqlil",
+          "forms": {
+            "number=sg": "pujpobpuqlil",
+            "number=pl": "pujpobpuqlilvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "sigsaj",
+          "forms": {
+            "number=sg": "sigsaj",
+            "number=pl": "sigsajvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "rutyej",
+          "forms": {
+            "number=sg": "rutyej",
+            "number=pl": "rutyejvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "vocxoh quh",
+          "forms": {
+            "number=sg": "vocxoh quh",
+            "number=pl": "vocxoh quhvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "tex quq",
+          "forms": {
+            "number=sg": "tex quq",
+            "number=pl": "tex quqvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "valkinkan",
+          "forms": {
+            "number=sg": "valkinkan",
+            "number=pl": "valkinkanvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "jux",
+          "forms": {
+            "number=sg": "jux",
+            "number=pl": "juxvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "vavpennof",
+          "forms": {
+            "number=sg": "vavpennof",
+            "number=pl": "vavpennofvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "zar",
+          "forms": {
+            "number=sg": "zar",
+            "number=pl": "zarvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "tokmef",
+          "forms": {
+            "number=sg": "tokmef",
+            "number=pl": "tokmefvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "neq",
+          "forms": {
+            "number=sg": "neq",
+            "number=pl": "neqvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "kin",
+          "forms": {
+            "number=sg": "kin",
+            "number=pl": "kinvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "jarhes yeksik",
+          "forms": {
+            "number=sg": "jarhes yeksik",
+            "number=pl": "jarhes yeksikvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "soc",
+          "forms": {
+            "number=sg": "soc",
+            "number=pl": "socvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "moz",
+          "forms": {
+            "number=sg": "moz",
+            "number=pl": "mozvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "momvib",
+          "forms": {
+            "number=sg": "momvib",
+            "number=pl": "momvibvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        },
+        {
+          "lemma": "yudyizsew gug",
+          "forms": {
+            "number=sg": "yudyizsew gug",
+            "number=pl": "yudyizsew gugvac"
+          },
+          "features": {
+            "person": "3"
+          }
+        }
+      ],
+      "propn_paradigms": [
+        {
+          "lemma": "lazfok",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "xekqoh",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "bet",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "bex qom tuhpax",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "xop",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "merfiy",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "fithezcalxow",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "luwcel",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "tox",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        },
+        {
+          "lemma": "tihnuj",
+          "features": {
+            "person": "3",
+            "number": "sg"
+          }
+        }
+      ]
+    }
+  }
+}
