@@ -6,7 +6,7 @@ import pathlib
 import random
 import secrets
 from hashlib import blake2b
-from typing import Dict, Union
+from typing import Any, Dict, Union
 
 import fire
 import numpy as np
@@ -35,12 +35,315 @@ DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
 
 GPT_MESSAGE_TOKEN_LIMIT = 272_000
+DEFAULT_LARGE_GRAMMAR_SIZES = [25, 50, 100, 1_000, 5_000, 7_500, 10_000]
+
+ORTHOGRAPHY_LABELS = {
+    "latin": "Latin",
+    "latin_diacritic": "Latin with diacritics",
+    "cyrillic": "Cyrillic",
+    "hebrew": "Hebrew",
+    "yiddish": "Hebrew",
+    "hebrew_unpointed": "Hebrew without nikkud",
+}
 
 
 def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_000) -> int:
     payload = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str)
     digest = blake2b(payload.encode("utf-8"), digest_size=8).digest()
     return base_seed + (int.from_bytes(digest, "big") % modulus)
+
+
+def experiment_dir(exp_name: str) -> Path:
+    return DATA_DIR / f"{exp_name}_exp"
+
+
+def _write_experiment_grammar_index(
+    exp_dir: Path,
+    exp_name: str,
+    grammar_names: list[str],
+) -> None:
+    with open(exp_dir / f"{exp_name}_grammars.txt", "w") as handle:
+        for name in grammar_names:
+            handle.write(f"{name}\n")
+
+
+def _load_first_sample(exp_dir: Path, grammar_name: str) -> dict[str, Any]:
+    with open(exp_dir / f"samples_{grammar_name}.jsonl", "r") as handle:
+        return json.loads(handle.readline())
+
+
+def _orthography_label(orthography: str) -> str:
+    return ORTHOGRAPHY_LABELS.get(orthography, orthography.replace("_", " ").title())
+
+
+def _wordorder_label(head_initial: bool, spec_initial: bool) -> str:
+    if head_initial and spec_initial:
+        return "Target matches the source order"
+    if not head_initial and spec_initial:
+        return "Target is head-final, spec-initial"
+    if not head_initial and not spec_initial:
+        return "Target is head-final, spec-final"
+    if head_initial and not spec_initial:
+        return "Target is head-initial, spec-final"
+    return f"target head_initial={head_initial}, spec_initial={spec_initial}"
+
+
+def _write_experiment_readme(
+    exp_name: str,
+    title: str,
+    overview: str,
+    matrix_items: list[tuple[str, str]],
+    condition_examples: list[dict[str, str]],
+    regeneration_command: str,
+) -> None:
+    exp_dir = experiment_dir(exp_name)
+    lines = [
+        f"# {title}",
+        "",
+        overview,
+        "",
+        "## Experimental Matrix",
+        "",
+    ]
+    for key, value in matrix_items:
+        lines.append(f"- {key}: {value}")
+
+    lines.extend(
+        [
+            "",
+            "## Regeneration",
+            "",
+            "```bash",
+            regeneration_command,
+            "```",
+            "",
+            "## Condition Examples",
+            "",
+            "Examples use the `left_phonetic` and `right_phonetic` surface forms from the sample JSONL files.",
+            "",
+        ]
+    )
+
+    for example in condition_examples:
+        lines.extend(
+            [
+                f"### {example['title']}",
+                "",
+                f"- condition: {example['condition']}",
+                f"- grammar: `{example['grammar_name']}`",
+                f"- example left: `{example['left']}`",
+                f"- example right: `{example['right']}`",
+                "",
+            ]
+        )
+
+    with open(exp_dir / "README.md", "w") as handle:
+        handle.write("\n".join(lines).rstrip() + "\n")
+
+
+def _create_orthography_dataset(
+    exp_name: str,
+    title: str,
+    overview: str,
+    grammar_sizes: list[int],
+    target_orthographies: list[str],
+    max_depth: int,
+    n_grammars_per_size: int,
+    n_sentences_per_depth: int,
+) -> None:
+    syllable_structure = "C*VC"
+    exp_dir = experiment_dir(exp_name)
+    exp_dir.mkdir(parents=True, exist_ok=True)
+
+    grammar_names: list[str] = []
+    example_grammars: dict[str, tuple[str, int]] = {}
+
+    for orthography in target_orthographies:
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = deterministic_seed(exp_name, orthography, g_size, index)
+                grammar_name = create_grammar(
+                    rng_seed=g_seed,
+                    syllable_structure_a=syllable_structure,
+                    syllable_structure_b=syllable_structure,
+                    head_initial_a=True,
+                    head_initial_b=True,
+                    spec_initial_a=True,
+                    spec_initial_b=True,
+                    pro_drop_a=False,
+                    pro_drop_b=False,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(2, g_size // 5),
+                    n_propns=max(2, g_size // 5),
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=2,
+                    n_comps=2,
+                    orthography_b=orthography,
+                    exp_name=exp_name,
+                )
+                log.info(
+                    "Created grammar %s with orthography=%s, seed=%s",
+                    grammar_name,
+                    orthography,
+                    g_seed,
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=g_seed,
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
+                )
+                grammar_names.append(grammar_name)
+                example_grammars.setdefault(orthography, (grammar_name, g_size))
+
+    _write_experiment_grammar_index(exp_dir, exp_name, grammar_names)
+
+    condition_examples = []
+    for orthography in target_orthographies:
+        grammar_name, g_size = example_grammars[orthography]
+        sample = _load_first_sample(exp_dir, grammar_name)
+        condition_examples.append(
+            {
+                "title": _orthography_label(orthography),
+                "condition": f"target orthography=`{orthography}`, lexical size target={g_size}",
+                "grammar_name": grammar_name,
+                "left": sample["left_phonetic"],
+                "right": sample["right_phonetic"],
+            }
+        )
+
+    total_grammars = len(grammar_names)
+    total_samples = total_grammars * (max_depth + 1) * n_sentences_per_depth
+    _write_experiment_readme(
+        exp_name=exp_name,
+        title=title,
+        overview=overview,
+        matrix_items=[
+            ("source orthography", "`latin`"),
+            (
+                "target orthographies",
+                ", ".join(f"`{orthography}`" for orthography in target_orthographies),
+            ),
+            ("grammar sizes", str(grammar_sizes)),
+            ("grammars per size and orthography", str(n_grammars_per_size)),
+            ("depth range", f"`0..{max_depth}`"),
+            ("samples per depth", str(n_sentences_per_depth)),
+            ("total grammars", str(total_grammars)),
+            ("total samples", str(total_samples)),
+        ],
+        condition_examples=condition_examples,
+        regeneration_command=f"uv run python main.py exp_{exp_name}",
+    )
+
+
+def _create_wordorder_dataset(
+    exp_name: str,
+    title: str,
+    overview: str,
+    grammar_sizes: list[int],
+    target_head_spec_params: list[tuple[bool, bool]],
+    max_depth: int,
+    n_grammars_per_size: int,
+    n_sentences_per_depth: int,
+) -> None:
+    syllable_structure = "C*VC"
+    source_head_spec_params: tuple[bool, bool] = (True, True)
+    exp_dir = experiment_dir(exp_name)
+    exp_dir.mkdir(parents=True, exist_ok=True)
+
+    grammar_names: list[str] = []
+    example_grammars: dict[tuple[bool, bool], tuple[str, int]] = {}
+
+    for hi_b, si_b in target_head_spec_params:
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = deterministic_seed(exp_name, hi_b, si_b, g_size, index)
+                grammar_name = create_grammar(
+                    rng_seed=g_seed,
+                    syllable_structure_a=syllable_structure,
+                    syllable_structure_b=syllable_structure,
+                    head_initial_a=source_head_spec_params[0],
+                    head_initial_b=hi_b,
+                    spec_initial_a=source_head_spec_params[1],
+                    spec_initial_b=si_b,
+                    pro_drop_a=False,
+                    pro_drop_b=False,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(2, g_size // 5),
+                    n_propns=max(2, g_size // 5),
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=2,
+                    n_comps=2,
+                    exp_name=exp_name,
+                )
+                log.info(
+                    "Created grammar %s with hi_b=%s, si_b=%s, seed=%s",
+                    grammar_name,
+                    hi_b,
+                    si_b,
+                    g_seed,
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=g_seed,
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
+                )
+                grammar_names.append(grammar_name)
+                example_grammars.setdefault((hi_b, si_b), (grammar_name, g_size))
+
+    _write_experiment_grammar_index(exp_dir, exp_name, grammar_names)
+
+    condition_examples = []
+    for hi_b, si_b in target_head_spec_params:
+        grammar_name, g_size = example_grammars[(hi_b, si_b)]
+        sample = _load_first_sample(exp_dir, grammar_name)
+        condition_examples.append(
+            {
+                "title": _wordorder_label(hi_b, si_b),
+                "condition": (
+                    f"target head_initial={hi_b}, target spec_initial={si_b}, "
+                    f"lexical size target={g_size}"
+                ),
+                "grammar_name": grammar_name,
+                "left": sample["left_phonetic"],
+                "right": sample["right_phonetic"],
+            }
+        )
+
+    total_grammars = len(grammar_names)
+    total_samples = total_grammars * (max_depth + 1) * n_sentences_per_depth
+    _write_experiment_readme(
+        exp_name=exp_name,
+        title=title,
+        overview=overview,
+        matrix_items=[
+            ("source word order", "`head_initial=True`, `spec_initial=True`"),
+            (
+                "target word orders",
+                ", ".join(
+                    f"`head_initial={hi_b}, spec_initial={si_b}`"
+                    for hi_b, si_b in target_head_spec_params
+                ),
+            ),
+            ("grammar sizes", str(grammar_sizes)),
+            ("grammars per size and word-order condition", str(n_grammars_per_size)),
+            ("depth range", f"`0..{max_depth}`"),
+            ("samples per depth", str(n_sentences_per_depth)),
+            ("total grammars", str(total_grammars)),
+            ("total samples", str(total_samples)),
+        ],
+        condition_examples=condition_examples,
+        regeneration_command=f"uv run python main.py exp_{exp_name}",
+    )
 
 
 def prompt_grammar_str(
@@ -97,121 +400,119 @@ def warn_for_large_prompts(
 
 
 def create_orthography_data(
+    grammar_sizes: list[int] = [7500, 10000],
     max_depth: int = 5,
-    n_grammars_per_size: int = 2,
-    n_sentences_per_depth: int = 20,
+    n_grammars_per_size: int = 1,
+    n_sentences_per_depth: int = 10,
+    target_orthographies: list[str] = ["latin", "cyrillic", "hebrew"],
 ):
     """
     Generates grammars which vary the target orthography.
     """
+    _create_orthography_dataset(
+        exp_name="orthography",
+        title="Orthography Experiment Data",
+        overview=(
+            "This dataset varies only the target-side writing system while keeping the "
+            "source orthography and the syntactic settings fixed."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_orthographies=target_orthographies,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
 
-    syllable_structure: str = "C*VC"
-    g_sizes: list[int] = [7500, 10000]
+
+def create_orthography_large_data(
+    grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
     target_orthographies: list[str] = [
         "latin",
+        "latin_diacritic",
         "cyrillic",
-        "yiddish",
-    ]
-    grammar_names: list[str] = []
-    for orthography in target_orthographies:
-        for g_size in g_sizes:
-            for _ in range(n_grammars_per_size):
-                g_seed = deterministic_seed("orthography", orthography, g_size, _)
-                grammar_name = create_grammar(
-                    rng_seed=g_seed,
-                    syllable_structure_a=syllable_structure,
-                    syllable_structure_b=syllable_structure,
-                    head_initial_a=True,
-                    head_initial_b=True,
-                    spec_initial_a=True,
-                    spec_initial_b=True,
-                    pro_drop_a=False,
-                    pro_drop_b=False,
-                    n_verbs=g_size // 5,
-                    n_nouns=g_size // 5,
-                    n_adjectives=g_size // 5,
-                    n_propns=max(2, g_size // 5),
-                    n_det_def=2,
-                    n_det_indef=2,
-                    n_prons=2,
-                    n_comps=2,
-                    orthography_b=orthography,
-                )
-                log.info(
-                    f"Created grammar {grammar_name} with orthography={orthography}, seed={g_seed}"
-                )
-                generate_samples(
-                    grammar_name=grammar_name,
-                    rng_seed=g_seed,
-                    min_depth=0,
-                    max_depth=max_depth,
-                    n_samples_per_depth=n_sentences_per_depth,
-                )
-                grammar_names.append(grammar_name)
+        "hebrew",
+        "hebrew_unpointed",
+    ],
+):
+    """
+    Generates a larger orthography dataset with more grammar sizes and scripts.
+    """
 
-    with open(DATA_DIR / "orthography_grammars.txt", "w") as f:
-        for name in grammar_names:
-            f.write(f"{name}\n")
+    _create_orthography_dataset(
+        exp_name="orthography_large",
+        title="Large Orthography Experiment Data",
+        overview=(
+            "This dataset expands the orthography experiment with a larger grammar-size "
+            "grid and two additional target-side writing systems."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_orthographies=target_orthographies,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
 
 
 def create_wordorder_data(
+    grammar_sizes: list[int] = [7500, 10000],
     max_depth: int = 5,
     n_grammars_per_size: int = 1,
     n_sentences_per_depth: int = 20,
-):
-    """
-    Generates grammars which systematically vary word order parameters.
-    """
-
-    syllable_structure: str = "C*VC"
-    g_sizes: list[int] = [7500, 10000]
-    source_head_spec_params: tuple[bool, bool] = (True, True)
     target_head_spec_params: list[tuple[bool, bool]] = [
         (True, True),
         (False, True),
         (False, False),
-    ]
+    ],
+):
+    """
+    Generates grammars which systematically vary word order parameters.
+    """
+    _create_wordorder_dataset(
+        exp_name="wordorder",
+        title="Word Order Experiment Data",
+        overview=(
+            "This dataset varies target-side head directionality and specifier order "
+            "while keeping the orthography fixed."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_head_spec_params=target_head_spec_params,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
 
-    grammar_names: list[str] = []
 
-    for hi_b, si_b in target_head_spec_params:
-        for g_size in g_sizes:
-            for _ in range(n_grammars_per_size):
-                g_seed = deterministic_seed("wordorder", hi_b, si_b, g_size, _)
-                grammar_name = create_grammar(
-                    rng_seed=g_seed,
-                    syllable_structure_a=syllable_structure,
-                    syllable_structure_b=syllable_structure,
-                    head_initial_a=source_head_spec_params[0],
-                    head_initial_b=hi_b,
-                    spec_initial_a=source_head_spec_params[1],
-                    spec_initial_b=si_b,
-                    pro_drop_a=False,
-                    pro_drop_b=False,
-                    n_verbs=g_size // 5,
-                    n_nouns=g_size // 5,
-                    n_adjectives=g_size // 5,
-                    n_propns=max(2, g_size // 5),
-                    n_det_def=2,
-                    n_det_indef=2,
-                    n_prons=2,
-                    n_comps=2,
-                )
-                log.info(
-                    f"Created grammar {grammar_name} with hi_b={hi_b}, si_b={si_b}, seed={g_seed}"
-                )
-                generate_samples(
-                    grammar_name=grammar_name,
-                    rng_seed=g_seed,
-                    min_depth=0,
-                    max_depth=max_depth,
-                    n_samples_per_depth=n_sentences_per_depth,
-                )
-                grammar_names.append(grammar_name)
+def create_wordorder_large_data(
+    grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
+    target_head_spec_params: list[tuple[bool, bool]] = [
+        (True, True),
+        (False, True),
+        (False, False),
+    ],
+):
+    """
+    Generates a larger word-order dataset with a broader grammar-size grid.
+    """
 
-    with open(DATA_DIR / "wordorder_grammars.txt", "w") as f:
-        for name in grammar_names:
-            f.write(f"{name}\n")
+    _create_wordorder_dataset(
+        exp_name="wordorder_large",
+        title="Large Word Order Experiment Data",
+        overview=(
+            "This dataset expands the word-order experiment with more grammar sizes "
+            "and more grammar replicates per condition."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_head_spec_params=target_head_spec_params,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
 
 
 def create_agreement_data(
@@ -826,7 +1127,9 @@ if __name__ == "__main__":
             "exp_complexity": create_complexity_data,
             "exp_large_complexity": create_large_complexity_data,
             "exp_wordorder": create_wordorder_data,
+            "exp_wordorder_large": create_wordorder_large_data,
             "exp_orthography": create_orthography_data,
+            "exp_orthography_large": create_orthography_large_data,
             "exp_agreement": create_agreement_data,
             "exp_size": create_size_data,
             # TODO: add hash id to input files, attach it to requiest custom id

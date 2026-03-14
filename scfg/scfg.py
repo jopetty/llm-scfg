@@ -39,6 +39,18 @@ LATIN_SONORITY_HIERARCHY: dict[str, float] = {
     "k": 0.9,
 }
 
+LATIN_DIACRITIC_CONSONANTS: list[str] = LATIN_CONSONANTS + ["ç", "ñ", "š", "ž", "ł", "ř"]
+LATIN_DIACRITIC_VOWELS: list[str] = list("áéíóúäëïöüâêîôû")
+LATIN_DIACRITIC_SONORITY_HIERARCHY: dict[str, float] = {
+    **LATIN_SONORITY_HIERARCHY,
+    "ç": 0.6,
+    "ñ": 0.3,
+    "š": 0.6,
+    "ž": 0.45,
+    "ł": 0.15,
+    "ř": 0.5,
+}
+
 CYRILLIC_CONSONANTS: list[str] = list("бвгджзйклмнпрстфхцчшщ")
 CYRILLIC_VOWELS: list[str] = list("аеёиоуыэюя")
 CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
@@ -65,9 +77,9 @@ CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
     "й": 0.6,
 }
 
-YIDDISH_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
-YIDDISH_VOWELS: list[str] = list("אַאָוּיִײײַױע")
-YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
+HEBREW_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
+HEBREW_VOWELS: list[str] = list("אַאָוּיִײײַױע")
+HEBREW_SONORITY_HIERARCHY: dict[str, float] = {
     "פּ": 0.10,
     "ב": 0.15,
     "ט": 0.10,
@@ -89,6 +101,34 @@ YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
     "ל": 0.50,
     "ר": 0.50,
     "י": 0.60,
+}
+
+YIDDISH_CONSONANTS = HEBREW_CONSONANTS
+YIDDISH_VOWELS = HEBREW_VOWELS
+YIDDISH_SONORITY_HIERARCHY = HEBREW_SONORITY_HIERARCHY
+
+HEBREW_UNPOINTED_CONSONANTS: list[str] = list("בגדהזחטכלמנסעפצקרשת")
+HEBREW_UNPOINTED_VOWELS: list[str] = list("אוי")
+HEBREW_UNPOINTED_SONORITY_HIERARCHY: dict[str, float] = {
+    "ת": 0.10,
+    "ד": 0.15,
+    "ט": 0.10,
+    "ק": 0.10,
+    "ג": 0.15,
+    "כ": 0.10,
+    "פ": 0.20,
+    "ב": 0.25,
+    "ס": 0.20,
+    "ז": 0.25,
+    "ש": 0.20,
+    "ח": 0.20,
+    "ה": 0.20,
+    "ע": 0.30,
+    "צ": 0.30,
+    "מ": 0.40,
+    "נ": 0.40,
+    "ל": 0.50,
+    "ר": 0.50,
 }
 
 SYLLABLE_STRUCTURES: list[str] = [
@@ -264,14 +304,22 @@ class CFGParams:
             self.consonants = LATIN_CONSONANTS
             self.vowels = LATIN_VOWELS
             self.sonority_hierarchy = LATIN_SONORITY_HIERARCHY
+        elif self.orthography == "latin_diacritic":
+            self.consonants = LATIN_DIACRITIC_CONSONANTS
+            self.vowels = LATIN_DIACRITIC_VOWELS
+            self.sonority_hierarchy = LATIN_DIACRITIC_SONORITY_HIERARCHY
         elif self.orthography == "cyrillic":
             self.consonants = CYRILLIC_CONSONANTS
             self.vowels = CYRILLIC_VOWELS
             self.sonority_hierarchy = CYRILLIC_SONORITY_HIERARCHY
-        elif self.orthography == "yiddish":
-            self.consonants = YIDDISH_CONSONANTS
-            self.vowels = YIDDISH_VOWELS
-            self.sonority_hierarchy = YIDDISH_SONORITY_HIERARCHY
+        elif self.orthography in {"hebrew", "yiddish"}:
+            self.consonants = HEBREW_CONSONANTS
+            self.vowels = HEBREW_VOWELS
+            self.sonority_hierarchy = HEBREW_SONORITY_HIERARCHY
+        elif self.orthography == "hebrew_unpointed":
+            self.consonants = HEBREW_UNPOINTED_CONSONANTS
+            self.vowels = HEBREW_UNPOINTED_VOWELS
+            self.sonority_hierarchy = HEBREW_UNPOINTED_SONORITY_HIERARCHY
         else:
             raise ValueError(f"Unknown orthography: {self.orthography}")
 

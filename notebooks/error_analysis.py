@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,36 +27,74 @@ AGREEMENT_CUSTOM_ID_RE = re.compile(
 @dataclass(frozen=True)
 class ExperimentSpec:
     exp: str
+    dataset: str
     batch_dir: Path
     data_dir: Path
-    output_to_input_map: dict[str, str] | None = None
 
 
 STANDARD_EXPERIMENTS = (
     ExperimentSpec(
         exp="wordorder",
+        dataset="wordorder_exp",
         batch_dir=BATCH_DIR / "word_order",
         data_dir=DATA_DIR / "wordorder_exp",
-        output_to_input_map={
-            "batch_68f6e481242c81909cf391cab561e39e_output.jsonl": "inputs_wordorder_grammars_gpt-5-nano.jsonl",
-            "batch_68f6e39d83948190b46dd11feb661ec7_output.jsonl": "inputs_wordorder_grammars_gpt-5.jsonl",
-        },
     ),
     ExperimentSpec(
         exp="size",
+        dataset="size_exp",
         batch_dir=BATCH_DIR / "size_exp",
         data_dir=DATA_DIR / "size_exp",
     ),
     ExperimentSpec(
         exp="orthography",
+        dataset="orthography_exp",
         batch_dir=BATCH_DIR / "orthography_exp",
         data_dir=DATA_DIR / "orthography_exp",
-        output_to_input_map={
-            "batch_68f6ebf4dc988190829bce2131cf8b72_output.jsonl": "inputs_orthography_grammars_gpt-5-nano.jsonl",
-            "batch_68f77aad697c8190987c69a60f65112a_output.jsonl": "inputs_orthography_grammars_gpt-5.jsonl",
-        },
+    ),
+    ExperimentSpec(
+        exp="wordorder",
+        dataset="wordorder_large_exp",
+        batch_dir=BATCH_DIR / "wordorder_large_exp",
+        data_dir=DATA_DIR / "wordorder_large_exp",
+    ),
+    ExperimentSpec(
+        exp="orthography",
+        dataset="orthography_large_exp",
+        batch_dir=BATCH_DIR / "orthography_large_exp",
+        data_dir=DATA_DIR / "orthography_large_exp",
     ),
 )
+
+OUTPUT_COLUMNS = [
+    "exp",
+    "custom_id",
+    "batch_file",
+    "batch_id",
+    "model",
+    "fuzzy_model",
+    "model_response",
+    "model_answer",
+    "prompt_tokens",
+    "completion_tokens",
+    "total_tokens",
+]
+INPUT_COLUMNS = [
+    "custom_id",
+    "input_file",
+    "fuzzy_model",
+    "grammar_name",
+    "sample_id",
+    "input_sentence",
+    "output_sentence",
+    "depth",
+    "n_words",
+    "n_rules",
+]
+SAMPLE_COLUMNS = ["grammar_name", "sample_id", "input_sentence", "output_sentence"]
+
+CYRILLIC_RE = re.compile(r"[а-яА-Я]")
+HEBREW_RE = re.compile(r"[\u0590-\u05FF]")
+HEBREW_DIACRITIC_RE = re.compile(r"[\u0591-\u05C7]")
 
 
 def fuzzy_model(model: str | None) -> str:
@@ -112,20 +151,51 @@ def repetition_stats(text: str | None) -> tuple[float, int]:
     return repeated_fraction, longest_run
 
 
+def contains_latin_script(text: str | None) -> bool:
+    if not isinstance(text, str):
+        return False
+    for char in text:
+        if not char.isalpha():
+            continue
+        if "LATIN" in unicodedata.name(char, ""):
+            return True
+    return False
+
+
 def detect_script(text: str | None) -> str:
     if not isinstance(text, str) or not text.strip():
         return "empty"
-    if re.search(r"[а-яА-Я]", text):
+    if CYRILLIC_RE.search(text):
         return "cyrillic"
-    if re.search(r"[\u0590-\u05FF]", text):
+    if HEBREW_RE.search(text):
         return "hebrew"
-    if re.search(r"[A-Za-z]", text):
+    if contains_latin_script(text):
         return "latin"
     return "other"
 
 
 def strip_hebrew_diacritics(text: str | None) -> str:
     return re.sub(r"[\u0591-\u05C7]", "", text or "")
+
+
+def strip_latin_diacritics(text: str | None) -> str:
+    normalized = unicodedata.normalize("NFKD", text or "")
+    return "".join(char for char in normalized if not unicodedata.combining(char))
+
+
+def infer_target_orthography(sample_word: str, dataset: str) -> str:
+    if CYRILLIC_RE.search(sample_word):
+        return "cyrillic"
+    if HEBREW_RE.search(sample_word):
+        if dataset == "orthography_large_exp":
+            return "hebrew" if HEBREW_DIACRITIC_RE.search(sample_word) else "hebrew_unpointed"
+        return "yiddish"
+    if contains_latin_script(sample_word):
+        stripped = strip_latin_diacritics(sample_word)
+        if stripped != sample_word:
+            return "latin_diacritic"
+        return "latin"
+    return "unknown"
 
 
 def extract_json_field(line: str, start_marker: str, end_markers: list[str]):
@@ -162,7 +232,7 @@ def read_jsonl_prefix_until(handle, marker: bytes, chunk_size: int = 65536) -> b
             return bytes(buffer[:newline_index])
 
 
-def load_outputs(batch_dir: Path, exp: str, output_to_input_map: dict[str, str] | None) -> pd.DataFrame:
+def load_outputs(batch_dir: Path, exp: str) -> pd.DataFrame:
     rows: list[dict] = []
     for path in sorted(batch_dir.glob("*_output.jsonl")):
         with open(path) as handle:
@@ -185,10 +255,8 @@ def load_outputs(batch_dir: Path, exp: str, output_to_input_map: dict[str, str] 
                     "completion_tokens": completion_tokens,
                     "total_tokens": total_tokens,
                 }
-                if output_to_input_map and path.name in output_to_input_map:
-                    row["input_file"] = output_to_input_map[path.name]
                 rows.append(row)
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=OUTPUT_COLUMNS)
 
 
 def load_inputs(batch_dir: Path) -> pd.DataFrame:
@@ -197,12 +265,15 @@ def load_inputs(batch_dir: Path) -> pd.DataFrame:
         with open(path) as handle:
             for line in handle:
                 item = json.loads(line)
-                metadata = item["body"].get("metadata") or {}
+                body = item["body"]
+                metadata = body.get("metadata") or {}
                 rows.append(
                     {
                         "custom_id": item["custom_id"],
                         "input_file": path.name,
+                        "fuzzy_model": fuzzy_model(body.get("model")),
                         "grammar_name": metadata.get("grammar_name"),
+                        "sample_id": metadata.get("sample_id"),
                         "input_sentence": metadata.get("input_sentence"),
                         "output_sentence": metadata.get("output_sentence"),
                         "depth": pd.to_numeric(metadata.get("depth"), errors="coerce"),
@@ -210,10 +281,79 @@ def load_inputs(batch_dir: Path) -> pd.DataFrame:
                         "n_rules": pd.to_numeric(metadata.get("n_rules"), errors="coerce"),
                     }
                 )
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=INPUT_COLUMNS)
 
 
-def load_grammar_metadata(exp: str, data_dir: Path) -> pd.DataFrame:
+def ensure_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    df = df.copy()
+    for column in columns:
+        if column not in df.columns:
+            df[column] = pd.NA
+    return df
+
+
+def merge_outputs_inputs(outputs_df: pd.DataFrame, inputs_df: pd.DataFrame) -> pd.DataFrame:
+    if outputs_df.empty:
+        return ensure_columns(outputs_df, INPUT_COLUMNS)
+    if inputs_df.empty:
+        return ensure_columns(outputs_df, INPUT_COLUMNS)
+
+    if inputs_df["custom_id"].is_unique:
+        dedup_inputs_df = inputs_df.drop(columns=["fuzzy_model"], errors="ignore")
+        return ensure_columns(outputs_df.merge(dedup_inputs_df, on="custom_id", how="left"), INPUT_COLUMNS)
+
+    merge_keys = ["custom_id", "fuzzy_model"]
+    dedup_inputs_df = (
+        inputs_df.sort_values(["custom_id", "fuzzy_model", "input_file"], na_position="last")
+        .drop_duplicates(subset=merge_keys, keep="first")
+    )
+    return ensure_columns(outputs_df.merge(dedup_inputs_df, on=merge_keys, how="left"), INPUT_COLUMNS)
+
+
+def load_sample_sentences(data_dir: Path, sample_index_df: pd.DataFrame) -> pd.DataFrame:
+    if sample_index_df.empty:
+        return pd.DataFrame(columns=SAMPLE_COLUMNS)
+
+    needed_df = sample_index_df.dropna(subset=["grammar_name", "sample_id"]).copy()
+    if needed_df.empty:
+        return pd.DataFrame(columns=SAMPLE_COLUMNS)
+
+    needed_df["sample_id"] = needed_df["sample_id"].astype(str)
+    needed_ids = (
+        needed_df.assign(sample_id_int=lambda df: df["sample_id"].astype(int))
+        .groupby("grammar_name")["sample_id_int"]
+        .agg(set)
+        .to_dict()
+    )
+
+    rows: list[dict] = []
+    for grammar_name, wanted_ids in needed_ids.items():
+        path = data_dir / f"samples_{grammar_name}.jsonl"
+        if not path.exists():
+            continue
+        remaining_ids = set(wanted_ids)
+        with open(path) as handle:
+            for sample_idx, line in enumerate(handle):
+                if sample_idx not in remaining_ids:
+                    if not remaining_ids:
+                        break
+                    continue
+                sample = json.loads(line)
+                rows.append(
+                    {
+                        "grammar_name": grammar_name,
+                        "sample_id": str(sample_idx),
+                        "input_sentence": sample.get("left_phonetic") or sample.get("left"),
+                        "output_sentence": sample.get("right_phonetic") or sample.get("right"),
+                    }
+                )
+                remaining_ids.remove(sample_idx)
+                if not remaining_ids:
+                    break
+    return pd.DataFrame(rows, columns=SAMPLE_COLUMNS)
+
+
+def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFrame:
     rows: list[dict] = []
     for path in sorted(data_dir.glob("grammar_*.json")):
         with open(path) as handle:
@@ -229,6 +369,8 @@ def load_grammar_metadata(exp: str, data_dir: Path) -> pd.DataFrame:
                 [grammar["b"][key] for key in ["verbs", "nouns", "propns", "prons", "adjs", "det_def", "det_indef", "comps"]],
                 [],
             ),
+            "n_words": pd.to_numeric(grammar.get("n_words"), errors="coerce"),
+            "n_rules": pd.to_numeric(grammar.get("n_rules"), errors="coerce"),
         }
         if exp == "wordorder":
             share_head = grammar["a"]["head_initial"] == grammar["b"]["head_initial"]
@@ -242,28 +384,47 @@ def load_grammar_metadata(exp: str, data_dir: Path) -> pd.DataFrame:
             else:
                 row["target_word_order"] = "OVS"
         if exp == "orthography":
-            sample_word = row["b_words"][0] if row["b_words"] else ""
-            if re.search(r"[а-яА-Я]", sample_word):
-                row["target_orthography"] = "cyrillic"
-            elif re.search(r"[אַ-ת]", sample_word):
-                row["target_orthography"] = "yiddish"
-            elif re.search(r"[A-Za-z]", sample_word):
-                row["target_orthography"] = "latin"
-            else:
-                row["target_orthography"] = "unknown"
+            sample_word = next((word for word in row["b_words"] if word), "")
+            row["target_orthography"] = infer_target_orthography(sample_word, dataset)
         rows.append(row)
     return pd.DataFrame(rows)
 
 
 def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
-    outputs_df = load_outputs(spec.batch_dir, spec.exp, spec.output_to_input_map)
+    outputs_df = load_outputs(spec.batch_dir, spec.exp)
     inputs_df = load_inputs(spec.batch_dir)
-    if "input_file" in outputs_df.columns:
-        merged_df = outputs_df.merge(inputs_df, on=["custom_id", "input_file"], how="left")
-    else:
-        merged_df = outputs_df.merge(inputs_df.drop(columns=["input_file"]), on="custom_id", how="left")
-    grammar_df = load_grammar_metadata(spec.exp, spec.data_dir)
-    return merged_df.merge(grammar_df, on="grammar_name", how="left")
+    merged_df = merge_outputs_inputs(outputs_df, inputs_df)
+
+    needs_sample_df = merged_df.loc[
+        (merged_df["input_sentence"].isna() | merged_df["output_sentence"].isna())
+        & merged_df["sample_id"].notna(),
+        ["grammar_name", "sample_id"],
+    ]
+    sample_df = load_sample_sentences(spec.data_dir, needs_sample_df)
+    if not sample_df.empty:
+        merged_df = merged_df.merge(
+            sample_df,
+            on=["grammar_name", "sample_id"],
+            how="left",
+            suffixes=("", "_sample"),
+        )
+        for column in ["input_sentence", "output_sentence"]:
+            sample_column = f"{column}_sample"
+            if sample_column in merged_df.columns:
+                merged_df[column] = merged_df[column].combine_first(merged_df[sample_column])
+                merged_df = merged_df.drop(columns=[sample_column])
+
+    grammar_df = load_grammar_metadata(spec.exp, spec.data_dir, spec.dataset)
+    merged_df = merged_df.merge(grammar_df, on="grammar_name", how="left", suffixes=("", "_grammar"))
+    for column in ["n_words", "n_rules"]:
+        grammar_column = f"{column}_grammar"
+        if grammar_column in merged_df.columns:
+            primary_values = pd.to_numeric(merged_df[column], errors="coerce")
+            fallback_values = pd.to_numeric(merged_df[grammar_column], errors="coerce")
+            merged_df[column] = primary_values.where(primary_values.notna(), fallback_values)
+            merged_df = merged_df.drop(columns=[grammar_column])
+    merged_df["dataset"] = spec.dataset
+    return merged_df
 
 
 def load_agreement_experiment() -> pd.DataFrame:
@@ -378,9 +539,11 @@ def load_agreement_experiment() -> pd.DataFrame:
 
     samples_df = pd.DataFrame(sample_rows)
     grammars_df = pd.DataFrame(grammar_rows)
-    return outputs_df.merge(samples_df, on=["grammar_name", "sample_id"], how="left").merge(
+    merged_df = outputs_df.merge(samples_df, on=["grammar_name", "sample_id"], how="left").merge(
         grammars_df, on="grammar_name", how="left"
     )
+    merged_df["dataset"] = data_dir.name
+    return merged_df
 
 
 def classify_failure(row: pd.Series) -> str:
@@ -420,11 +583,19 @@ def classify_failure(row: pd.Series) -> str:
         pred_script = detect_script(pred)
         if target_orthography == "cyrillic" and pred_script != "cyrillic":
             return "wrong_script"
-        if target_orthography == "yiddish" and pred_script != "hebrew":
+        if target_orthography in {"hebrew", "hebrew_unpointed", "yiddish"} and pred_script != "hebrew":
+            return "wrong_script"
+        if target_orthography in {"latin", "latin_diacritic"} and pred_script != "latin":
             return "wrong_script"
         if (
-            target_orthography == "yiddish"
+            target_orthography in {"hebrew", "hebrew_unpointed", "yiddish"}
             and strip_hebrew_diacritics(pred) == strip_hebrew_diacritics(ref)
+            and pred != ref
+        ):
+            return "diacritic_drop"
+        if (
+            target_orthography in {"latin", "latin_diacritic"}
+            and strip_latin_diacritics(pred) == strip_latin_diacritics(ref)
             and pred != ref
         ):
             return "diacritic_drop"
@@ -473,6 +644,7 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     row_columns = [
+        "dataset",
         "exp",
         "fuzzy_model",
         "custom_id",
@@ -505,19 +677,21 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
     wrong_df = df[~df["exact_match"]].copy()
 
     summary_df = (
-        wrong_df.groupby(["exp", "fuzzy_model", "failure_mode"])
+        wrong_df.groupby(["dataset", "exp", "fuzzy_model", "failure_mode"])
         .size()
         .rename("count")
         .reset_index()
     )
-    summary_df["pct_within_model_exp"] = summary_df.groupby(["exp", "fuzzy_model"])["count"].transform(
+    summary_df["pct_within_model_exp"] = summary_df.groupby(["dataset", "fuzzy_model"])["count"].transform(
         lambda series: 100 * series / series.sum()
     )
-    summary_df = summary_df.sort_values(["exp", "fuzzy_model", "count"], ascending=[True, True, False])
+    summary_df = summary_df.sort_values(
+        ["dataset", "exp", "fuzzy_model", "count"], ascending=[True, True, True, False]
+    )
     summary_df.to_csv(out_dir / "failure_mode_summary.csv", index=False)
 
     metric_df = (
-        df.groupby(["exp", "fuzzy_model"])
+        df.groupby(["dataset", "exp", "fuzzy_model"])
         .agg(
             rows=("custom_id", "size"),
             exact_match=("exact_match", "mean"),
@@ -533,7 +707,7 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
 
     orthography_df = df[df["exp"] == "orthography"].copy()
     orthography_summary = (
-        orthography_df.groupby(["fuzzy_model", "target_orthography"])
+        orthography_df.groupby(["dataset", "fuzzy_model", "target_orthography"])
         .agg(
             rows=("custom_id", "size"),
             exact_match=("exact_match", "mean"),
@@ -560,6 +734,7 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
     ]
     examples = {}
     example_columns = [
+        "dataset",
         "exp",
         "fuzzy_model",
         "custom_id",
@@ -587,7 +762,7 @@ def main(out_dir: str = str(OUTPUT_DIR)) -> None:
     df = build_dataset()
     write_outputs(df, Path(out_dir))
     print(f"Wrote analysis outputs to {out_dir}")
-    print(df.groupby(["exp", "fuzzy_model"]).size())
+    print(df.groupby(["dataset", "exp", "fuzzy_model"]).size())
 
 
 if __name__ == "__main__":

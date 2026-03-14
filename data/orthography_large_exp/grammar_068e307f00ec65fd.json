@@ -1,0 +1,345 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9073,
+    "verbs": [
+      "sbizidsix",
+      "peq",
+      "bdah",
+      "damzuf",
+      "id",
+      "lpafukikdzeq",
+      "kdel",
+      "vin",
+      "iffkuzow",
+      "obzsah",
+      "fdivpajiv",
+      "bger",
+      "teq",
+      "kohtaytub",
+      "gmigob",
+      "dgikvbog",
+      "key",
+      "el",
+      "zay",
+      "fluwfdejdolket"
+    ],
+    "nouns": [
+      "ztupikktil",
+      "mzoszuydviqvid",
+      "acsbah",
+      "gvetgadep",
+      "ldoyiwvij",
+      "ek",
+      "kkox ij",
+      "tdoh",
+      "dnayvoy",
+      "pigzdeh",
+      "kuz vpow at ic",
+      "gkey",
+      "ufdeh",
+      "kamkicfugsub",
+      "ppedom goz",
+      "bsup",
+      "ix",
+      "agpbeypet",
+      "kgaf beqip",
+      "ob"
+    ],
+    "propns": [
+      "paffkotniv",
+      "gkener",
+      "tot",
+      "pen gac ir",
+      "oltpab",
+      "zzazmit",
+      "kmaq",
+      "fizosnpungtaw",
+      "muhfizolor",
+      "uxvug",
+      "ocmip",
+      "icmaz",
+      "ow lig ptuw",
+      "mimidptednow",
+      "fges des",
+      "pattibdkuk",
+      "fapatzun",
+      "ktajbdah",
+      "es pit",
+      "soqbefpec"
+    ],
+    "prons": [
+      "iqmix",
+      "tbagbal"
+    ],
+    "adjs": [
+      "todacepgbux",
+      "ig",
+      "big",
+      "dob",
+      "iy",
+      "pdetkox",
+      "kagvbuzuw",
+      "gozdip",
+      "tpih",
+      "ow",
+      "am",
+      "tip",
+      "epefdismib",
+      "ttiv af tzar",
+      "iw",
+      "ilezusey",
+      "ewgaf",
+      "soqnvubssat",
+      "bmuf fsub",
+      "npey"
+    ],
+    "det_def": [
+      "sfiz dup",
+      "bfos"
+    ],
+    "det_indef": [
+      "eg",
+      "ngep"
+    ],
+    "comps": [
+      "vinddit",
+      "ab"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9074,
+    "verbs": [
+      "אסנאתרראמכור",
+      "צשידפיק",
+      "להירראפמאזסהאב",
+      "צזימובביצעיע",
+      "באסצאח",
+      "טארדיד",
+      "יח",
+      "ונדיג",
+      "יקומ",
+      "ידעוליסרשיר",
+      "זמיחפציהנזיכיצ",
+      "מוז יס",
+      "ריבניל",
+      "יק",
+      "יקמוריב",
+      "שנאג",
+      "אנ",
+      "ציבנאנמקאכ",
+      "מיע",
+      "צלוכ"
+    ],
+    "nouns": [
+      "רוח",
+      "יד עצאפשוב",
+      "וזכיג",
+      "נהיסרפיקשיט",
+      "אקחתוזלאטכנאק",
+      "הזיז",
+      "הוסכולוצגלאמ",
+      "לתיזחלונ",
+      "מחוצ",
+      "זאע",
+      "פשאשזפאצוזצאצ",
+      "באד",
+      "לומהניר",
+      "ינ",
+      "וב",
+      "ומ",
+      "ועשאבוק",
+      "כיט",
+      "ראש ימדפיפיח",
+      "וש"
+    ],
+    "propns": [
+      "אשרוט ופ",
+      "זחיקמוגמיר",
+      "אכ",
+      "כאביכטוח",
+      "יהיצאכ",
+      "נאפיציהומ",
+      "רבאפ",
+      "נמושציסכאבבריב",
+      "לשימהזארעעומ",
+      "חנאנצהאדזחאק גיד",
+      "טופ",
+      "וב",
+      "זביחטריצנריעלימ",
+      "רצאנמוכ עיע",
+      "אז",
+      "מנאפמיס",
+      "נאק",
+      "ופ",
+      "יח אכיכ",
+      "ילנולוגטבאה"
+    ],
+    "prons": [
+      "וה",
+      "דהאלונ"
+    ],
+    "adjs": [
+      "צשיסיזינ",
+      "נשיניע",
+      "הוחרית",
+      "חסיק הריה",
+      "ונצאזאננזינ",
+      "זהוננילאטגעאק",
+      "כאספמארוז",
+      "גאצ",
+      "ניס ות ית",
+      "לאבסיקיפסיצ",
+      "מאר יב חאר",
+      "רול",
+      "צאקלאפושוח",
+      "לקיסצשיניע",
+      "לרומאפזכוש",
+      "נגאעיכסמועעוע",
+      "סלאגנפאת",
+      "ביה",
+      "יגקוט",
+      "אסראקחחומ"
+    ],
+    "det_def": [
+      "גיג",
+      "למימ וע חיגמסאט"
+    ],
+    "det_indef": [
+      "ילנקוד",
+      "טחיע"
+    ],
+    "comps": [
+      "דיח",
+      "יר ביעאנוק"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "hebrew_unpointed",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "068e307f00ec65fd",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, NP_SUBJ TBAR>\nTBAR -> <T VP, T VP>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR,  VBAR>\nVBAR -> <V OBJ_PHRASE, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDP -> <DET NP, DET NP>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP N_HEAD, AdjP N_HEAD>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET -> <'sfiz dup', 'גיג'>\nDET -> <'bfos', 'למימ וע חיגמסאט'>\nT -> <'∅_T_pres', '∅_T_pres'>\nV -> <'sbizidsix', 'אסנאתרראמכור'>\nV -> <'peq', 'צשידפיק'>\nV -> <'bdah', 'להירראפמאזסהאב'>\nV -> <'damzuf', 'צזימובביצעיע'>\nV -> <'id', 'באסצאח'>\nV -> <'lpafukikdzeq', 'טארדיד'>\nV -> <'kdel', 'יח'>\nV -> <'vin', 'ונדיג'>\nV -> <'iffkuzow', 'יקומ'>\nV -> <'obzsah', 'ידעוליסרשיר'>\nV -> <'fdivpajiv', 'זמיחפציהנזיכיצ'>\nV -> <'bger', 'מוז יס'>\nV -> <'teq', 'ריבניל'>\nV -> <'kohtaytub', 'יק'>\nV -> <'gmigob', 'יקמוריב'>\nV -> <'dgikvbog', 'שנאג'>\nV -> <'key', 'אנ'>\nV -> <'el', 'ציבנאנמקאכ'>\nV -> <'zay', 'מיע'>\nV -> <'fluwfdejdolket', 'צלוכ'>\nN -> <'ztupikktil', 'רוח'>\nN -> <'mzoszuydviqvid', 'יד עצאפשוב'>\nN -> <'acsbah', 'וזכיג'>\nN -> <'gvetgadep', 'נהיסרפיקשיט'>\nN -> <'ldoyiwvij', 'אקחתוזלאטכנאק'>\nN -> <'ek', 'הזיז'>\nN -> <'kkox ij', 'הוסכולוצגלאמ'>\nN -> <'tdoh', 'לתיזחלונ'>\nN -> <'dnayvoy', 'מחוצ'>\nN -> <'pigzdeh', 'זאע'>\nN -> <'kuz vpow at ic', 'פשאשזפאצוזצאצ'>\nN -> <'gkey', 'באד'>\nN -> <'ufdeh', 'לומהניר'>\nN -> <'kamkicfugsub', 'ינ'>\nN -> <'ppedom goz', 'וב'>\nN -> <'bsup', 'ומ'>\nN -> <'ix', 'ועשאבוק'>\nN -> <'agpbeypet', 'כיט'>\nN -> <'kgaf beqip', 'ראש ימדפיפיח'>\nN -> <'ob', 'וש'>\nPROPN -> <'paffkotniv', 'אשרוט ופ'>\nPROPN -> <'gkener', 'זחיקמוגמיר'>\nPROPN -> <'tot', 'אכ'>\nPROPN -> <'pen gac ir', 'כאביכטוח'>\nPROPN -> <'oltpab', 'יהיצאכ'>\nPROPN -> <'zzazmit', 'נאפיציהומ'>\nPROPN -> <'kmaq', 'רבאפ'>\nPROPN -> <'fizosnpungtaw', 'נמושציסכאבבריב'>\nPROPN -> <'muhfizolor', 'לשימהזארעעומ'>\nPROPN -> <'uxvug', 'חנאנצהאדזחאק גיד'>\nPROPN -> <'ocmip', 'טופ'>\nPROPN -> <'icmaz', 'וב'>\nPROPN -> <'ow lig ptuw', 'זביחטריצנריעלימ'>\nPROPN -> <'mimidptednow', 'רצאנמוכ עיע'>\nPROPN -> <'fges des', 'אז'>\nPROPN -> <'pattibdkuk', 'מנאפמיס'>\nPROPN -> <'fapatzun', 'נאק'>\nPROPN -> <'ktajbdah', 'ופ'>\nPROPN -> <'es pit', 'יח אכיכ'>\nPROPN -> <'soqbefpec', 'ילנולוגטבאה'>\nPRON -> <'iqmix', 'וה'>\nPRON -> <'tbagbal', 'דהאלונ'>\nADJ -> <'todacepgbux', 'צשיסיזינ'>\nADJ -> <'ig', 'נשיניע'>\nADJ -> <'big', 'הוחרית'>\nADJ -> <'dob', 'חסיק הריה'>\nADJ -> <'iy', 'ונצאזאננזינ'>\nADJ -> <'pdetkox', 'זהוננילאטגעאק'>\nADJ -> <'kagvbuzuw', 'כאספמארוז'>\nADJ -> <'gozdip', 'גאצ'>\nADJ -> <'tpih', 'ניס ות ית'>\nADJ -> <'ow', 'לאבסיקיפסיצ'>\nADJ -> <'am', 'מאר יב חאר'>\nADJ -> <'tip', 'רול'>\nADJ -> <'epefdismib', 'צאקלאפושוח'>\nADJ -> <'ttiv af tzar', 'לקיסצשיניע'>\nADJ -> <'iw', 'לרומאפזכוש'>\nADJ -> <'ilezusey', 'נגאעיכסמועעוע'>\nADJ -> <'ewgaf', 'סלאגנפאת'>\nADJ -> <'soqnvubssat', 'ביה'>\nADJ -> <'bmuf fsub', 'יגקוט'>\nADJ -> <'npey', 'אסראקחחומ'>\nC -> <'vinddit', 'דיח'>\nC -> <'ab', 'יר ביעאנוק'>\nCNULL -> <'∅', '∅'>",
+  "n_rules": 18,
+  "n_words": 88,
+  "agreement_metadata": {
+    "enabled": false,
+    "a": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    },
+    "b": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    }
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9411,
+    "verbs": [
+      "ij",
+      "fil",
+      "ad tagsas",
+      "dac",
+      "siyip"
+    ],
+    "nouns": [
+      "ziylinkux mtum",
+      "aweb ap",
+      "kpavkejobtpep",
+      "ozdveczuqtut",
+      "ptawob"
+    ],
+    "propns": [
+      "beltdig",
+      "dov gdej",
+      "pgujsviq",
+      "ddotkvesok",
+      "zzesfkaw"
+    ],
+    "prons": [
+      "godspeh",
+      "en"
+    ],
+    "adjs": [
+      "ummewuced",
+      "feroxgew",
+      "or ek",
+      "odtfof",
+      "dil"
+    ],
+    "det_def": [
+      "tihpekkeggom",
+      "as"
+    ],
+    "det_indef": [
+      "ixay",
+      "kombbebgec"
+    ],
+    "comps": [
+      "zuczuy",
+      "ahogdfid"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 9412,
+    "verbs": [
+      "אפ",
+      "גסאטסיפ",
+      "בפאקאב",
+      "ממוצ",
+      "וטיסישיב"
+    ],
+    "nouns": [
+      "זישחקולוכ",
+      "חימבוגחצאל",
+      "אהישסאבופ",
+      "מדיתחוע",
+      "שלות"
+    ],
+    "propns": [
+      "אח",
+      "דעאהזאכ",
+      "פוגוליח",
+      "לרות",
+      "בישוס"
+    ],
+    "prons": [
+      "והמימ וס",
+      "גלידקשאח"
+    ],
+    "adjs": [
+      "שראדצות",
+      "בלאדוטנאחלראכ",
+      "מרוננניצ זוס",
+      "טטובניצ",
+      "וחוז"
+    ],
+    "det_def": [
+      "נאריגנחומ",
+      "ססית אק"
+    ],
+    "det_indef": [
+      "אלננודודצאט",
+      "בסיצלוס"
+    ],
+    "comps": [
+      "הוקזסיכ",
+      "שליהרומ"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "hebrew_unpointed",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "c192b693deee4f1d",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, NP_SUBJ TBAR>\nTBAR -> <T VP, T VP>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR,  VBAR>\nVBAR -> <V OBJ_PHRASE, V OBJ_PHRASE>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDP -> <DET NP, DET NP>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP N_HEAD, AdjP N_HEAD>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET -> <'tihpekkeggom', 'נאריגנחומ'>\nDET -> <'as', 'ססית אק'>\nT -> <'∅_T_pres', '∅_T_pres'>\nV -> <'ij', 'אפ'>\nV -> <'fil', 'גסאטסיפ'>\nV -> <'ad tagsas', 'בפאקאב'>\nV -> <'dac', 'ממוצ'>\nV -> <'siyip', 'וטיסישיב'>\nN -> <'ziylinkux mtum', 'זישחקולוכ'>\nN -> <'aweb ap', 'חימבוגחצאל'>\nN -> <'kpavkejobtpep', 'אהישסאבופ'>\nN -> <'ozdveczuqtut', 'מדיתחוע'>\nN -> <'ptawob', 'שלות'>\nPROPN -> <'beltdig', 'אח'>\nPROPN -> <'dov gdej', 'דעאהזאכ'>\nPROPN -> <'pgujsviq', 'פוגוליח'>\nPROPN -> <'ddotkvesok', 'לרות'>\nPROPN -> <'zzesfkaw', 'בישוס'>\nPRON -> <'godspeh', 'והמימ וס'>\nPRON -> <'en', 'גלידקשאח'>\nADJ -> <'ummewuced', 'שראדצות'>\nADJ -> <'feroxgew', 'בלאדוטנאחלראכ'>\nADJ -> <'or ek', 'מרוננניצ זוס'>\nADJ -> <'odtfof', 'טטובניצ'>\nADJ -> <'dil', 'וחוז'>\nC -> <'zuczuy', 'הוקזסיכ'>\nC -> <'ahogdfid', 'שליהרומ'>\nCNULL -> <'∅', '∅'>",
+  "n_rules": 18,
+  "n_words": 28,
+  "agreement_metadata": {
+    "enabled": false,
+    "a": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    },
+    "b": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    }
+  }
+}

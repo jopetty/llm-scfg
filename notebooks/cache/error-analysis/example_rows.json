@@ -1,6 +1,7 @@
 {
   "repetition_loop": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-106",
@@ -12,11 +13,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102741,
       "completion_tokens": 11172
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-16",
@@ -28,11 +30,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136195,
       "completion_tokens": 5528
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-3",
@@ -44,11 +47,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102695,
       "completion_tokens": 4400
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-4",
@@ -60,11 +64,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102678,
       "completion_tokens": 5588
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-8",
@@ -76,11 +81,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102686,
       "completion_tokens": 5460
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-12",
@@ -92,11 +98,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102683,
       "completion_tokens": 2661
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-17",
@@ -108,11 +115,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102682,
       "completion_tokens": 2785
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-20",
@@ -124,11 +132,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102696,
       "completion_tokens": 4394
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-43",
@@ -140,11 +149,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102700,
       "completion_tokens": 3373
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-78",
@@ -156,11 +166,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102725,
       "completion_tokens": 2937
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-90",
@@ -172,11 +183,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102729,
       "completion_tokens": 4688
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-98",
@@ -188,11 +200,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102728,
       "completion_tokens": 7694
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-20",
@@ -204,11 +217,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136215,
       "completion_tokens": 3427
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-33",
@@ -220,11 +234,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136222,
       "completion_tokens": 3665
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-45",
@@ -236,11 +251,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136230,
       "completion_tokens": 2902
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-70",
@@ -252,11 +268,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136244,
       "completion_tokens": 4046
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-88",
@@ -268,11 +285,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136246,
       "completion_tokens": 4988
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-116",
@@ -284,11 +302,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136260,
       "completion_tokens": 3631
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "78f77ecf4d61a1c7-request-9",
@@ -300,11 +319,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102919,
       "completion_tokens": 4510
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "78f77ecf4d61a1c7-request-61",
@@ -316,13 +336,14 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 103004,
       "completion_tokens": 3286
     }
   ],
   "source_lexicon_intrusion": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-6",
@@ -334,11 +355,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102684,
       "completion_tokens": 2989
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-9",
@@ -350,11 +372,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102688,
       "completion_tokens": 5609
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-21",
@@ -366,11 +389,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102712,
       "completion_tokens": 4998
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-28",
@@ -382,11 +406,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102697,
       "completion_tokens": 4664
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-50",
@@ -398,11 +423,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102725,
       "completion_tokens": 7051
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-53",
@@ -414,11 +440,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102701,
       "completion_tokens": 5715
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-67",
@@ -430,11 +457,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102724,
       "completion_tokens": 4689
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-69",
@@ -446,11 +474,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102730,
       "completion_tokens": 5574
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-70",
@@ -462,11 +491,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102716,
       "completion_tokens": 4936
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-71",
@@ -478,11 +508,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102724,
       "completion_tokens": 4622
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-79",
@@ -494,11 +525,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102725,
       "completion_tokens": 3732
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-91",
@@ -510,11 +542,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102742,
       "completion_tokens": 6376
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-106",
@@ -526,11 +559,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102741,
       "completion_tokens": 5862
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-15",
@@ -542,11 +576,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136206,
       "completion_tokens": 3690
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-22",
@@ -558,11 +593,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136214,
       "completion_tokens": 4722
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-28",
@@ -574,11 +610,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136204,
       "completion_tokens": 2926
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-29",
@@ -590,11 +627,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136236,
       "completion_tokens": 4993
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-32",
@@ -606,11 +644,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136218,
       "completion_tokens": 6070
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-37",
@@ -622,11 +661,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136217,
       "completion_tokens": 3959
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-38",
@@ -638,13 +678,14 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136243,
       "completion_tokens": 4429
     }
   ],
   "wrong_script": [
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-9",
@@ -656,11 +697,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112744,
       "completion_tokens": 4058
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-10",
@@ -672,11 +714,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112763,
       "completion_tokens": 3616
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-13",
@@ -688,11 +731,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112756,
       "completion_tokens": 3805
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-14",
@@ -704,11 +748,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112745,
       "completion_tokens": 5753
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-17",
@@ -720,11 +765,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112778,
       "completion_tokens": 2134
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-18",
@@ -736,11 +782,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112766,
       "completion_tokens": 3425
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-19",
@@ -752,11 +799,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112763,
       "completion_tokens": 3819
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-20",
@@ -768,11 +816,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112769,
       "completion_tokens": 5914
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-21",
@@ -784,11 +833,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112766,
       "completion_tokens": 3581
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-24",
@@ -800,11 +850,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112778,
       "completion_tokens": 4477
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-25",
@@ -816,11 +867,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112764,
       "completion_tokens": 4417
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-26",
@@ -832,11 +884,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112765,
       "completion_tokens": 3374
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-28",
@@ -848,11 +901,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112766,
       "completion_tokens": 3996
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-30",
@@ -864,11 +918,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112777,
       "completion_tokens": 3985
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-31",
@@ -880,11 +935,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112779,
       "completion_tokens": 4123
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-34",
@@ -896,11 +952,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112779,
       "completion_tokens": 2649
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-35",
@@ -912,11 +969,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112765,
       "completion_tokens": 5225
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-37",
@@ -928,11 +986,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112775,
       "completion_tokens": 5842
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-38",
@@ -944,11 +1003,12 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112827,
       "completion_tokens": 3290
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "8efc57dbd7a050de-request-39",
@@ -960,13 +1020,14 @@
       "target_orthography": "cyrillic",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 112794,
       "completion_tokens": 5977
     }
   ],
   "diacritic_drop": [
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-0",
@@ -978,11 +1039,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127351,
       "completion_tokens": 2542
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-1",
@@ -994,11 +1056,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127349,
       "completion_tokens": 2097
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-3",
@@ -1010,11 +1073,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127351,
       "completion_tokens": 5241
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-4",
@@ -1026,11 +1090,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127349,
       "completion_tokens": 1765
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-5",
@@ -1042,11 +1107,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127347,
       "completion_tokens": 1192
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-6",
@@ -1058,11 +1124,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127387,
       "completion_tokens": 3338
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-7",
@@ -1074,11 +1141,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127342,
       "completion_tokens": 5668
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-8",
@@ -1090,11 +1158,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127356,
       "completion_tokens": 4224
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-9",
@@ -1106,11 +1175,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127344,
       "completion_tokens": 3113
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-14",
@@ -1122,11 +1192,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127356,
       "completion_tokens": 6086
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-18",
@@ -1138,11 +1209,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127372,
       "completion_tokens": 7188
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-22",
@@ -1154,11 +1226,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127397,
       "completion_tokens": 9281
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-23",
@@ -1170,11 +1243,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127378,
       "completion_tokens": 5876
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-26",
@@ -1186,11 +1260,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127440,
       "completion_tokens": 8139
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-29",
@@ -1202,11 +1277,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127392,
       "completion_tokens": 6909
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-33",
@@ -1218,11 +1294,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127392,
       "completion_tokens": 8518
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-36",
@@ -1234,11 +1311,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127417,
       "completion_tokens": 8450
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-37",
@@ -1250,11 +1328,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127418,
       "completion_tokens": 8888
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-43",
@@ -1266,11 +1345,12 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127421,
       "completion_tokens": 9043
     },
     {
+      "dataset": "orthography_exp",
       "exp": "orthography",
       "fuzzy_model": "gpt-5",
       "custom_id": "58772062536b3463-request-49",
@@ -1282,13 +1362,14 @@
       "target_orthography": "yiddish",
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 127411,
       "completion_tokens": 7724
     }
   ],
   "same_length_substitution": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-7",
@@ -1300,11 +1381,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136186,
       "completion_tokens": 5917
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "78f77ecf4d61a1c7-request-55",
@@ -1316,11 +1398,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102957,
       "completion_tokens": 8297
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e50a47d86dcc6da1-request-1",
@@ -1332,11 +1415,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136969,
       "completion_tokens": 6841
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e50a47d86dcc6da1-request-17",
@@ -1348,11 +1432,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136936,
       "completion_tokens": 4522
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e50a47d86dcc6da1-request-38",
@@ -1364,11 +1449,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136951,
       "completion_tokens": 8637
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "5def16efd5bd3c3f-request-36",
@@ -1380,11 +1466,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102646,
       "completion_tokens": 1709
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "fa5eedce3c29d74a-request-24",
@@ -1396,11 +1483,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136696,
       "completion_tokens": 7268
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "fa5eedce3c29d74a-request-35",
@@ -1412,11 +1500,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136699,
       "completion_tokens": 7149
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "fa5eedce3c29d74a-request-41",
@@ -1428,11 +1517,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136717,
       "completion_tokens": 6711
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-2",
@@ -1444,11 +1534,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102669,
       "completion_tokens": 3234
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-0",
@@ -1460,11 +1551,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136200,
       "completion_tokens": 2456
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-9",
@@ -1476,11 +1568,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136190,
       "completion_tokens": 5465
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "5def16efd5bd3c3f-request-0",
@@ -1492,11 +1585,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102622,
       "completion_tokens": 6881
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "3f7dd90d16a68eb3-be8aaa-request-33",
@@ -1508,11 +1602,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 811,
+      "n_words": 811.0,
       "prompt_tokens": 14394,
       "completion_tokens": 2029
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "b8f37cb6ec018e35-be8aaa-request-46",
@@ -1524,11 +1619,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 4011,
+      "n_words": 4011.0,
       "prompt_tokens": 67828,
       "completion_tokens": 2748
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "b8f37cb6ec018e35-be8aaa-request-54",
@@ -1540,11 +1636,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 4011,
+      "n_words": 4011.0,
       "prompt_tokens": 67825,
       "completion_tokens": 12083
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "c548843227b7074e-be8aaa-request-88",
@@ -1556,11 +1653,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 101491,
       "completion_tokens": 13664
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "20ee3b9975c6e07f-be8aaa-request-17",
@@ -1572,11 +1670,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 101045,
       "completion_tokens": 664
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "20ee3b9975c6e07f-be8aaa-request-70",
@@ -1588,11 +1687,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 101089,
       "completion_tokens": 9788
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5",
       "custom_id": "0c6ec5ed3f0cb8fc-be8aaa-request-14",
@@ -1604,13 +1704,14 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 134801,
       "completion_tokens": 4378
     }
   ],
   "partial_span": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e50a47d86dcc6da1-request-116",
@@ -1622,11 +1723,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 137004,
       "completion_tokens": 10594
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "fa5eedce3c29d74a-request-21",
@@ -1638,11 +1740,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136690,
       "completion_tokens": 5937
     },
     {
+      "dataset": "size_exp",
       "exp": "size",
       "fuzzy_model": "gpt-5-mini",
       "custom_id": "ee2af92eceda5c0d-963cf6-request-18",
@@ -1654,285 +1757,303 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 134903,
       "completion_tokens": 4127
     },
     {
-      "exp": "agreement",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
-      "custom_id": "179d4d1c734893f7-c4a6f3-sample-114",
+      "custom_id": "bc817d1bb16f7b53-52ee01-sample-17",
       "failure_mode": "partial_span",
-      "input_sentence": "yob lof vakpohfif vug hunxuc gabpiq wigqavpad luf fefzic gabpiq cuz damxulfagpop gabpiq vakpohfif vug luf fefzic mihlofberjek yob zas wigqavpad vintos mihlofberjek wigqavpad vintos yob zas vakpohfif vug",
-      "output_sentence": "bayqat marxidzeq karbagtac pejxirpap fizkeybur par quprolhas faqgac fizkeybur par nimgoh nusyojtaz fizkeybur par karbagtac faqgac lelcuxduc bayqat havlamqidhaz quprolhas teflad lelcuxduc quprolhas teflad bayqat havlamqidhaz karbagtac",
-      "model_answer": "karbagtac pejxirpap fizkeybur par quprolhas faqgac fizkeybur par nimgoh nusyojtaz fizkeybur par karbagtac faqgac lelcuxduc bayqat havlamqidhaz quprolhas teflad lelcuxduc quprolhas teflad bayqat havlamqidhaz karbagtac",
-      "target_word_order": NaN,
+      "input_sentence": "kog ur oq itbib bdunbahol ihverej duc itbib",
+      "output_sentence": "bpittoh fub awajaf zbicub bom mban awajaf",
+      "model_answer": "awajaf zbicub bom mban awajaf",
+      "target_word_order": "SVO",
       "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> NoAgr",
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 28.0,
+      "prompt_tokens": 1141,
+      "completion_tokens": 4315
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-nano",
+      "custom_id": "b993947b3f98fcd8-52ee01-sample-14",
+      "failure_mode": "partial_span",
+      "input_sentence": "bpulidpab tav tkefvfixkaw vefvesem ewip",
+      "output_sentence": "is bulkej optoy fin uvdkoj",
+      "model_answer": "bulkej optoy fin uvdkoj",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 88.0,
+      "prompt_tokens": 1980,
+      "completion_tokens": 3480
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-nano",
+      "custom_id": "75be8403e192605d-52ee01-sample-4",
+      "failure_mode": "partial_span",
+      "input_sentence": "ey gicsib od ppasvtuxag mpok kportdonep",
+      "output_sentence": "otux fbaz azdguj semplow",
+      "model_answer": "otux fbaz azdguj",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 4008.0,
+      "prompt_tokens": 56451,
+      "completion_tokens": 4371
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "b993947b3f98fcd8-776301-sample-14",
+      "failure_mode": "partial_span",
+      "input_sentence": "bpulidpab tav tkefvfixkaw vefvesem ewip",
+      "output_sentence": "is bulkej optoy fin uvdkoj",
+      "model_answer": "bulkej optoy fin uvdkoj",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 88.0,
+      "prompt_tokens": 1980,
+      "completion_tokens": 853
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "fc43d33fc9687826-776301-sample-107",
+      "failure_mode": "partial_span",
+      "input_sentence": "tfid gguydimtdoq kekvbuxakuk pacawur bgervockic kifev nkofdef ebksabilbop kifev nkofdef ebksabilbop oslinbsih kekvbuxakuk ebksabilbop peh nkofdef kigexuqgzat pbecfger pacawur ofbosik tejbexfbejir",
+      "output_sentence": "is ftod ztivkejpbuv bubayil dvaltim uqpgonkgefub ipnoy appdekojpbeg uqpgonkgefub ipnoy appdekojpbeg fkibldixmeb ztivkejpbuv appdekojpbeg luksdok ipnoy eq kap bubayil sihfbujax bmosgmab",
+      "model_answer": "ftod ztivkejpbuv bubayil dvaltim uqpgonkgefub ipnoy appdekojpbeg uqpgonkgefub ipnoy appdekojpbeg fkibldixmeb ztivkejpbuv appdekojpbeg luksdok ipnoy eq kap bubayil sihfbujax bmosgmab",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 26,
-      "prompt_tokens": 1441,
-      "completion_tokens": 7582
+      "n_words": 808.0,
+      "prompt_tokens": 11970,
+      "completion_tokens": 5145
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "f065a3a978c8ae5c-c4a6f3-sample-39",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-12",
       "failure_mode": "partial_span",
-      "input_sentence": "luxlijqad fid pasruxhaw gep miw giqtudrus luxlijqad sewmam rar tupxiymol",
-      "output_sentence": "luk payhas wab yix tas faypucfeb zuhtuh tum luk pezpuvmab yazpaq xod",
-      "model_answer": "payhas wab yix tas faypucfeb zuhtuh tum luk pezpuvmab yazpaq xod",
-      "target_word_order": NaN,
+      "input_sentence": "ehowiq uhoglor mzul sof powmbes oves nas",
+      "output_sentence": "is baf pukpopuw sbenvfif uj",
+      "model_answer": "baf pukpopuw sbenvfif uj",
+      "target_word_order": "SVO",
       "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> NoAgr",
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 6008.0,
+      "prompt_tokens": 84700,
+      "completion_tokens": 3862
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-16",
+      "failure_mode": "partial_span",
+      "input_sentence": "ehowiq dzapfij mzul sof powmbes klojbomtiy",
+      "output_sentence": "is iy et pukpopuw todedppox",
+      "model_answer": "iy et pukpopuw todedppox",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 6008.0,
+      "prompt_tokens": 84703,
+      "completion_tokens": 2454
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-18",
+      "failure_mode": "partial_span",
+      "input_sentence": "ehowiq gpaqdtocpos mzul sof powmbes ktetabsaz",
+      "output_sentence": "is iz pukpopuw al",
+      "model_answer": "iz pukpopuw al",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 6008.0,
+      "prompt_tokens": 84703,
+      "completion_tokens": 5138
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-24",
+      "failure_mode": "partial_span",
+      "input_sentence": "ehowiq bkuhmpendtovssut sirldas mzul sof powmbes dzukon iqfzanup paj kakbpihkah don ojvaw sgaylor",
+      "output_sentence": "is pkakiz ksotlziyakgov pukpopuw eggiv ksodey peqerej fejdtif ofpdacpib ihsin",
+      "model_answer": "pkakiz ksotlziyakgov pukpopuw eggiv ksodey peqerej fejdtif ofpdacpib ihsin",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 72,
-      "prompt_tokens": 1132,
-      "completion_tokens": 7018
+      "n_words": 6008.0,
+      "prompt_tokens": 84723,
+      "completion_tokens": 8299
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "f065a3a978c8ae5c-c4a6f3-sample-67",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-28",
       "failure_mode": "partial_span",
-      "input_sentence": "jetfamvatwin jiz kaw wewyocyiqnuh jetfamvatwin qojgoh wewyocyiqnuh fid pasruxhaw wewyocyiqnuh wop viqxobjox mac yat gex yoh darpugjecfum",
-      "output_sentence": "faqlun jenhamzozvak xux faqlun xovmevsat xux payhas wab yix xux nep lormad geb fol vaf yas huq qeqlij",
-      "model_answer": "faqlun xovmevsat xux payhas wab yix xux nep lormad geb fol vaf yas huq qeqlij",
-      "target_word_order": NaN,
+      "input_sentence": "ehowiq on pnir sirldas bdis pfih knivivsosar mzul sof powmbes bmibzegnkizpsiy",
+      "output_sentence": "is mbulpoxglepguk ksotlziyakgov idppag belot pukpopuw dfezsibpdipdiq",
+      "model_answer": "mbulpoxglepguk ksotlziyakgov idppag belot pukpopuw dfezsibpdipdiq",
+      "target_word_order": "SVO",
       "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> NoAgr",
-      "depth": 3,
-      "n_words": 72,
-      "prompt_tokens": 1432,
-      "completion_tokens": 11885
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "7689d7d9b4cd8170-c4a6f3-sample-11",
-      "failure_mode": "partial_span",
-      "input_sentence": "wac zeg wih xam wac taq hegtas",
-      "output_sentence": "vurwawvoz wuyxay wul vurwawvoz biwdeg mexgegsos",
-      "model_answer": "wuyxay wul vurwawvoz biwdeg mexgegsos",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> NoAgr",
-      "depth": 0,
-      "n_words": 612,
-      "prompt_tokens": 968,
-      "completion_tokens": 2206
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "cb8d41a6e118b530-c4a6f3-sample-7",
-      "failure_mode": "partial_span",
-      "input_sentence": "totqazliytod zuyfiptup qewbuh don bik tustig quzjuz helhapqiljus",
-      "output_sentence": "duc fepcefpoh zex xaryih lul derruk",
-      "model_answer": "fepcefpoh zex xaryih lul derruk",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 0,
-      "n_words": 56,
-      "prompt_tokens": 1133,
-      "completion_tokens": 5530
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "cb8d41a6e118b530-c4a6f3-sample-41",
-      "failure_mode": "partial_span",
-      "input_sentence": "cetvom qem hoynoy mansuz tustig ket qewbuh don bik mif qewbuh don bik",
-      "output_sentence": "tukninbeqnaz yoynev cim koh xarheh cag zex sotyeryih zex",
-      "model_answer": "tukninbeqnaz yoynev cim koh xarheh cag zex",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 2,
-      "n_words": 56,
-      "prompt_tokens": 1316,
-      "completion_tokens": 11298
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "f7805e5f817efa28-c4a6f3-sample-22",
-      "failure_mode": "partial_span",
-      "input_sentence": "dodcob kog nukwelxibcol dabcav cot hizsifjut qis wivdopqux",
-      "output_sentence": "humhactuf cowhuxpopbuy ragsoclon wuxxalvow hiqwicwin gavwan xucbenmicvow vic",
-      "model_answer": "cowhuxpopbuy ragsoclon wuxxalvow hiqwicwin gavwan xucbenmicvow vic",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
+      "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 102,
-      "prompt_tokens": 1280,
-      "completion_tokens": 9578
+      "n_words": 6008.0,
+      "prompt_tokens": 84716,
+      "completion_tokens": 3880
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "b716750402939057-c4a6f3-sample-47",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "20271621ed144d32-776301-sample-32",
       "failure_mode": "partial_span",
-      "input_sentence": "kan xagrerkofpen qohbetbex nof zar gagsuytizziw qohbetbex val kin gagsuytizziw moz jarhesyeksik xojrozhay",
-      "output_sentence": "yoqsofpis xiwbij zepkagrem metsoh pakpaz zepkagrem kulyapratmix pakqoh yaqgaf nanmamsaj pomrimqom",
-      "model_answer": "kulyapratmix pakqoh yaqgaf nanmamsaj pomrimqom",
-      "target_word_order": NaN,
+      "input_sentence": "ehowiq sbivbkoviq sirldas ehowiq obmkitzpur don kojaduw",
+      "output_sentence": "is bayulosdak ksotlziyakgov is ktuveqoc fejdtif dtobspoh",
+      "model_answer": "bayulosdak ksotlziyakgov is ktuveqoc fejdtif dtobspoh",
+      "target_word_order": "SVO",
       "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 2,
-      "n_words": 102,
-      "prompt_tokens": 1353,
-      "completion_tokens": 8241
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "42e8537300f90e1c-c4a6f3-sample-9",
-      "failure_mode": "partial_span",
-      "input_sentence": "buw pokfekrap wat xuv powkibbud",
-      "output_sentence": "quw def wespag tuvqikjom nomdaq",
-      "model_answer": "wespag tuvqikjom nomdaq",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 0,
-      "n_words": 192,
-      "prompt_tokens": 1075,
-      "completion_tokens": 5146
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "42e8537300f90e1c-c4a6f3-sample-16",
-      "failure_mode": "partial_span",
-      "input_sentence": "yokhuw hij mob rek buq bec ziwxey pomsup",
-      "output_sentence": "daq jum mud soxjom can hoppus xesfun riqsoj",
-      "model_answer": "mud soxjom can hoppus xesfun riqsoj",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 0,
-      "n_words": 192,
-      "prompt_tokens": 1120,
-      "completion_tokens": 6429
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "623c4c3ccd640499-c4a6f3-sample-67",
-      "failure_mode": "partial_span",
-      "input_sentence": "gon cud xewbil hangih bihjaj xewbil wiz taq witgux cug xewbil kuyvirwez xiz cud tunsem tuw",
-      "output_sentence": "kettog peswin rozhaytub xiftazxok her xaf cavhul xiftazxok yibwathamwoz puzhew xiftazxok zosqiw valkinkan rozhaytub hoq tex quqvac",
-      "model_answer": "kettog peswin rozhaytub xiftazxok her xaf cavhul xiftazxok yibwathamwoz puzhew xiftazxok zosqiw valkinkan",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 3,
-      "n_words": 192,
-      "prompt_tokens": 1450,
-      "completion_tokens": 8824
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "6e19b6033d8aa9f1-c4a6f3-sample-20",
-      "failure_mode": "partial_span",
-      "input_sentence": "xepwikjacmus hapwix lipyex wiw xol jehxoh qeh dip kecxax ruxruk soczejxan wabmom vel",
-      "output_sentence": "gupdebpug qabgefwob sotjuq kay dat lil rax leh pehrukmegwaxqux fimrohloqgek pufsamvep jor rixtuzjotfetyas",
-      "model_answer": "gupdebpug qabgefwob sotjuq kay dat lil rax leh",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
+      "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 9012,
-      "prompt_tokens": 1458,
-      "completion_tokens": 7520
+      "n_words": 6008.0,
+      "prompt_tokens": 84706,
+      "completion_tokens": 4642
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "7d1611e7bb39ff32-c4a6f3-sample-0",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "bf85b74942a52eb0-a90c0c-sample-37",
       "failure_mode": "partial_span",
-      "input_sentence": "his mav ginmutjof gaf set wew guf gob",
-      "output_sentence": "rezrey zoc hupqih nopterlezzod hizzid xaznitlot yuqleryoq",
-      "model_answer": "zoc hupqih nopterlezzod hizzid xaznitlot yuqleryoq",
-      "target_word_order": NaN,
+      "input_sentence": "icfowkaq tpuhkiptun esebom iddpembbajop tpuhkiptun im guf",
+      "output_sentence": "lodkbekgih kah pubpum ib ttihfan bix bix",
+      "model_answer": "lodkbekgih kah pubpum ib ttihfan bix",
+      "target_word_order": "SOV",
       "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 0,
-      "n_words": 13512,
-      "prompt_tokens": 1337,
-      "completion_tokens": 7458
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "7d1611e7bb39ff32-c4a6f3-sample-5",
-      "failure_mode": "partial_span",
-      "input_sentence": "his larkibyivwas jajhiy negday qunkuq",
-      "output_sentence": "rezrey xenpacgec yufhog xaznetsaxzod qelborsom",
-      "model_answer": "xenpacgec yufhog xaznetsaxzod qelborsom",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
-      "depth": 0,
-      "n_words": 13512,
-      "prompt_tokens": 1092,
-      "completion_tokens": 4639
-    },
-    {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "0ad6acf1ac3b4965-c4a6f3-sample-33",
-      "failure_mode": "partial_span",
-      "input_sentence": "hikvozzoqken gag wim bub cervibyag totfab filwulmep fevsawtit bog viqzaftip",
-      "output_sentence": "lis yewgiyyom juzwoymev gef fer xodmev mudsij toj sofjok",
-      "model_answer": "yewgiyyom juzwoymev gef fer xodmev mudsij toj sofjok",
-      "target_word_order": NaN,
-      "target_orthography": NaN,
-      "agreement_condition": "NoAgr -> Agr",
+      "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 18012,
-      "prompt_tokens": 1397,
-      "completion_tokens": 7464
+      "n_words": 88.0,
+      "prompt_tokens": 1995,
+      "completion_tokens": 1498
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "04521c805f26121e-c4a6f3-sample-3",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5",
+      "custom_id": "a5544f3f6fceab89-a90c0c-sample-13",
       "failure_mode": "partial_span",
-      "input_sentence": "dulcus supnuf jocpob did pal",
-      "output_sentence": "fonsuqvar tas hok gefbot",
-      "model_answer": "tas hok gefbot",
-      "target_word_order": NaN,
+      "input_sentence": "tuhfufkpur ifim uc may fupewdix",
+      "output_sentence": "ijbniq ey ov tiqmtolum",
+      "model_answer": "ijbniq ey ov",
+      "target_word_order": "SOV",
       "target_orthography": NaN,
-      "agreement_condition": "Agr -> NoAgr",
+      "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 56,
-      "prompt_tokens": 1060,
-      "completion_tokens": 4883
+      "n_words": 8008.0,
+      "prompt_tokens": 112461,
+      "completion_tokens": 7634
     },
     {
-      "exp": "agreement",
-      "fuzzy_model": "gpt-5-nano",
-      "custom_id": "04521c805f26121e-c4a6f3-sample-28",
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-mini",
+      "custom_id": "b993947b3f98fcd8-f8752a-sample-14",
       "failure_mode": "partial_span",
-      "input_sentence": "tax xitzapmem vuqdoc wumgehxap cacqezqax koqridvim did pal yuzpob sik",
-      "output_sentence": "mij mes muwlinmetlez fobxubpeb fuvrombijxak zifzih gefbot sob wah",
-      "model_answer": "muwlinmetlez fobxubpeb fuvrombijxak zifzih gefbot sob wah",
-      "target_word_order": NaN,
+      "input_sentence": "bpulidpab tav tkefvfixkaw vefvesem ewip",
+      "output_sentence": "is bulkej optoy fin uvdkoj",
+      "model_answer": "bulkej optoy fin uvdkoj",
+      "target_word_order": "SVO",
       "target_orthography": NaN,
-      "agreement_condition": "Agr -> NoAgr",
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 88.0,
+      "prompt_tokens": 1980,
+      "completion_tokens": 853
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-mini",
+      "custom_id": "fc43d33fc9687826-f8752a-sample-107",
+      "failure_mode": "partial_span",
+      "input_sentence": "tfid gguydimtdoq kekvbuxakuk pacawur bgervockic kifev nkofdef ebksabilbop kifev nkofdef ebksabilbop oslinbsih kekvbuxakuk ebksabilbop peh nkofdef kigexuqgzat pbecfger pacawur ofbosik tejbexfbejir",
+      "output_sentence": "is ftod ztivkejpbuv bubayil dvaltim uqpgonkgefub ipnoy appdekojpbeg uqpgonkgefub ipnoy appdekojpbeg fkibldixmeb ztivkejpbuv appdekojpbeg luksdok ipnoy eq kap bubayil sihfbujax bmosgmab",
+      "model_answer": "ftod ztivkejpbuv bubayil dvaltim uqpgonkgefub ipnoy appdekojpbeg uqpgonkgefub ipnoy appdekojpbeg fkibldixmeb ztivkejpbuv appdekojpbeg luksdok ipnoy eq kap bubayil sihfbujax bmosgmab",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 5,
+      "n_words": 808.0,
+      "prompt_tokens": 11970,
+      "completion_tokens": 4889
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-mini",
+      "custom_id": "20271621ed144d32-f8752a-sample-16",
+      "failure_mode": "partial_span",
+      "input_sentence": "ehowiq dzapfij mzul sof powmbes klojbomtiy",
+      "output_sentence": "is iy et pukpopuw todedppox",
+      "model_answer": "iy et pukpopuw todedppox",
+      "target_word_order": "SVO",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
+      "depth": 0,
+      "n_words": 6008.0,
+      "prompt_tokens": 84703,
+      "completion_tokens": 2006
+    },
+    {
+      "dataset": "wordorder_large_exp",
+      "exp": "wordorder",
+      "fuzzy_model": "gpt-5-mini",
+      "custom_id": "a816ec087c646e1b-4ec246-sample-21",
+      "failure_mode": "partial_span",
+      "input_sentence": "diron bixot el zupupsol uwsostug diron bixot kalsaz gnef baw iwen ur inif",
+      "output_sentence": "um knohoh um vixun ih ugik ab upgof",
+      "model_answer": "knohoh um vixun ih ugik ab upgof",
+      "target_word_order": "SOV",
+      "target_orthography": NaN,
+      "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 56,
-      "prompt_tokens": 1274,
-      "completion_tokens": 8167
+      "n_words": 4008.0,
+      "prompt_tokens": 56702,
+      "completion_tokens": 8411
     }
   ],
   "too_short": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-36",
@@ -1944,11 +2065,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102703,
       "completion_tokens": 3156
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-82",
@@ -1960,11 +2082,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102761,
       "completion_tokens": 4378
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-88",
@@ -1976,11 +2099,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102740,
       "completion_tokens": 7413
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-99",
@@ -1992,11 +2116,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102759,
       "completion_tokens": 3994
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-100",
@@ -2008,11 +2133,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102755,
       "completion_tokens": 5785
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-104",
@@ -2024,11 +2150,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102747,
       "completion_tokens": 4507
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-109",
@@ -2040,11 +2167,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102743,
       "completion_tokens": 3283
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-112",
@@ -2056,11 +2184,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102798,
       "completion_tokens": 3895
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "e12ca10ab0c0ee1e-request-113",
@@ -2072,11 +2201,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102772,
       "completion_tokens": 4311
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-46",
@@ -2088,11 +2218,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136217,
       "completion_tokens": 3282
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-65",
@@ -2104,11 +2235,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136268,
       "completion_tokens": 3095
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-83",
@@ -2120,11 +2252,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136289,
       "completion_tokens": 3649
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-85",
@@ -2136,11 +2269,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136273,
       "completion_tokens": 5866
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-90",
@@ -2152,11 +2286,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136268,
       "completion_tokens": 3292
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-94",
@@ -2168,11 +2303,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136264,
       "completion_tokens": 3159
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-101",
@@ -2184,11 +2320,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136288,
       "completion_tokens": 3226
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-104",
@@ -2200,11 +2337,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136250,
       "completion_tokens": 3418
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-105",
@@ -2216,11 +2354,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136272,
       "completion_tokens": 2775
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-109",
@@ -2232,11 +2371,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136271,
       "completion_tokens": 5290
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5-nano",
       "custom_id": "d214d93a070dc397-request-113",
@@ -2248,13 +2388,14 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136249,
       "completion_tokens": 2414
     }
   ],
   "hallucinated_vocab": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-49",
@@ -2266,11 +2407,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102700,
       "completion_tokens": 6833
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-54",
@@ -2282,11 +2424,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102741,
       "completion_tokens": 7581
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-63",
@@ -2298,11 +2441,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102732,
       "completion_tokens": 9750
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-67",
@@ -2314,11 +2458,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102724,
       "completion_tokens": 8068
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-74",
@@ -2330,11 +2475,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102707,
       "completion_tokens": 6782
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-75",
@@ -2346,11 +2492,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102717,
       "completion_tokens": 9599
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-80",
@@ -2362,11 +2509,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102748,
       "completion_tokens": 11936
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-82",
@@ -2378,11 +2526,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102761,
       "completion_tokens": 11326
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-85",
@@ -2394,11 +2543,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102755,
       "completion_tokens": 10797
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-93",
@@ -2410,11 +2560,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102732,
       "completion_tokens": 11857
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-98",
@@ -2426,11 +2577,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102728,
       "completion_tokens": 13196
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-99",
@@ -2442,11 +2594,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102759,
       "completion_tokens": 10597
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-100",
@@ -2458,11 +2611,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102755,
       "completion_tokens": 11604
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-102",
@@ -2474,11 +2628,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102766,
       "completion_tokens": 9006
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-103",
@@ -2490,11 +2645,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102733,
       "completion_tokens": 12511
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-104",
@@ -2506,11 +2662,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102747,
       "completion_tokens": 11298
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-112",
@@ -2522,11 +2679,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102798,
       "completion_tokens": 11016
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-113",
@@ -2538,11 +2696,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102772,
       "completion_tokens": 10356
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-114",
@@ -2554,11 +2713,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102760,
       "completion_tokens": 10399
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-116",
@@ -2570,13 +2730,14 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102751,
       "completion_tokens": 10330
     }
   ],
   "word_order_only": [
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-17",
@@ -2588,11 +2749,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102682,
       "completion_tokens": 7140
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-19",
@@ -2604,11 +2766,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102679,
       "completion_tokens": 6395
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-61",
@@ -2620,11 +2783,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102709,
       "completion_tokens": 5372
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-70",
@@ -2636,11 +2800,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102716,
       "completion_tokens": 10502
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-79",
@@ -2652,11 +2817,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 3,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102725,
       "completion_tokens": 8194
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-84",
@@ -2668,11 +2834,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102744,
       "completion_tokens": 8480
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-88",
@@ -2684,11 +2851,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102740,
       "completion_tokens": 13858
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-95",
@@ -2700,11 +2868,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 4,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102757,
       "completion_tokens": 9844
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-110",
@@ -2716,11 +2885,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102744,
       "completion_tokens": 11292
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "e12ca10ab0c0ee1e-request-111",
@@ -2732,11 +2902,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 5,
-      "n_words": 6011,
+      "n_words": 6011.0,
       "prompt_tokens": 102757,
       "completion_tokens": 12327
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-3",
@@ -2748,11 +2919,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136199,
       "completion_tokens": 6427
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-13",
@@ -2764,11 +2936,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136199,
       "completion_tokens": 7513
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-14",
@@ -2780,11 +2953,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136201,
       "completion_tokens": 4834
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-18",
@@ -2796,11 +2970,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136199,
       "completion_tokens": 4974
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-19",
@@ -2812,11 +2987,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 0,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136200,
       "completion_tokens": 7194
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-20",
@@ -2828,11 +3004,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136215,
       "completion_tokens": 6201
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-21",
@@ -2844,11 +3021,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136208,
       "completion_tokens": 6450
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-27",
@@ -2860,11 +3038,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136221,
       "completion_tokens": 5748
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-35",
@@ -2876,11 +3055,12 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 1,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136224,
       "completion_tokens": 5372
     },
     {
+      "dataset": "wordorder_exp",
       "exp": "wordorder",
       "fuzzy_model": "gpt-5",
       "custom_id": "d214d93a070dc397-request-47",
@@ -2892,7 +3072,7 @@
       "target_orthography": NaN,
       "agreement_condition": NaN,
       "depth": 2,
-      "n_words": 8011,
+      "n_words": 8011.0,
       "prompt_tokens": 136239,
       "completion_tokens": 8778
     }

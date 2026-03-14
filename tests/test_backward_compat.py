@@ -40,6 +40,22 @@ class BackwardCompatTest(unittest.TestCase):
         self.assertEqual([sample["right_phonetic"]], sample["possible_right_phonetic"])
         self.assertNotIn("agreement_ok", sample)
 
+    def test_legacy_yiddish_orthography_alias_still_samples(self):
+        params = CFGParams(
+            rng_seed=5,
+            orthography="yiddish",
+            verbs=2,
+            nouns=2,
+            propns=2,
+            prons=2,
+            adjs=1,
+            det_def=1,
+            det_indef=1,
+            comps=1,
+        )
+        self.assertEqual("yiddish", params.orthography)
+        self.assertTrue(any("\u0590" <= char <= "\u05FF" for char in params.verb_lemmas[0]))
+
 
 if __name__ == "__main__":
     unittest.main()

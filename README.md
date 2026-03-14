@@ -129,7 +129,9 @@ Core commands:
 Experiment commands:
 
 - `exp_wordorder`
+- `exp_wordorder_large`
 - `exp_orthography`
+- `exp_orthography_large`
 - `exp_agreement`
 - `exp_size`
 - `exp_complexity`
@@ -143,6 +145,7 @@ Run:
 
 ```bash
 uv run python main.py exp_wordorder
+uv run python main.py exp_wordorder_large
 ```
 
 This experiment varies:
@@ -150,7 +153,7 @@ This experiment varies:
 - head directionality
 - specifier order
 
-It keeps orthography and agreement mostly fixed. Outputs are written under [data](/Users/jacksonpetty/Development/llm-scfg/data) and listed in `data/wordorder_grammars.txt`.
+It keeps orthography and agreement mostly fixed. Outputs live in [data/wordorder_exp](/Users/jacksonpetty/Development/llm-scfg/data/wordorder_exp) and [data/wordorder_large_exp](/Users/jacksonpetty/Development/llm-scfg/data/wordorder_large_exp).
 
 ### Orthography
 
@@ -158,9 +161,10 @@ Run:
 
 ```bash
 uv run python main.py exp_orthography
+uv run python main.py exp_orthography_large
 ```
 
-This experiment varies the target-side orthography and related surface-form properties while holding syntax mostly fixed. Outputs are listed in `data/orthography_grammars.txt`.
+This experiment varies the target-side orthography and related surface-form properties while holding syntax mostly fixed. The large variant uses `hebrew` and `hebrew_unpointed` as separate target-script conditions. Outputs live in [data/orthography_exp](/Users/jacksonpetty/Development/llm-scfg/data/orthography_exp) and [data/orthography_large_exp](/Users/jacksonpetty/Development/llm-scfg/data/orthography_large_exp).
 
 ### Agreement
 
