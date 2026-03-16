@@ -15,7 +15,7 @@ import pyrootutils
 import tiktoken
 
 from scfg.prompt import ChatCompletionResponse, basic_prompt
-from scfg.scfg import SCFG, CFGParams, SCFGParams, RuleBuilder
+from scfg.scfg import SCFG, CFGParams, RuleBuilder, SCFGParams
 from scfg.utils import get_logger, set_all_seeds
 
 Path = pathlib.Path
@@ -47,7 +47,9 @@ ORTHOGRAPHY_LABELS = {
 }
 
 
-def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_000) -> int:
+def deterministic_seed(
+    *parts: object, base_seed: int = 42, modulus: int = 10_000
+) -> int:
     payload = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str)
     digest = blake2b(payload.encode("utf-8"), digest_size=8).digest()
     return base_seed + (int.from_bytes(digest, "big") % modulus)
@@ -119,7 +121,10 @@ def _write_experiment_readme(
             "",
             "## Condition Examples",
             "",
-            "Examples use the `left_phonetic` and `right_phonetic` surface forms from the sample JSONL files.",
+            (
+                "Examples use the `left_phonetic` and `right_phonetic` "
+                "surface forms from the sample JSONL files."
+            ),
             "",
         ]
     )
@@ -209,7 +214,9 @@ def _create_orthography_dataset(
         condition_examples.append(
             {
                 "title": _orthography_label(orthography),
-                "condition": f"target orthography=`{orthography}`, lexical size target={g_size}",
+                "condition": (
+                    f"target orthography=`{orthography}`, lexical size target={g_size}"
+                ),
                 "grammar_name": grammar_name,
                 "left": sample["left_phonetic"],
                 "right": sample["right_phonetic"],
@@ -375,13 +382,18 @@ def warn_for_large_prompts(
 ) -> None:
     if not model.startswith("gpt") or "prompt" not in df:
         return
-    token_estimates = df["prompt"].apply(lambda prompt: estimate_prompt_tokens(prompt, model))
+    token_estimates = df["prompt"].apply(
+        lambda prompt: estimate_prompt_tokens(prompt, model)
+    )
     max_tokens = int(token_estimates.max())
     over_limit = int((token_estimates > threshold).sum())
     near_limit = int((token_estimates > int(0.8 * threshold)).sum())
     if near_limit:
         log.warning(
-            "Grammar %s has %s prompts above 80%% of the %s-token limit for %s; max estimate=%s",
+            (
+                "Grammar %s has %s prompts above 80%% of the %s-token limit "
+                "for %s; max estimate=%s"
+            ),
             grammar_name,
             near_limit,
             threshold,
@@ -390,7 +402,10 @@ def warn_for_large_prompts(
         )
     if over_limit:
         log.warning(
-            "Grammar %s has %s prompts estimated above the %s-token limit for %s; max estimate=%s",
+            (
+                "Grammar %s has %s prompts estimated above the %s-token limit "
+                "for %s; max estimate=%s"
+            ),
             grammar_name,
             over_limit,
             threshold,
@@ -445,7 +460,8 @@ def create_orthography_large_data(
         exp_name="orthography_large",
         title="Large Orthography Experiment Data",
         overview=(
-            "This dataset expands the orthography experiment with a larger grammar-size "
+            "This dataset expands the orthography experiment with a larger "
+            "grammar-size "
             "grid and two additional target-side writing systems."
         ),
         grammar_sizes=grammar_sizes,
@@ -593,7 +609,6 @@ def create_agreement_data(
             f.write(f"{name}\n")
 
 
-
 def create_size_data(
     grammar_sizes: list[int] = [25, 50, 100, 1_000, 5_000, 7_500, 10_000],
     max_depth: int = 5,
@@ -606,7 +621,7 @@ def create_size_data(
     """
     syllable_structure: str = "C*VC"
     target_head_initial: bool = False
-    
+
     exp_dir: Path = DATA_DIR / (exp_name + "_exp")
     exp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -632,7 +647,7 @@ def create_size_data(
                 n_det_indef=2,
                 n_prons=2,
                 n_comps=2,
-                exp_name=exp_name
+                exp_name=exp_name,
             )
             log.info(
                 f"Created grammar {grammar_name} with g_size={g_size}, seed={g_seed}"
@@ -646,7 +661,7 @@ def create_size_data(
                 exp_name=exp_name,
             )
             grammar_names.append(grammar_name)
-    
+
     with open(exp_dir / f"{exp_name}_grammars.txt", "w") as f:
         for name in grammar_names:
             f.write(f"{name}\n")
@@ -854,7 +869,7 @@ def create_grammar(
 
     out_dir: Path = DATA_DIR
     if exp_name is not None:
-        out_dir /= (exp_name + "_exp")
+        out_dir /= exp_name + "_exp"
         out_dir.mkdir(parents=True, exist_ok=True)
 
     with open(out_dir / f"grammar_{params.name}.json", "w") as f:
@@ -878,7 +893,7 @@ def generate_samples(
     filepath = f"grammar_{grammar_name}.json"
     grammar_dir: Path = DATA_DIR
     if exp_name is not None:
-        grammar_dir /= (exp_name + "_exp")
+        grammar_dir /= exp_name + "_exp"
     with open(grammar_dir / filepath, "r") as f:
         data = json.load(f)
 
@@ -905,7 +920,7 @@ def generate_samples(
 
     out_dir: Path = DATA_DIR
     if exp_name is not None:
-        out_dir /= (exp_name + "_exp")
+        out_dir /= exp_name + "_exp"
         out_dir.mkdir(parents=True, exist_ok=True)
 
     # Save samples to a file
@@ -932,8 +947,6 @@ def generate_batchfile(
     with open(grammar_path, "r") as f:
         grammar = json.load(f)
     agreement_metadata = grammar.get("agreement_metadata")
-    n_words = grammar["n_words"]
-    n_rules = grammar["n_rules"]
 
     df = pd.DataFrame(samples)
     prompt_func = basic_prompt
@@ -965,7 +978,9 @@ def generate_batchfile(
 
     model_pathsafe_name = model.replace("/", "_")
     prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
-    batch_jsonl_filename = f"inputs_{grammar_name}{prompt_label}_{model_pathsafe_name}.jsonl"
+    batch_jsonl_filename = (
+        f"inputs_{grammar_name}{prompt_label}_{model_pathsafe_name}.jsonl"
+    )
     batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
     log.info(f"Writing batch job to {batch_jsonl_path}")
 
@@ -1014,15 +1029,15 @@ def generate_experiment_batchfile(
         with open(grammar_path, "r") as f:
             grammar = json.load(f)
         agreement_metadata = grammar.get("agreement_metadata")
-        n_words = grammar["n_words"]
-        n_rules = grammar["n_rules"]
 
         df = pd.DataFrame(samples)
         prompt_func = basic_prompt
 
         df["prompt"] = df.apply(
             lambda row: prompt_func(
-                grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
+                grammar_str=prompt_grammar_str(
+                    grammar, row["left_phonetic"], prompt_type
+                ),
                 sample=row["left_phonetic"],
                 agreement_metadata=agreement_metadata,
             ),
@@ -1062,7 +1077,6 @@ def generate_experiment_batchfile(
     # num_files = minimum number of files needed
     num_files = max(1, int(total_size_mb // max_filesize_mb) + 1)
 
-
     # partition all_df into num_files parts
     partitioned_dfs = np.array_split(all_df, num_files)
 
@@ -1086,7 +1100,10 @@ def generate_experiment_batchfile(
 
         model_pathsafe_name: str = model.replace("/", "_")
         prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
-        base_fname: str = f"inputs_{exp}{prompt_label}_{model_pathsafe_name}_part{i+1}_of_{num_files}"
+        base_fname: str = (
+            f"inputs_{exp}{prompt_label}_{model_pathsafe_name}"
+            f"_part{i + 1}_of_{num_files}"
+        )
         fname: str = f"{base_fname}_{fname_hash}.jsonl"
         fpath: Path = exp_batch_dir / fname
         log.info(f"Writing batch job to {fpath}")

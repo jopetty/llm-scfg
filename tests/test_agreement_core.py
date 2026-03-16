@@ -93,12 +93,12 @@ class AgreementCoreTest(unittest.TestCase):
             det_indef=1,
             comps=1,
         )
-        with patch("numpy.random.uniform", return_value=0.8), patch(
-            "numpy.random.poisson", return_value=1
-        ), patch("numpy.random.beta", return_value=0.0), patch(
-            "numpy.random.binomial", return_value=0
-        ), patch.object(
-            params, "_generate_syllable", return_value="ba"
+        with (
+            patch("numpy.random.uniform", return_value=0.8),
+            patch("numpy.random.poisson", return_value=1),
+            patch("numpy.random.beta", return_value=0.0),
+            patch("numpy.random.binomial", return_value=0),
+            patch.object(params, "_generate_syllable", return_value="ba"),
         ):
             self.assertEqual("baba", params._sample_string())
 

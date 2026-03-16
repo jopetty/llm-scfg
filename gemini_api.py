@@ -1,6 +1,5 @@
 # Upload and download to Gemini API
 
-import json
 import logging
 import os
 

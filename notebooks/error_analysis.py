@@ -10,7 +10,6 @@ from pathlib import Path
 import fire
 import pandas as pd
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
@@ -199,7 +198,9 @@ def is_hebrew_letter(char: str) -> bool:
     return char.isalpha() and "HEBREW" in char_name(char)
 
 
-def matches_target_orthography(text: str | None, target_orthography: str | None) -> bool:
+def matches_target_orthography(
+    text: str | None, target_orthography: str | None
+) -> bool:
     if not isinstance(text, str) or not text.strip():
         return False
 
@@ -238,7 +239,11 @@ def infer_target_orthography(sample_word: str, dataset: str) -> str:
         return "cyrillic"
     if HEBREW_RE.search(sample_word):
         if dataset == "orthography_large_exp":
-            return "hebrew" if HEBREW_DIACRITIC_RE.search(sample_word) else "hebrew_unpointed"
+            return (
+                "hebrew"
+                if HEBREW_DIACRITIC_RE.search(sample_word)
+                else "hebrew_unpointed"
+            )
         return "yiddish"
     if contains_latin_script(sample_word):
         stripped = strip_latin_diacritics(sample_word)
@@ -250,7 +255,9 @@ def infer_target_orthography(sample_word: str, dataset: str) -> str:
 
 def extract_json_field(line: str, start_marker: str, end_markers: list[str]):
     start = line.index(start_marker) + len(start_marker)
-    candidate_ends = [line.index(marker, start) for marker in end_markers if marker in line[start:]]
+    candidate_ends = [
+        line.index(marker, start) for marker in end_markers if marker in line[start:]
+    ]
     end = min(candidate_ends) if candidate_ends else len(line)
     return json.loads(line[start:end])
 
@@ -290,7 +297,11 @@ def load_outputs(batch_dir: Path, exp: str) -> pd.DataFrame:
                 item = json.loads(line)
                 body = (item.get("response") or {}).get("body") or {}
                 choices = body.get("choices") or []
-                message = ((choices[0] or {}).get("message") or {}).get("content") if choices else None
+                message = (
+                    ((choices[0] or {}).get("message") or {}).get("content")
+                    if choices
+                    else None
+                )
                 prompt_tokens, completion_tokens, total_tokens = usage_tuple(body)
                 row = {
                     "exp": exp,
@@ -327,8 +338,12 @@ def load_inputs(batch_dir: Path) -> pd.DataFrame:
                         "input_sentence": metadata.get("input_sentence"),
                         "output_sentence": metadata.get("output_sentence"),
                         "depth": pd.to_numeric(metadata.get("depth"), errors="coerce"),
-                        "n_words": pd.to_numeric(metadata.get("n_words"), errors="coerce"),
-                        "n_rules": pd.to_numeric(metadata.get("n_rules"), errors="coerce"),
+                        "n_words": pd.to_numeric(
+                            metadata.get("n_words"), errors="coerce"
+                        ),
+                        "n_rules": pd.to_numeric(
+                            metadata.get("n_rules"), errors="coerce"
+                        ),
                     }
                 )
     return pd.DataFrame(rows, columns=INPUT_COLUMNS)
@@ -342,7 +357,9 @@ def ensure_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     return df
 
 
-def merge_outputs_inputs(outputs_df: pd.DataFrame, inputs_df: pd.DataFrame) -> pd.DataFrame:
+def merge_outputs_inputs(
+    outputs_df: pd.DataFrame, inputs_df: pd.DataFrame
+) -> pd.DataFrame:
     if outputs_df.empty:
         return ensure_columns(outputs_df, INPUT_COLUMNS)
     if inputs_df.empty:
@@ -350,17 +367,22 @@ def merge_outputs_inputs(outputs_df: pd.DataFrame, inputs_df: pd.DataFrame) -> p
 
     if inputs_df["custom_id"].is_unique:
         dedup_inputs_df = inputs_df.drop(columns=["fuzzy_model"], errors="ignore")
-        return ensure_columns(outputs_df.merge(dedup_inputs_df, on="custom_id", how="left"), INPUT_COLUMNS)
+        return ensure_columns(
+            outputs_df.merge(dedup_inputs_df, on="custom_id", how="left"), INPUT_COLUMNS
+        )
 
     merge_keys = ["custom_id", "fuzzy_model"]
-    dedup_inputs_df = (
-        inputs_df.sort_values(["custom_id", "fuzzy_model", "input_file"], na_position="last")
-        .drop_duplicates(subset=merge_keys, keep="first")
+    dedup_inputs_df = inputs_df.sort_values(
+        ["custom_id", "fuzzy_model", "input_file"], na_position="last"
+    ).drop_duplicates(subset=merge_keys, keep="first")
+    return ensure_columns(
+        outputs_df.merge(dedup_inputs_df, on=merge_keys, how="left"), INPUT_COLUMNS
     )
-    return ensure_columns(outputs_df.merge(dedup_inputs_df, on=merge_keys, how="left"), INPUT_COLUMNS)
 
 
-def load_sample_sentences(data_dir: Path, sample_index_df: pd.DataFrame) -> pd.DataFrame:
+def load_sample_sentences(
+    data_dir: Path, sample_index_df: pd.DataFrame
+) -> pd.DataFrame:
     if sample_index_df.empty:
         return pd.DataFrame(columns=SAMPLE_COLUMNS)
 
@@ -393,8 +415,10 @@ def load_sample_sentences(data_dir: Path, sample_index_df: pd.DataFrame) -> pd.D
                     {
                         "grammar_name": grammar_name,
                         "sample_id": str(sample_idx),
-                        "input_sentence": sample.get("left_phonetic") or sample.get("left"),
-                        "output_sentence": sample.get("right_phonetic") or sample.get("right"),
+                        "input_sentence": sample.get("left_phonetic")
+                        or sample.get("left"),
+                        "output_sentence": sample.get("right_phonetic")
+                        or sample.get("right"),
                     }
                 )
                 remaining_ids.remove(sample_idx)
@@ -412,11 +436,35 @@ def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFram
         row = {
             "grammar_name": grammar_id,
             "a_words": sum(
-                [grammar["a"][key] for key in ["verbs", "nouns", "propns", "prons", "adjs", "det_def", "det_indef", "comps"]],
+                [
+                    grammar["a"][key]
+                    for key in [
+                        "verbs",
+                        "nouns",
+                        "propns",
+                        "prons",
+                        "adjs",
+                        "det_def",
+                        "det_indef",
+                        "comps",
+                    ]
+                ],
                 [],
             ),
             "b_words": sum(
-                [grammar["b"][key] for key in ["verbs", "nouns", "propns", "prons", "adjs", "det_def", "det_indef", "comps"]],
+                [
+                    grammar["b"][key]
+                    for key in [
+                        "verbs",
+                        "nouns",
+                        "propns",
+                        "prons",
+                        "adjs",
+                        "det_def",
+                        "det_indef",
+                        "comps",
+                    ]
+                ],
                 [],
             ),
             "n_words": pd.to_numeric(grammar.get("n_words"), errors="coerce"),
@@ -461,17 +509,23 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
         for column in ["input_sentence", "output_sentence"]:
             sample_column = f"{column}_sample"
             if sample_column in merged_df.columns:
-                merged_df[column] = merged_df[column].combine_first(merged_df[sample_column])
+                merged_df[column] = merged_df[column].combine_first(
+                    merged_df[sample_column]
+                )
                 merged_df = merged_df.drop(columns=[sample_column])
 
     grammar_df = load_grammar_metadata(spec.exp, spec.data_dir, spec.dataset)
-    merged_df = merged_df.merge(grammar_df, on="grammar_name", how="left", suffixes=("", "_grammar"))
+    merged_df = merged_df.merge(
+        grammar_df, on="grammar_name", how="left", suffixes=("", "_grammar")
+    )
     for column in ["n_words", "n_rules"]:
         grammar_column = f"{column}_grammar"
         if grammar_column in merged_df.columns:
             primary_values = pd.to_numeric(merged_df[column], errors="coerce")
             fallback_values = pd.to_numeric(merged_df[grammar_column], errors="coerce")
-            merged_df[column] = primary_values.where(primary_values.notna(), fallback_values)
+            merged_df[column] = primary_values.where(
+                primary_values.notna(), fallback_values
+            )
             merged_df = merged_df.drop(columns=[grammar_column])
     merged_df["dataset"] = spec.dataset
     return merged_df
@@ -508,7 +562,11 @@ def load_agreement_experiment() -> pd.DataFrame:
                     continue
                 body = (item.get("response") or {}).get("body") or {}
                 choices = body.get("choices") or []
-                message = ((choices[0] or {}).get("message") or {}).get("content") if choices else None
+                message = (
+                    ((choices[0] or {}).get("message") or {}).get("content")
+                    if choices
+                    else None
+                )
                 prompt_tokens, completion_tokens, total_tokens = usage_tuple(body)
                 output_rows.append(
                     {
@@ -549,8 +607,12 @@ def load_agreement_experiment() -> pd.DataFrame:
             grammar = json.load(handle)
 
         agreement_metadata = grammar.get("agreement_metadata", {})
-        a_enabled = bool(agreement_metadata.get("a", {}).get("config", {}).get("enabled", False))
-        b_enabled = bool(agreement_metadata.get("b", {}).get("config", {}).get("enabled", False))
+        a_enabled = bool(
+            agreement_metadata.get("a", {}).get("config", {}).get("enabled", False)
+        )
+        b_enabled = bool(
+            agreement_metadata.get("b", {}).get("config", {}).get("enabled", False)
+        )
         grammar_rows.append(
             {
                 "grammar_name": grammar_id,
@@ -558,7 +620,10 @@ def load_agreement_experiment() -> pd.DataFrame:
                 "n_rules": grammar.get("n_rules"),
                 "agreement_enabled_a": a_enabled,
                 "agreement_enabled_b": b_enabled,
-                "agreement_condition": f"{'Agr' if a_enabled else 'NoAgr'} -> {'Agr' if b_enabled else 'NoAgr'}",
+                "agreement_condition": (
+                    f"{'Agr' if a_enabled else 'NoAgr'} -> "
+                    f"{'Agr' if b_enabled else 'NoAgr'}"
+                ),
             }
         )
 
@@ -580,18 +645,22 @@ def load_agreement_experiment() -> pd.DataFrame:
                     {
                         "grammar_name": grammar_id,
                         "sample_id": str(sample_idx),
-                        "input_sentence": extract_json_field(line, '"left_phonetic": ', [', "right":']),
+                        "input_sentence": extract_json_field(
+                            line, '"left_phonetic": ', [', "right":']
+                        ),
                         "output_sentence": extract_json_field(
-                            line, '"right_phonetic": ', [', "possible_right":', ', "left_tree":']
+                            line,
+                            '"right_phonetic": ',
+                            [', "possible_right":', ', "left_tree":'],
                         ),
                     }
                 )
 
     samples_df = pd.DataFrame(sample_rows)
     grammars_df = pd.DataFrame(grammar_rows)
-    merged_df = outputs_df.merge(samples_df, on=["grammar_name", "sample_id"], how="left").merge(
-        grammars_df, on="grammar_name", how="left"
-    )
+    merged_df = outputs_df.merge(
+        samples_df, on=["grammar_name", "sample_id"], how="left"
+    ).merge(grammars_df, on="grammar_name", how="left")
     merged_df["dataset"] = data_dir.name
     return merged_df
 
@@ -650,8 +719,13 @@ def classify_failure(row: pd.Series) -> str:
         return "too_long"
     if oov_count > 0:
         return "hallucinated_vocab"
-    if pred_tokens and ref_tokens and (
-        pred_tokens == ref_tokens[: len(pred_tokens)] or pred_tokens == ref_tokens[-len(pred_tokens) :]
+    if (
+        pred_tokens
+        and ref_tokens
+        and (
+            pred_tokens == ref_tokens[: len(pred_tokens)]
+            or pred_tokens == ref_tokens[-len(pred_tokens) :]
+        )
     ):
         return "partial_span"
     if len(pred_tokens) == len(ref_tokens):
@@ -668,7 +742,8 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
     df["bow_match"] = df.apply(
-        lambda row: bag_equal(row.get("model_answer"), row.get("output_sentence")), axis=1
+        lambda row: bag_equal(row.get("model_answer"), row.get("output_sentence")),
+        axis=1,
     )
     df["failure_mode"] = df.apply(classify_failure, axis=1)
     df["pred_len"] = df["model_answer"].apply(lambda text: len(tokenize(text)))
@@ -727,9 +802,9 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
         .rename("count")
         .reset_index()
     )
-    summary_df["pct_within_model_exp"] = summary_df.groupby(["dataset", "fuzzy_model"])["count"].transform(
-        lambda series: 100 * series / series.sum()
-    )
+    summary_df["pct_within_model_exp"] = summary_df.groupby(["dataset", "fuzzy_model"])[
+        "count"
+    ].transform(lambda series: 100 * series / series.sum())
     summary_df = summary_df.sort_values(
         ["dataset", "exp", "fuzzy_model", "count"], ascending=[True, True, True, False]
     )
@@ -760,7 +835,10 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
             wrong_script=("failure_mode", lambda s: (s == "wrong_script").mean()),
             diacritic_drop=("failure_mode", lambda s: (s == "diacritic_drop").mean()),
             too_short=("failure_mode", lambda s: (s == "too_short").mean()),
-            same_length_substitution=("failure_mode", lambda s: (s == "same_length_substitution").mean()),
+            same_length_substitution=(
+                "failure_mode",
+                lambda s: (s == "same_length_substitution").mean(),
+            ),
         )
         .reset_index()
     )

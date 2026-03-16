@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import random
-from pathlib import Path
 import sys
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import fire
 import pyrootutils
@@ -12,7 +13,8 @@ PROJECT_ROOT = pyrootutils.find_root(search_from=__file__, indicator=".project-r
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scfg.scfg import CFGParams, SCFG, SCFGParams
+if TYPE_CHECKING:
+    from scfg.scfg import SCFGParams
 
 
 def _load_params(
@@ -20,7 +22,9 @@ def _load_params(
     latent_gender: bool,
     realize_gender_a: bool,
     realize_gender_b: bool,
-) -> SCFGParams:
+) -> "SCFGParams":
+    from scfg.scfg import CFGParams, SCFGParams
+
     if grammar is None:
         return SCFGParams(
             a=CFGParams(
@@ -65,7 +69,9 @@ def _load_params(
         if candidate.exists():
             grammar_path = candidate
         else:
-            raise FileNotFoundError(f"Could not find grammar at {grammar} or {candidate}")
+            raise FileNotFoundError(
+                f"Could not find grammar at {grammar} or {candidate}"
+            )
 
     with open(grammar_path) as handle:
         data = json.load(handle)
@@ -88,6 +94,8 @@ def main(
         realize_gender_a=realize_gender_a,
         realize_gender_b=realize_gender_b,
     )
+    from scfg.scfg import SCFG
+
     scfg = SCFG(params)
     rng = random.Random(seed)
 

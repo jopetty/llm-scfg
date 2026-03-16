@@ -123,8 +123,8 @@ def _to_rgb_tuple(color: str | Color) -> Color:
 def _darken_color(color: str | Color, by: float) -> Color:
     by = min(max(float(by), 0.0), 1.0)
     rgb = _to_rgb_tuple(color)
-    h, l, s = colorsys.rgb_to_hls(*rgb)
-    darker = colorsys.hls_to_rgb(h, l * (1.0 - by), s)
+    h, lightness, saturation = colorsys.rgb_to_hls(*rgb)
+    darker = colorsys.hls_to_rgb(h, lightness * (1.0 - by), saturation)
     return (float(darker[0]), float(darker[1]), float(darker[2]))
 
 
@@ -166,8 +166,10 @@ def darken(
         return {k: _darken_color(v, by) for k, v in color.items()}
     if isinstance(color, str):
         return _darken_color(color, by)
-    if isinstance(color, tuple) and len(color) == 3 and all(
-        isinstance(x, (int, float)) for x in color
+    if (
+        isinstance(color, tuple)
+        and len(color) == 3
+        and all(isinstance(x, (int, float)) for x in color)
     ):
         return _darken_color(color, by)
     return [_darken_color(c, by) for c in color]

@@ -54,7 +54,9 @@ class BackwardCompatTest(unittest.TestCase):
             comps=1,
         )
         self.assertEqual("yiddish", params.orthography)
-        self.assertTrue(any("\u0590" <= char <= "\u05FF" for char in params.verb_lemmas[0]))
+        self.assertTrue(
+            any("\u0590" <= char <= "\u05ff" for char in params.verb_lemmas[0])
+        )
 
 
 if __name__ == "__main__":
