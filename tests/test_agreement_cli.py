@@ -8,9 +8,15 @@ import main
 
 class AgreementCliTest(unittest.TestCase):
     def test_deterministic_seed_is_stable(self):
-        seed_one = main.deterministic_seed("agreement", 100, 0, (("agreement_enabled_a", True),))
-        seed_two = main.deterministic_seed("agreement", 100, 0, (("agreement_enabled_a", True),))
-        seed_three = main.deterministic_seed("agreement", 100, 1, (("agreement_enabled_a", True),))
+        seed_one = main.deterministic_seed(
+            "agreement", 100, 0, (("agreement_enabled_a", True),)
+        )
+        seed_two = main.deterministic_seed(
+            "agreement", 100, 0, (("agreement_enabled_a", True),)
+        )
+        seed_three = main.deterministic_seed(
+            "agreement", 100, 1, (("agreement_enabled_a", True),)
+        )
 
         self.assertEqual(seed_one, seed_two)
         self.assertNotEqual(seed_one, seed_three)

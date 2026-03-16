@@ -86,7 +86,11 @@ class FeatureUnifier:
         for axis in ("person", "number", "gender"):
             left_value = getattr(left, axis)
             right_value = getattr(right, axis)
-            if left_value is not None and right_value is not None and left_value != right_value:
+            if (
+                left_value is not None
+                and right_value is not None
+                and left_value != right_value
+            ):
                 return None
             merged[axis] = left_value if left_value is not None else right_value
         return FeatureBundle(**merged)
@@ -115,7 +119,9 @@ def build_suffix_inventory(
     gender_values: tuple[str, ...] = GENDER_VALUES,
 ) -> dict[str, str]:
     inventory: dict[str, str] = {}
-    for bundle, form in zip(feature_inventory(axes, gender_values=gender_values), forms):
+    for bundle, form in zip(
+        feature_inventory(axes, gender_values=gender_values), forms
+    ):
         inventory[bundle.key(axes)] = form
     return inventory
 

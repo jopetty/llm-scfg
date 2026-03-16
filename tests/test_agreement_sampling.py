@@ -1,5 +1,6 @@
 import random
 import unittest
+from typing import Any, cast
 
 from scfg.agreement import FeatureBundle
 from scfg.scfg import SCFG, CFGParams, SCFGParams
@@ -90,18 +91,22 @@ class AgreementSamplingTest(unittest.TestCase):
         self.fail("Did not encounter a gendered nominal subject in 100 draws")
 
     def test_verb_sampling_uses_aligned_paradigm_entries(self):
+        self.assertIsNotNone(self.params.a.verb_paradigms)
+        self.assertIsNotNone(self.params.b.verb_paradigms)
+        a_verb_paradigms = cast(list[dict[str, Any]], self.params.a.verb_paradigms)
+        b_verb_paradigms = cast(list[dict[str, Any]], self.params.b.verb_paradigms)
         plural_third_key = FeatureBundle(person="3", number="pl").key(
             self.params.a.latent_axes
         )
         expected_pairs = {
             (
-                self.params.a.verb_paradigms[index]["forms"][plural_third_key],
-                self.params.b.verb_paradigms[index]["forms"][plural_third_key],
+                a_verb_paradigms[index]["forms"][plural_third_key],
+                b_verb_paradigms[index]["forms"][plural_third_key],
             )
             for index in range(
                 min(
-                    len(self.params.a.verb_paradigms),
-                    len(self.params.b.verb_paradigms),
+                    len(a_verb_paradigms),
+                    len(b_verb_paradigms),
                 )
             )
         }

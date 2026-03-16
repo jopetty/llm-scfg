@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, cast
 from unittest.mock import patch
 
 from scfg.agreement import FeatureBundle, FeatureUnifier
@@ -33,12 +34,18 @@ class AgreementCoreTest(unittest.TestCase):
             det_indef=1,
             comps=1,
         )
-        self.assertEqual(6, len(params.pronoun_paradigms))
-        self.assertEqual(2, len(params.verb_paradigms))
-        self.assertEqual(2, len(params.noun_paradigms))
-        self.assertIn("number=sg", params.noun_paradigms[0]["forms"])
-        self.assertIn("number=pl", params.noun_paradigms[0]["forms"])
-        self.assertEqual(6, len(params.verb_paradigms[0]["forms"]))
+        self.assertIsNotNone(params.pronoun_paradigms)
+        self.assertIsNotNone(params.verb_paradigms)
+        self.assertIsNotNone(params.noun_paradigms)
+        pronoun_paradigms = cast(list[dict[str, Any]], params.pronoun_paradigms)
+        verb_paradigms = cast(list[dict[str, Any]], params.verb_paradigms)
+        noun_paradigms = cast(list[dict[str, Any]], params.noun_paradigms)
+        self.assertEqual(6, len(pronoun_paradigms))
+        self.assertEqual(2, len(verb_paradigms))
+        self.assertEqual(2, len(noun_paradigms))
+        self.assertIn("number=sg", noun_paradigms[0]["forms"])
+        self.assertIn("number=pl", noun_paradigms[0]["forms"])
+        self.assertEqual(6, len(verb_paradigms[0]["forms"]))
 
     def test_gender_can_be_latent_without_surface_realization(self):
         hidden = CFGParams(
@@ -67,9 +74,15 @@ class AgreementCoreTest(unittest.TestCase):
             det_indef=1,
             comps=1,
         )
-        self.assertIn("gender", hidden.noun_paradigms[0]["features"].to_dict())
-        hidden_forms = hidden.verb_paradigms[0]["forms"]
-        overt_forms = overt.verb_paradigms[0]["forms"]
+        self.assertIsNotNone(hidden.noun_paradigms)
+        self.assertIsNotNone(hidden.verb_paradigms)
+        self.assertIsNotNone(overt.verb_paradigms)
+        hidden_noun_paradigms = cast(list[dict[str, Any]], hidden.noun_paradigms)
+        hidden_verb_paradigms = cast(list[dict[str, Any]], hidden.verb_paradigms)
+        overt_verb_paradigms = cast(list[dict[str, Any]], overt.verb_paradigms)
+        self.assertIn("gender", hidden_noun_paradigms[0]["features"].to_dict())
+        hidden_forms = hidden_verb_paradigms[0]["forms"]
+        overt_forms = overt_verb_paradigms[0]["forms"]
         self.assertEqual(
             hidden_forms["number=sg|person=3|gender=masc"],
             hidden_forms["number=sg|person=3|gender=fem"],
@@ -93,12 +106,12 @@ class AgreementCoreTest(unittest.TestCase):
             det_indef=1,
             comps=1,
         )
-        with patch("numpy.random.uniform", return_value=0.8), patch(
-            "numpy.random.poisson", return_value=1
-        ), patch("numpy.random.beta", return_value=0.0), patch(
-            "numpy.random.binomial", return_value=0
-        ), patch.object(
-            params, "_generate_syllable", return_value="ba"
+        with (
+            patch("numpy.random.uniform", return_value=0.8),
+            patch("numpy.random.poisson", return_value=1),
+            patch("numpy.random.beta", return_value=0.0),
+            patch("numpy.random.binomial", return_value=0),
+            patch.object(params, "_generate_syllable", return_value="ba"),
         ):
             self.assertEqual("baba", params._sample_string())
 

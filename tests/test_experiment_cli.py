@@ -13,7 +13,7 @@ class ExperimentCliTest(unittest.TestCase):
             ("latin_diacritic", lambda text: any(ord(char) > 127 for char in text)),
             (
                 "hebrew_unpointed",
-                lambda text: any("\u0590" <= char <= "\u05FF" for char in text),
+                lambda text: any("\u0590" <= char <= "\u05ff" for char in text),
             ),
         ]
 
@@ -51,13 +51,17 @@ class ExperimentCliTest(unittest.TestCase):
                 )
                 orthography_dir = data_dir / "orthography_large_exp"
                 self.assertTrue((orthography_dir / "README.md").exists())
-                self.assertTrue((orthography_dir / "orthography_large_grammars.txt").exists())
+                self.assertTrue(
+                    (orthography_dir / "orthography_large_grammars.txt").exists()
+                )
                 orthography_readme = (orthography_dir / "README.md").read_text()
                 self.assertIn("latin_diacritic", orthography_readme)
                 self.assertIn("hebrew_unpointed", orthography_readme)
 
                 with open(orthography_dir / "orthography_large_grammars.txt") as handle:
-                    orthography_names = [line.strip() for line in handle if line.strip()]
+                    orthography_names = [
+                        line.strip() for line in handle if line.strip()
+                    ]
                 self.assertEqual(5, len(orthography_names))
 
                 target_orthographies = set()
@@ -89,7 +93,9 @@ class ExperimentCliTest(unittest.TestCase):
                 )
                 wordorder_dir = data_dir / "wordorder_large_exp"
                 self.assertTrue((wordorder_dir / "README.md").exists())
-                self.assertTrue((wordorder_dir / "wordorder_large_grammars.txt").exists())
+                self.assertTrue(
+                    (wordorder_dir / "wordorder_large_grammars.txt").exists()
+                )
                 wordorder_readme = (wordorder_dir / "README.md").read_text()
                 self.assertIn("head-final, spec-initial", wordorder_readme)
                 self.assertIn("head-final, spec-final", wordorder_readme)
@@ -106,7 +112,9 @@ class ExperimentCliTest(unittest.TestCase):
                     self.assertTrue(samples_path.exists())
                     with open(grammar_path) as handle:
                         grammar = json.load(handle)
-                    target_orders.add((grammar["b"]["head_initial"], grammar["b"]["spec_initial"]))
+                    target_orders.add(
+                        (grammar["b"]["head_initial"], grammar["b"]["spec_initial"])
+                    )
 
                 self.assertEqual(
                     {(True, True), (False, True), (False, False)},

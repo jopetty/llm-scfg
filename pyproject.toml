@@ -27,7 +27,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pre-commit>=3.8.0"
+    "pre-commit>=3.8.0",
+    "ty>=0.0.4",
 ]
 
 [tool.ruff]
@@ -40,3 +41,6 @@ select = ["E", "F", "I", "N"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ty.src]
+exclude = ["**/*.ipynb"]

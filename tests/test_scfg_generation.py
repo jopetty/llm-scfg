@@ -1,5 +1,6 @@
 import random
 import unittest
+from typing import Any, cast
 from unittest.mock import patch
 
 from scfg.agreement import FeatureBundle
@@ -83,8 +84,10 @@ class SCFGGenerationTest(unittest.TestCase):
         expected_key = FeatureBundle(person="3", number="sg", gender="fem").key(
             params.latent_axes
         )
+        self.assertIsNotNone(params.verb_paradigms)
+        verb_paradigms = cast(list[dict[str, Any]], params.verb_paradigms)
         self.assertEqual("fem", features.gender)
-        self.assertEqual(params.verb_paradigms[0]["forms"][expected_key], surface)
+        self.assertEqual(verb_paradigms[0]["forms"][expected_key], surface)
 
     def test_possible_verb_right_surfaces_expand_when_source_lacks_agreement(self):
         params = SCFGParams(

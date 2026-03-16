@@ -1,8 +1,8 @@
 # Upload and download to Gemini API
 
-import json
 import logging
 import os
+from typing import cast
 
 import dotenv
 import fire
@@ -49,8 +49,9 @@ def upload_batch(
         ),
     )
     print(uploaded_file)
+    input_file_id = cast(str, uploaded_file.name)
     batch = openai_client.batches.create(
-        input_file_id=uploaded_file.name,
+        input_file_id=input_file_id,
         endpoint="/v1/chat/completions",
         completion_window="24h",
     )
@@ -66,18 +67,18 @@ def download_batch(
 
     print(batch)
 
-    print(client.files.get(name=batch.display_name))
+    batch_display_name = cast(str, batch.display_name)
+    print(client.files.get(name=batch_display_name))
 
     if batch.state == genai.types.JobState.JOB_STATE_SUCCEEDED:
-        batch_dest_fname: str = str(batch.dest.file_name)
+        batch_dest = cast(genai.types.BatchJobDestination, batch.dest)
+        batch_dest_fname = cast(str, batch_dest.file_name)
         output_fname = BATCH_DIR / (
             "batch_" + batch_dest_fname.split("-")[-1] + "_output.jsonl"
         )
 
         file_content = (
-            client.files.download(file=batch.dest.file_name)
-            .decode("utf-8")
-            .splitlines()
+            client.files.download(file=batch_dest_fname).decode("utf-8").splitlines()
         )
         with open(outpath / output_fname, "w") as f:
             for line in file_content:
