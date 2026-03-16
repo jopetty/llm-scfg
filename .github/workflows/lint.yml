@@ -23,5 +23,5 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run pre-commit
-        run: uv run --group dev pre-commit run --all-files --show-diff-on-failure
+      - name: Run prek
+        run: uv run --group dev prek run --all-files --show-diff-on-failure
