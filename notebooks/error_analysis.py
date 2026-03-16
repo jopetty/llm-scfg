@@ -4,6 +4,7 @@ import json
 import re
 import unicodedata
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -64,7 +65,7 @@ STANDARD_EXPERIMENTS = (
     ),
 )
 
-OUTPUT_COLUMNS = [
+OUTPUT_COLUMNS = (
     "exp",
     "custom_id",
     "batch_file",
@@ -76,8 +77,8 @@ OUTPUT_COLUMNS = [
     "prompt_tokens",
     "completion_tokens",
     "total_tokens",
-]
-INPUT_COLUMNS = [
+)
+INPUT_COLUMNS = (
     "custom_id",
     "input_file",
     "fuzzy_model",
@@ -88,8 +89,12 @@ INPUT_COLUMNS = [
     "depth",
     "n_words",
     "n_rules",
-]
-SAMPLE_COLUMNS = ["grammar_name", "sample_id", "input_sentence", "output_sentence"]
+)
+SAMPLE_COLUMNS = ("grammar_name", "sample_id", "input_sentence", "output_sentence")
+
+OUTPUT_INDEX = pd.Index(OUTPUT_COLUMNS)
+INPUT_INDEX = pd.Index(INPUT_COLUMNS)
+SAMPLE_INDEX = pd.Index(SAMPLE_COLUMNS)
 
 CYRILLIC_RE = re.compile(r"[а-яА-Я]")
 HEBREW_RE = re.compile(r"[\u0590-\u05FF]")
@@ -317,7 +322,7 @@ def load_outputs(batch_dir: Path, exp: str) -> pd.DataFrame:
                     "total_tokens": total_tokens,
                 }
                 rows.append(row)
-    return pd.DataFrame(rows, columns=OUTPUT_COLUMNS)
+    return pd.DataFrame(rows, columns=OUTPUT_INDEX)
 
 
 def load_inputs(batch_dir: Path) -> pd.DataFrame:
@@ -346,10 +351,10 @@ def load_inputs(batch_dir: Path) -> pd.DataFrame:
                         ),
                     }
                 )
-    return pd.DataFrame(rows, columns=INPUT_COLUMNS)
+    return pd.DataFrame(rows, columns=INPUT_INDEX)
 
 
-def ensure_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+def ensure_columns(df: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
     df = df.copy()
     for column in columns:
         if column not in df.columns:
@@ -384,11 +389,11 @@ def load_sample_sentences(
     data_dir: Path, sample_index_df: pd.DataFrame
 ) -> pd.DataFrame:
     if sample_index_df.empty:
-        return pd.DataFrame(columns=SAMPLE_COLUMNS)
+        return pd.DataFrame(columns=SAMPLE_INDEX)
 
     needed_df = sample_index_df.dropna(subset=["grammar_name", "sample_id"]).copy()
     if needed_df.empty:
-        return pd.DataFrame(columns=SAMPLE_COLUMNS)
+        return pd.DataFrame(columns=SAMPLE_INDEX)
 
     needed_df["sample_id"] = needed_df["sample_id"].astype(str)
     needed_ids = (
@@ -424,7 +429,7 @@ def load_sample_sentences(
                 remaining_ids.remove(sample_idx)
                 if not remaining_ids:
                     break
-    return pd.DataFrame(rows, columns=SAMPLE_COLUMNS)
+    return pd.DataFrame(rows, columns=SAMPLE_INDEX)
 
 
 def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFrame:

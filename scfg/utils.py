@@ -26,7 +26,7 @@ def set_all_seeds(seed: int):
     random.seed(seed)
 
     if importlib.util.find_spec("torch") is not None:
-        import torch
+        import torch  # ty: ignore[unresolved-import]
 
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)

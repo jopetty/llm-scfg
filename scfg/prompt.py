@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+from typing import Any
 
 
 @dataclasses.dataclass(frozen=True)
@@ -12,20 +13,21 @@ class ChatCompletionResponse:
     n: int = 1
 
     def to_openai_batched_json(self, model: str, custom_id: str) -> str:
-        obj = {
+        body: dict[str, Any] = {
+            "model": model,
+            "messages": [{"role": "user", "content": self.user_prompt}],
+            "max_completion_tokens": self.max_completion_tokens,
+            "n": self.n,
+        }
+        obj: dict[str, Any] = {
             "custom_id": custom_id,
             "method": "POST",
             "url": "/v1/chat/completions",
-            "body": {
-                "model": model,
-                "messages": [{"role": "user", "content": self.user_prompt}],
-                "max_completion_tokens": self.max_completion_tokens,
-                "n": self.n,
-            },
+            "body": body,
         }
         if self.metadata is not None:
-            obj["body"]["metadata"] = self.metadata
-            obj["body"]["store"] = True
+            body["metadata"] = self.metadata
+            body["store"] = True
         return json.dumps(obj=obj)
 
 

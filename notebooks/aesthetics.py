@@ -9,7 +9,7 @@ from __future__ import annotations
 import colorsys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -163,7 +163,7 @@ def darken(
     by: float = 0.2,
 ):
     if isinstance(color, Mapping):
-        return {k: _darken_color(v, by) for k, v in color.items()}
+        return {k: _darken_color(cast(str | Color, v), by) for k, v in color.items()}
     if isinstance(color, str):
         return _darken_color(color, by)
     if (
@@ -171,8 +171,8 @@ def darken(
         and len(color) == 3
         and all(isinstance(x, (int, float)) for x in color)
     ):
-        return _darken_color(color, by)
-    return [_darken_color(c, by) for c in color]
+        return _darken_color(cast(Color, color), by)
+    return [_darken_color(cast(str | Color, c), by) for c in color]
 
 
 PALETTES: dict[str, Any] = {"models": {}}

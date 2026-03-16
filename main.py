@@ -6,7 +6,7 @@ import pathlib
 import random
 import secrets
 from hashlib import blake2b
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, cast
 
 import fire
 import numpy as np
@@ -912,6 +912,7 @@ def generate_samples(
             sample = scfg.sample(rng=rng, min_depth=d, max_depth=d)
             samples.append(sample)
 
+    assert params.name is not None
     for s in samples:
         s["grammar_name"] = params.name
         s["min_depth"] = min_depth
@@ -1078,9 +1079,10 @@ def generate_experiment_batchfile(
     num_files = max(1, int(total_size_mb // max_filesize_mb) + 1)
 
     # partition all_df into num_files parts
-    partitioned_dfs = np.array_split(all_df, num_files)
+    partitioned_dfs = list(np.array_split(all_df, num_files))
 
-    for i, part_df in enumerate(partitioned_dfs):
+    for i, raw_part_df in enumerate(partitioned_dfs):
+        part_df = cast(pd.DataFrame, raw_part_df)
         fname_hash: str = secrets.token_hex(3)
 
         # Add fname_hash to each custom_id so we can retrieve the

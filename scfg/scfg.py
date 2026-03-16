@@ -5,7 +5,7 @@ import re
 import secrets
 from dataclasses import asdict, dataclass, field
 from itertools import product
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 
@@ -552,7 +552,9 @@ class CFGParams:
                 )
                 form = f"{lemma}{suffix}"
                 if self.realize_gender and bundle.gender is not None:
-                    gender_suffix = agreement_suffixes.get(f"gender={bundle.gender}", "")
+                    gender_suffix = agreement_suffixes.get(
+                        f"gender={bundle.gender}", ""
+                    )
                     form = f"{form}{gender_suffix}"
                 forms[latent_key] = form
             paradigms.append({"lemma": lemma, "forms": forms})
@@ -717,9 +719,7 @@ class SCFGParams:
             "a": {
                 "config": self.a.agreement_config.to_dict(),
                 "suffixes": dict(self.a.agreement_suffixes or {}),
-                "pronoun_paradigms": serialize_bundles(
-                    self.a.pronoun_paradigms or []
-                ),
+                "pronoun_paradigms": serialize_bundles(self.a.pronoun_paradigms or []),
                 "verb_paradigms": serialize_bundles(self.a.verb_paradigms or []),
                 "noun_paradigms": serialize_bundles(self.a.noun_paradigms or []),
                 "propn_paradigms": serialize_bundles(self.a.propn_paradigms or []),
@@ -727,9 +727,7 @@ class SCFGParams:
             "b": {
                 "config": self.b.agreement_config.to_dict(),
                 "suffixes": dict(self.b.agreement_suffixes or {}),
-                "pronoun_paradigms": serialize_bundles(
-                    self.b.pronoun_paradigms or []
-                ),
+                "pronoun_paradigms": serialize_bundles(self.b.pronoun_paradigms or []),
                 "verb_paradigms": serialize_bundles(self.b.verb_paradigms or []),
                 "noun_paradigms": serialize_bundles(self.b.noun_paradigms or []),
                 "propn_paradigms": serialize_bundles(self.b.propn_paradigms or []),
@@ -1930,8 +1928,12 @@ class RuleBuilder:
         left: list[str] = []
         right: list[str] = []
         count = min(
-            len(params.a.verb_paradigms) if params.a.verb_paradigms else len(params.a.verb_lex),
-            len(params.b.verb_paradigms) if params.b.verb_paradigms else len(params.b.verb_lex),
+            len(params.a.verb_paradigms)
+            if params.a.verb_paradigms
+            else len(params.a.verb_lex),
+            len(params.b.verb_paradigms)
+            if params.b.verb_paradigms
+            else len(params.b.verb_lex),
         )
         bundle_source = params.a if params.a.agreement_enabled else params.b
         keys = [
@@ -1968,8 +1970,12 @@ class RuleBuilder:
         left: list[str] = []
         right: list[str] = []
         count = min(
-            len(params.a.noun_paradigms) if params.a.noun_paradigms else len(params.a.noun_lex),
-            len(params.b.noun_paradigms) if params.b.noun_paradigms else len(params.b.noun_lex),
+            len(params.a.noun_paradigms)
+            if params.a.noun_paradigms
+            else len(params.a.noun_lex),
+            len(params.b.noun_paradigms)
+            if params.b.noun_paradigms
+            else len(params.b.noun_lex),
         )
         for index in range(count):
             for key in ("number=sg", "number=pl"):
@@ -2062,14 +2068,10 @@ class RuleBuilder:
         )
         for index in range(count):
             left_entry = (
-                params.a.noun_paradigms[index]
-                if params.a.noun_paradigms
-                else None
+                params.a.noun_paradigms[index] if params.a.noun_paradigms else None
             )
             right_entry = (
-                params.b.noun_paradigms[index]
-                if params.b.noun_paradigms
-                else None
+                params.b.noun_paradigms[index] if params.b.noun_paradigms else None
             )
             left_features = (
                 left_entry.get("features", FeatureBundle())
@@ -2137,14 +2139,10 @@ class RuleBuilder:
         )
         for index in range(count):
             left_entry = (
-                params.a.propn_paradigms[index]
-                if params.a.propn_paradigms
-                else None
+                params.a.propn_paradigms[index] if params.a.propn_paradigms else None
             )
             right_entry = (
-                params.b.propn_paradigms[index]
-                if params.b.propn_paradigms
-                else None
+                params.b.propn_paradigms[index] if params.b.propn_paradigms else None
             )
             feature_source = (
                 left_entry
@@ -2187,14 +2185,10 @@ class RuleBuilder:
         )
         for index in range(count):
             left_entry = (
-                params.a.verb_paradigms[index]
-                if params.a.verb_paradigms
-                else None
+                params.a.verb_paradigms[index] if params.a.verb_paradigms else None
             )
             right_entry = (
-                params.b.verb_paradigms[index]
-                if params.b.verb_paradigms
-                else None
+                params.b.verb_paradigms[index] if params.b.verb_paradigms else None
             )
             stem = f"V{index + 1}"
             left_lemma = (
@@ -2299,14 +2293,10 @@ class RuleBuilder:
         lines: list[str] = []
         for index in range(count):
             left_entry = (
-                params.a.verb_paradigms[index]
-                if params.a.verb_paradigms
-                else None
+                params.a.verb_paradigms[index] if params.a.verb_paradigms else None
             )
             right_entry = (
-                params.b.verb_paradigms[index]
-                if params.b.verb_paradigms
-                else None
+                params.b.verb_paradigms[index] if params.b.verb_paradigms else None
             )
             left_lemma = (
                 left_entry["lemma"]
@@ -2359,14 +2349,10 @@ class RuleBuilder:
         lines: list[str] = []
         for index in range(count):
             left_entry = (
-                params.a.noun_paradigms[index]
-                if params.a.noun_paradigms
-                else None
+                params.a.noun_paradigms[index] if params.a.noun_paradigms else None
             )
             right_entry = (
-                params.b.noun_paradigms[index]
-                if params.b.noun_paradigms
-                else None
+                params.b.noun_paradigms[index] if params.b.noun_paradigms else None
             )
             left_lemma = (
                 left_entry["lemma"]
@@ -2416,14 +2402,10 @@ class RuleBuilder:
         lines: list[str] = []
         for index in range(count):
             left_entry = (
-                params.a.propn_paradigms[index]
-                if params.a.propn_paradigms
-                else None
+                params.a.propn_paradigms[index] if params.a.propn_paradigms else None
             )
             right_entry = (
-                params.b.propn_paradigms[index]
-                if params.b.propn_paradigms
-                else None
+                params.b.propn_paradigms[index] if params.b.propn_paradigms else None
             )
             left_surface = (
                 left_entry["lemma"]
