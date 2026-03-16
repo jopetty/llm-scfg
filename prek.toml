@@ -15,6 +15,10 @@ hooks = [
     id = "check-added-large-files",
     args = ["--maxkb=2000"]
   },
+  {
+    id = "no-commit-to-branch",
+    args = ["--branch", "main"]
+  },
   { id = "debug-statements" },
   { id = "detect-private-key" }
 ]
