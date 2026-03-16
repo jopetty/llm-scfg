@@ -183,6 +183,56 @@ def strip_latin_diacritics(text: str | None) -> str:
     return "".join(char for char in normalized if not unicodedata.combining(char))
 
 
+def char_name(char: str) -> str:
+    return unicodedata.name(char, "")
+
+
+def is_latin_letter(char: str) -> bool:
+    return char.isalpha() and "LATIN" in char_name(char)
+
+
+def is_cyrillic_letter(char: str) -> bool:
+    return char.isalpha() and "CYRILLIC" in char_name(char)
+
+
+def is_hebrew_letter(char: str) -> bool:
+    return char.isalpha() and "HEBREW" in char_name(char)
+
+
+def matches_target_orthography(text: str | None, target_orthography: str | None) -> bool:
+    if not isinstance(text, str) or not text.strip():
+        return False
+
+    for char in text:
+        if char.isspace():
+            continue
+
+        if target_orthography == "cyrillic":
+            if not is_cyrillic_letter(char):
+                return False
+            continue
+
+        if target_orthography in {"latin", "latin_diacritic"}:
+            if not is_latin_letter(char):
+                return False
+            if target_orthography == "latin" and strip_latin_diacritics(char) != char:
+                return False
+            continue
+
+        if target_orthography in {"hebrew", "yiddish", "hebrew_unpointed"}:
+            if HEBREW_DIACRITIC_RE.fullmatch(char):
+                if target_orthography == "hebrew_unpointed":
+                    return False
+                continue
+            if not is_hebrew_letter(char):
+                return False
+            continue
+
+        return False
+
+    return True
+
+
 def infer_target_orthography(sample_word: str, dataset: str) -> str:
     if CYRILLIC_RE.search(sample_word):
         return "cyrillic"
@@ -580,12 +630,7 @@ def classify_failure(row: pd.Series) -> str:
         return "source_lexicon_intrusion"
     if row.get("exp") == "orthography":
         target_orthography = row.get("target_orthography")
-        pred_script = detect_script(pred)
-        if target_orthography == "cyrillic" and pred_script != "cyrillic":
-            return "wrong_script"
-        if target_orthography in {"hebrew", "hebrew_unpointed", "yiddish"} and pred_script != "hebrew":
-            return "wrong_script"
-        if target_orthography in {"latin", "latin_diacritic"} and pred_script != "latin":
+        if not matches_target_orthography(pred, target_orthography):
             return "wrong_script"
         if (
             target_orthography in {"hebrew", "hebrew_unpointed", "yiddish"}
