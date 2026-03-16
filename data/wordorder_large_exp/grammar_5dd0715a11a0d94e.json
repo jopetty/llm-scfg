@@ -1,0 +1,265 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 5198,
+    "verbs": [
+      "vtuy el eq",
+      "orur",
+      "obfdakol",
+      "im",
+      "gax",
+      "iniw",
+      "goxoktdupup",
+      "aytpac",
+      "kan",
+      "gvidbov"
+    ],
+    "nouns": [
+      "enmit",
+      "kar",
+      "ucontaw",
+      "taf",
+      "lidgkay",
+      "ntot",
+      "dmuptokud",
+      "paslsep",
+      "ah",
+      "ejgalmertkir"
+    ],
+    "propns": [
+      "buk er",
+      "gsaculdbec",
+      "axuh",
+      "kibormod",
+      "ejur",
+      "nob",
+      "povtub",
+      "tpeg ozfbaq",
+      "kporfbir tpuv",
+      "kvupos"
+    ],
+    "prons": [
+      "axksos",
+      "ekteh"
+    ],
+    "adjs": [
+      "kibaknduktked",
+      "kzuk",
+      "dmirzkarpzac",
+      "suy",
+      "zistpawfep",
+      "gaf inbekffis",
+      "gpap",
+      "dakez",
+      "bnaces",
+      "kgitsfuj"
+    ],
+    "det_def": [
+      "pivzof",
+      "banfdepten"
+    ],
+    "det_indef": [
+      "betan",
+      "zob kvud gayger"
+    ],
+    "comps": [
+      "uspukbgeh",
+      "mgeton"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": false,
+    "spec_initial": false,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 5199,
+    "verbs": [
+      "upev",
+      "id",
+      "knowkiyoh",
+      "zaqbuf",
+      "isgomldaw",
+      "ettdicfsux",
+      "zem",
+      "oy",
+      "stol",
+      "urbkunem"
+    ],
+    "nouns": [
+      "erftosud",
+      "oqazpfeg",
+      "dbufippnib",
+      "fovdus",
+      "datfbih",
+      "vgafoz",
+      "ok",
+      "vag",
+      "edocmvetsmaw",
+      "mas ogtguf"
+    ],
+    "propns": [
+      "bot oh",
+      "bzay",
+      "novvfargsoy",
+      "abtsawdkub",
+      "uc",
+      "osab",
+      "siqojir",
+      "ztifownirszis",
+      "ewbpov bmatbaf",
+      "dpeforer"
+    ],
+    "prons": [
+      "uwajlap",
+      "dkefbesujtbih"
+    ],
+    "adjs": [
+      "uz",
+      "tiqzeyvvow",
+      "dehbaw",
+      "gebsicfuvpbaw",
+      "seg id",
+      "ij",
+      "ntem",
+      "zibvetad dim",
+      "tilkol",
+      "sfig"
+    ],
+    "det_def": [
+      "ppad eg",
+      "ftobpik"
+    ],
+    "det_indef": [
+      "fnaypal",
+      "fiw zfusak"
+    ],
+    "comps": [
+      "dajdpuqexos",
+      "kfemstuqvmip"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "5dd0715a11a0d94e",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, TBAR NP_SUBJ>\nTBAR -> <T VP, VP T>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR, VBAR >\nVBAR -> <V OBJ_PHRASE, OBJ_PHRASE V>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDP -> <DET NP, DET NP>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP N_HEAD, AdjP N_HEAD>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET -> <'pivzof', 'ppad eg'>\nDET -> <'banfdepten', 'ftobpik'>\nT -> <'∅_T_pres', '∅_T_pres'>\nV -> <'vtuy el eq', 'upev'>\nV -> <'orur', 'id'>\nV -> <'obfdakol', 'knowkiyoh'>\nV -> <'im', 'zaqbuf'>\nV -> <'gax', 'isgomldaw'>\nV -> <'iniw', 'ettdicfsux'>\nV -> <'goxoktdupup', 'zem'>\nV -> <'aytpac', 'oy'>\nV -> <'kan', 'stol'>\nV -> <'gvidbov', 'urbkunem'>\nN -> <'enmit', 'erftosud'>\nN -> <'kar', 'oqazpfeg'>\nN -> <'ucontaw', 'dbufippnib'>\nN -> <'taf', 'fovdus'>\nN -> <'lidgkay', 'datfbih'>\nN -> <'ntot', 'vgafoz'>\nN -> <'dmuptokud', 'ok'>\nN -> <'paslsep', 'vag'>\nN -> <'ah', 'edocmvetsmaw'>\nN -> <'ejgalmertkir', 'mas ogtguf'>\nPROPN -> <'buk er', 'bot oh'>\nPROPN -> <'gsaculdbec', 'bzay'>\nPROPN -> <'axuh', 'novvfargsoy'>\nPROPN -> <'kibormod', 'abtsawdkub'>\nPROPN -> <'ejur', 'uc'>\nPROPN -> <'nob', 'osab'>\nPROPN -> <'povtub', 'siqojir'>\nPROPN -> <'tpeg ozfbaq', 'ztifownirszis'>\nPROPN -> <'kporfbir tpuv', 'ewbpov bmatbaf'>\nPROPN -> <'kvupos', 'dpeforer'>\nPRON -> <'axksos', 'uwajlap'>\nPRON -> <'ekteh', 'dkefbesujtbih'>\nADJ -> <'kibaknduktked', 'uz'>\nADJ -> <'kzuk', 'tiqzeyvvow'>\nADJ -> <'dmirzkarpzac', 'dehbaw'>\nADJ -> <'suy', 'gebsicfuvpbaw'>\nADJ -> <'zistpawfep', 'seg id'>\nADJ -> <'gaf inbekffis', 'ij'>\nADJ -> <'gpap', 'ntem'>\nADJ -> <'dakez', 'zibvetad dim'>\nADJ -> <'bnaces', 'tilkol'>\nADJ -> <'kgitsfuj', 'sfig'>\nC -> <'uspukbgeh', 'dajdpuqexos'>\nC -> <'mgeton', 'kfemstuqvmip'>\nCNULL -> <'∅', '∅'>",
+  "n_rules": 18,
+  "n_words": 48,
+  "agreement_metadata": {
+    "enabled": false,
+    "a": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    },
+    "b": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    }
+  }
+}

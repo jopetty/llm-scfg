@@ -4,6 +4,7 @@ import random
 import re
 import secrets
 from dataclasses import asdict, dataclass, field
+from itertools import product
 from typing import Any
 
 import numpy as np
@@ -38,6 +39,18 @@ LATIN_SONORITY_HIERARCHY: dict[str, float] = {
     "k": 0.9,
 }
 
+LATIN_DIACRITIC_CONSONANTS: list[str] = LATIN_CONSONANTS + ["ç", "ñ", "š", "ž", "ł", "ř"]
+LATIN_DIACRITIC_VOWELS: list[str] = list("áéíóúäëïöüâêîôû")
+LATIN_DIACRITIC_SONORITY_HIERARCHY: dict[str, float] = {
+    **LATIN_SONORITY_HIERARCHY,
+    "ç": 0.6,
+    "ñ": 0.3,
+    "š": 0.6,
+    "ž": 0.45,
+    "ł": 0.15,
+    "ř": 0.5,
+}
+
 CYRILLIC_CONSONANTS: list[str] = list("бвгджзйклмнпрстфхцчшщ")
 CYRILLIC_VOWELS: list[str] = list("аеёиоуыэюя")
 CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
@@ -64,9 +77,9 @@ CYRILLIC_SONORITY_HIERARCHY: dict[str, float] = {
     "й": 0.6,
 }
 
-YIDDISH_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
-YIDDISH_VOWELS: list[str] = list("אַאָוּיִײײַױע")
-YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
+HEBREW_CONSONANTS: list[str] = list("בגדהװזשחטיּכּכלמנפּפֿצקרשת")
+HEBREW_VOWELS: list[str] = list("אַאָוּיִײײַױע")
+HEBREW_SONORITY_HIERARCHY: dict[str, float] = {
     "פּ": 0.10,
     "ב": 0.15,
     "ט": 0.10,
@@ -88,6 +101,34 @@ YIDDISH_SONORITY_HIERARCHY: dict[str, float] = {
     "ל": 0.50,
     "ר": 0.50,
     "י": 0.60,
+}
+
+YIDDISH_CONSONANTS = HEBREW_CONSONANTS
+YIDDISH_VOWELS = HEBREW_VOWELS
+YIDDISH_SONORITY_HIERARCHY = HEBREW_SONORITY_HIERARCHY
+
+HEBREW_UNPOINTED_CONSONANTS: list[str] = list("בגדהזחטכלמנסעפצקרשת")
+HEBREW_UNPOINTED_VOWELS: list[str] = list("אוי")
+HEBREW_UNPOINTED_SONORITY_HIERARCHY: dict[str, float] = {
+    "ת": 0.10,
+    "ד": 0.15,
+    "ט": 0.10,
+    "ק": 0.10,
+    "ג": 0.15,
+    "כ": 0.10,
+    "פ": 0.20,
+    "ב": 0.25,
+    "ס": 0.20,
+    "ז": 0.25,
+    "ש": 0.20,
+    "ח": 0.20,
+    "ה": 0.20,
+    "ע": 0.30,
+    "צ": 0.30,
+    "מ": 0.40,
+    "נ": 0.40,
+    "ל": 0.50,
+    "ר": 0.50,
 }
 
 SYLLABLE_STRUCTURES: list[str] = [
@@ -263,14 +304,22 @@ class CFGParams:
             self.consonants = LATIN_CONSONANTS
             self.vowels = LATIN_VOWELS
             self.sonority_hierarchy = LATIN_SONORITY_HIERARCHY
+        elif self.orthography == "latin_diacritic":
+            self.consonants = LATIN_DIACRITIC_CONSONANTS
+            self.vowels = LATIN_DIACRITIC_VOWELS
+            self.sonority_hierarchy = LATIN_DIACRITIC_SONORITY_HIERARCHY
         elif self.orthography == "cyrillic":
             self.consonants = CYRILLIC_CONSONANTS
             self.vowels = CYRILLIC_VOWELS
             self.sonority_hierarchy = CYRILLIC_SONORITY_HIERARCHY
-        elif self.orthography == "yiddish":
-            self.consonants = YIDDISH_CONSONANTS
-            self.vowels = YIDDISH_VOWELS
-            self.sonority_hierarchy = YIDDISH_SONORITY_HIERARCHY
+        elif self.orthography in {"hebrew", "yiddish"}:
+            self.consonants = HEBREW_CONSONANTS
+            self.vowels = HEBREW_VOWELS
+            self.sonority_hierarchy = HEBREW_SONORITY_HIERARCHY
+        elif self.orthography == "hebrew_unpointed":
+            self.consonants = HEBREW_UNPOINTED_CONSONANTS
+            self.vowels = HEBREW_UNPOINTED_VOWELS
+            self.sonority_hierarchy = HEBREW_UNPOINTED_SONORITY_HIERARCHY
         else:
             raise ValueError(f"Unknown orthography: {self.orthography}")
 
@@ -704,6 +753,8 @@ class Derivation:
     depth: int
     features: FeatureBundle = field(default_factory=FeatureBundle)
     trace: str = ""
+    possible_right_full: tuple[str, ...] = field(default_factory=tuple)
+    possible_right_phonetic: tuple[str, ...] = field(default_factory=tuple)
 
 
 class SCFG:
@@ -783,57 +834,158 @@ class SCFG:
         index = self._choose_aligned_index(rng, len(left_items), len(right_items), label)
         return left_items[index], right_items[index]
 
-    def _choose_aligned_pronoun(self, rng: random.Random) -> tuple[str, str, FeatureBundle]:
-        if not self.agreement_enabled:
-            left_surface, right_surface = self._choose_aligned_simple(
-                rng,
-                self.params.a.pron_lex,
-                self.params.b.pron_lex,
-                "pronoun",
-            )
-            return left_surface, right_surface, FeatureBundle()
+    def _dedupe_preserve_order(self, values: list[str]) -> tuple[str, ...]:
+        return tuple(dict.fromkeys(values))
 
-        left_paradigms = self.params.a.pronoun_paradigms
-        right_paradigms = self.params.b.pronoun_paradigms
+    def _possible_pronoun_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        if self.params.a.pronoun_paradigms and self.params.b.pronoun_paradigms:
+            left_form = self.params.a.pronoun_paradigms[index]["form"]
+            right_form = self.params.b.pronoun_paradigms[index]["form"]
+            return (right_form,) if left_form == left_surface else tuple()
+        if self.params.a.pron_lex and self.params.b.pron_lex:
+            return (self.params.b.pron_lex[index],) if self.params.a.pron_lex[index] == left_surface else tuple()
+        return tuple()
+
+    def _possible_propn_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        if self.params.a.propn_paradigms and self.params.b.propn_paradigms:
+            left_form = self.params.a.propn_paradigms[index]["lemma"]
+            right_form = self.params.b.propn_paradigms[index]["lemma"]
+            return (right_form,) if left_form == left_surface else tuple()
+        if self.params.a.propn_lex and self.params.b.propn_lex:
+            return (self.params.b.propn_lex[index],) if self.params.a.propn_lex[index] == left_surface else tuple()
+        return tuple()
+
+    def _possible_noun_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        candidates: list[str] = []
+        for number in ("sg", "pl"):
+            left_form, _ = self._noun_entry(self.params.a, index, number)
+            right_form, _ = self._noun_entry(self.params.b, index, number)
+            if left_form == left_surface:
+                candidates.append(right_form)
+        return self._dedupe_preserve_order(candidates)
+
+    def _verb_bundle_space(self) -> list[FeatureBundle]:
+        if self.params.a.verb_paradigms:
+            return feature_inventory(
+                self.params.a.latent_axes,
+                gender_values=self.params.a.gender_values,
+            )
+        if self.params.b.verb_paradigms:
+            return feature_inventory(
+                self.params.b.latent_axes,
+                gender_values=self.params.b.gender_values,
+            )
+        return [FeatureBundle(person="3", number="sg")]
+
+    def _possible_verb_right_surfaces(self, index: int, left_surface: str) -> tuple[str, ...]:
+        candidates: list[str] = []
+        for bundle in self._verb_bundle_space():
+            left_form, _ = self._verb_entry(self.params.a, index, bundle)
+            right_form, _ = self._verb_entry(self.params.b, index, bundle)
+            if left_form == left_surface:
+                candidates.append(right_form)
+        return self._dedupe_preserve_order(candidates)
+
+    def _pronoun_count(self, params: CFGParams) -> int:
+        if params.agreement_enabled and params.pronouns_are_featured and params.pronoun_paradigms:
+            return len(params.pronoun_paradigms)
+        return len(params.pron_lex)
+
+    def _pronoun_entry(
+        self,
+        params: CFGParams,
+        index: int,
+    ) -> tuple[str, FeatureBundle]:
+        if params.agreement_enabled and params.pronouns_are_featured and params.pronoun_paradigms:
+            entry = params.pronoun_paradigms[index]
+            return entry["form"], entry["features"]
+        return params.pron_lex[index], FeatureBundle()
+
+    def _propn_count(self, params: CFGParams) -> int:
+        if params.agreement_enabled and params.propn_paradigms:
+            return len(params.propn_paradigms)
+        return len(params.propn_lex)
+
+    def _propn_entry(
+        self,
+        params: CFGParams,
+        index: int,
+    ) -> tuple[str, FeatureBundle]:
+        if params.agreement_enabled and params.propn_paradigms:
+            entry = params.propn_paradigms[index]
+            features = entry.get("features", FeatureBundle(person="3", number="sg"))
+            return entry["lemma"], FeatureBundle(
+                person=features.person or "3",
+                number=features.number or "sg",
+                gender=features.gender,
+            )
+        return params.propn_lex[index], FeatureBundle(person="3", number="sg")
+
+    def _noun_count(self, params: CFGParams) -> int:
+        if params.agreement_enabled and params.noun_paradigms:
+            return len(params.noun_paradigms)
+        return len(params.noun_lex)
+
+    def _noun_entry(
+        self,
+        params: CFGParams,
+        index: int,
+        number: str,
+    ) -> tuple[str, FeatureBundle]:
+        if params.agreement_enabled and params.noun_paradigms:
+            entry = params.noun_paradigms[index]
+            features = entry.get("features", FeatureBundle(person="3"))
+            return entry["forms"][f"number={number}"], FeatureBundle(
+                person=features.person or "3",
+                number=number,
+                gender=features.gender,
+            )
+        return params.noun_lex[index], FeatureBundle(person="3", number=number)
+
+    def _verb_count(self, params: CFGParams) -> int:
+        if params.agreement_enabled and params.verb_paradigms:
+            return len(params.verb_paradigms)
+        return len(params.verb_lex)
+
+    def _verb_entry(
+        self,
+        params: CFGParams,
+        index: int,
+        features: FeatureBundle,
+    ) -> tuple[str, FeatureBundle]:
+        resolved = FeatureBundle(
+            person=features.person or "3",
+            number=features.number or "sg",
+            gender=features.gender,
+        )
+        if params.agreement_enabled and params.verb_paradigms:
+            key = resolved.key(params.latent_axes)
+            return params.verb_paradigms[index]["forms"][key], resolved
+        return params.verb_lex[index], resolved
+
+    def _choose_aligned_pronoun(self, rng: random.Random) -> tuple[str, str, FeatureBundle]:
         index = self._choose_aligned_index(
             rng,
-            len(left_paradigms),
-            len(right_paradigms),
+            self._pronoun_count(self.params.a),
+            self._pronoun_count(self.params.b),
             "pronoun",
         )
-        left_entry = left_paradigms[index]
-        right_entry = right_paradigms[index]
-        features = (
-            FeatureUnifier.unify(left_entry["features"], right_entry["features"])
-            or left_entry["features"]
-            or right_entry["features"]
-        )
-        return left_entry["form"], right_entry["form"], features
+        left_surface, left_features = self._pronoun_entry(self.params.a, index)
+        right_surface, right_features = self._pronoun_entry(self.params.b, index)
+        features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+        return left_surface, right_surface, features
 
     def _choose_aligned_propn(self, rng: random.Random) -> tuple[str, str, FeatureBundle]:
-        if not self.agreement_enabled:
-            left_surface, right_surface = self._choose_aligned_simple(
-                rng,
-                self.params.a.propn_lex,
-                self.params.b.propn_lex,
-                "proper noun",
-            )
-            return left_surface, right_surface, FeatureBundle(person="3", number="sg")
-
-        left_paradigms = self.params.a.propn_paradigms
-        right_paradigms = self.params.b.propn_paradigms
         index = self._choose_aligned_index(
             rng,
-            len(left_paradigms),
-            len(right_paradigms),
+            self._propn_count(self.params.a),
+            self._propn_count(self.params.b),
             "proper noun",
         )
-        left_entry = left_paradigms[index]
-        right_entry = right_paradigms[index]
-        left_features = left_entry.get("features", FeatureBundle(person="3", number="sg"))
-        right_features = right_entry.get("features", FeatureBundle(person="3", number="sg"))
+        left_surface, left_features = self._propn_entry(self.params.a, index)
+        right_surface, right_features = self._propn_entry(self.params.b, index)
         features = FeatureUnifier.unify(left_features, right_features) or left_features
-        return left_entry["lemma"], right_entry["lemma"], FeatureBundle(
+        return left_surface, right_surface, FeatureBundle(
             person=features.person or "3",
             number=features.number or "sg",
             gender=features.gender,
@@ -845,29 +997,14 @@ class SCFG:
         number: str | None = None,
     ) -> tuple[str, str, FeatureBundle]:
         chosen_number = number or rng.choice(("sg", "pl"))
-        if not self.agreement_enabled:
-            left_surface, right_surface = self._choose_aligned_simple(
-                rng,
-                self.params.a.noun_lex,
-                self.params.b.noun_lex,
-                "noun",
-            )
-            return left_surface, right_surface, FeatureBundle(person="3", number=chosen_number)
-
-        left_paradigms = self.params.a.noun_paradigms
-        right_paradigms = self.params.b.noun_paradigms
         index = self._choose_aligned_index(
             rng,
-            len(left_paradigms),
-            len(right_paradigms),
+            self._noun_count(self.params.a),
+            self._noun_count(self.params.b),
             "noun",
         )
-        left_entry = left_paradigms[index]
-        right_entry = right_paradigms[index]
-        left_surface = left_entry["forms"][f"number={chosen_number}"]
-        right_surface = right_entry["forms"][f"number={chosen_number}"]
-        left_features = left_entry.get("features", FeatureBundle(person="3"))
-        right_features = right_entry.get("features", FeatureBundle(person="3"))
+        left_surface, left_features = self._noun_entry(self.params.a, index, chosen_number)
+        right_surface, right_features = self._noun_entry(self.params.b, index, chosen_number)
         features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
         return left_surface, right_surface, FeatureBundle(
             person=features.person or "3",
@@ -891,29 +1028,16 @@ class SCFG:
             number=target.number or "sg",
             gender=resolved_gender,
         )
-
-        if not self.agreement_enabled:
-            left_surface, right_surface = self._choose_aligned_simple(
-                rng,
-                self.params.a.verb_lex,
-                self.params.b.verb_lex,
-                "verb",
-            )
-            return left_surface, right_surface, resolved
-
-        left_paradigms = self.params.a.verb_paradigms
-        right_paradigms = self.params.b.verb_paradigms
         index = self._choose_aligned_index(
             rng,
-            len(left_paradigms),
-            len(right_paradigms),
+            self._verb_count(self.params.a),
+            self._verb_count(self.params.b),
             "verb",
         )
-        left_entry = left_paradigms[index]
-        right_entry = right_paradigms[index]
-        left_key = resolved.key(self.params.a.latent_axes)
-        right_key = resolved.key(self.params.b.latent_axes)
-        return left_entry["forms"][left_key], right_entry["forms"][right_key], resolved
+        left_surface, left_features = self._verb_entry(self.params.a, index, resolved)
+        right_surface, right_features = self._verb_entry(self.params.b, index, resolved)
+        features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+        return left_surface, right_surface, features
 
     def _choose_aligned_det(self, rng: random.Random, definite: bool) -> tuple[str, str]:
         left_items = self.params.a.det_def_lex if definite else self.params.a.det_indef_lex
@@ -972,6 +1096,8 @@ class SCFG:
                 "depth": result.depth,
                 "subject_features": result.features.to_dict(),
                 "verb_features": result.features.to_dict(),
+                "possible_right": [" ".join(option.split()) for option in result.possible_right_full],
+                "possible_right_phonetic": [" ".join(option.split()) for option in result.possible_right_phonetic],
                 "agreement_ok": True,
                 "agreement_trace": result.trace,
             }
@@ -988,6 +1114,8 @@ class SCFG:
             "left_phonetic": " ".join(result["left_phonetic"].split()),
             "right": " ".join(result["right_full"].split()),
             "right_phonetic": " ".join(result["right_phonetic"].split()),
+            "possible_right": [" ".join(result["right_full"].split())],
+            "possible_right_phonetic": [" ".join(result["right_phonetic"].split())],
             "left_tree": " ".join(result["left_tree"].split()),
             "right_tree": " ".join(result["right_tree"].split()),
             "depth": result["depth"],
@@ -1093,9 +1221,19 @@ class SCFG:
         depth: int,
         features: FeatureBundle | None = None,
         trace: str = "",
+        possible_right_surfaces: tuple[str, ...] | None = None,
     ) -> Derivation:
         left_phonetic = "" if left_surface.startswith("∅") else left_surface
         right_phonetic = "" if right_surface.startswith("∅") else right_surface
+        if possible_right_surfaces is None:
+            possible_right_surfaces = (right_surface,)
+        possible_right_phonetic = tuple(
+            surface
+            for surface in (
+                "" if candidate.startswith("∅") else candidate
+                for candidate in possible_right_surfaces
+            )
+        )
         return Derivation(
             left_full=left_surface,
             left_phonetic=left_phonetic,
@@ -1106,6 +1244,8 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
+            possible_right_full=possible_right_surfaces,
+            possible_right_phonetic=possible_right_phonetic,
         )
 
     def _combine_derivations(
@@ -1125,6 +1265,18 @@ class SCFG:
         right_phonetic = " ".join([child.right_phonetic for child in right_children if child.right_phonetic])
         left_tree = f"({symbol} {' '.join(child.left_tree for child in left_children if child.left_tree)})"
         right_tree = f"({symbol} {' '.join(child.right_tree for child in right_children if child.right_tree)})"
+        possible_right_full = self._dedupe_preserve_order(
+            [
+                " ".join(part for part in parts if part).strip()
+                for parts in product(*(child.possible_right_full or ("",) for child in right_children))
+            ]
+        )
+        possible_right_phonetic = self._dedupe_preserve_order(
+            [
+                " ".join(part for part in parts if part).strip()
+                for parts in product(*(child.possible_right_phonetic or ("",) for child in right_children))
+            ]
+        )
         return Derivation(
             left_full=left_full,
             left_phonetic=left_phonetic,
@@ -1135,6 +1287,8 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
+            possible_right_full=possible_right_full,
+            possible_right_phonetic=possible_right_phonetic,
         )
 
     def _order_head_comp(self, head: Derivation, comp: Derivation, head_initial: bool) -> list[Derivation]:
@@ -1217,11 +1371,43 @@ class SCFG:
             if choice == "PRO":
                 return self._terminal_derivation("PRO", "∅", "∅", current_depth, FeatureBundle(person="3", number="sg"), trace="pro")
             if choice == "PRON":
-                left_surface, right_surface, features = self._choose_aligned_pronoun(rng)
-                return self._terminal_derivation("PRON", left_surface, right_surface, current_depth, features=features, trace=f"pron={features.key()}")
+                pron_index = self._choose_aligned_index(
+                    rng,
+                    self._pronoun_count(self.params.a),
+                    self._pronoun_count(self.params.b),
+                    "pronoun",
+                )
+                left_surface, left_features = self._pronoun_entry(self.params.a, pron_index)
+                right_surface, right_features = self._pronoun_entry(self.params.b, pron_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+                return self._terminal_derivation(
+                    "PRON",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace=f"pron={features.key()}",
+                    possible_right_surfaces=self._possible_pronoun_right_surfaces(pron_index, left_surface) or (right_surface,),
+                )
             if choice == "PROPN":
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
-                return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="propn=3sg")
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                return self._terminal_derivation(
+                    "PROPN",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace="propn=3sg",
+                    possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                )
             return self._sample_agreement_recursive("DP", rng, current_depth, min_depth, max_depth, role=role)
 
         if symbol == "VP":
@@ -1239,8 +1425,35 @@ class SCFG:
             return self._combine_derivations("VP", left_children, right_children, features=inherited_features or FeatureBundle(), trace=verb.trace)
 
         if symbol == "V":
-            left_surface, right_surface, features = self._choose_aligned_verb(rng, inherited_features)
-            return self._terminal_derivation("V", left_surface, right_surface, current_depth, features=features, trace=f"verb={features.key()}")
+            target = FeatureUnifier.unify(inherited_features or FeatureBundle(), FeatureBundle()) or FeatureBundle()
+            resolved_gender = target.gender
+            if "gender" in self.params.a.latent_axes or "gender" in self.params.b.latent_axes:
+                if resolved_gender is None:
+                    gender_values = self.params.a.gender_values or self.params.b.gender_values
+                    resolved_gender = gender_values[0]
+            resolved = FeatureBundle(
+                person=target.person or "3",
+                number=target.number or "sg",
+                gender=resolved_gender,
+            )
+            verb_index = self._choose_aligned_index(
+                rng,
+                self._verb_count(self.params.a),
+                self._verb_count(self.params.b),
+                "verb",
+            )
+            left_surface, left_features = self._verb_entry(self.params.a, verb_index, resolved)
+            right_surface, right_features = self._verb_entry(self.params.b, verb_index, resolved)
+            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            return self._terminal_derivation(
+                "V",
+                left_surface,
+                right_surface,
+                current_depth,
+                features=features,
+                trace=f"verb={features.key()}",
+                possible_right_surfaces=self._possible_verb_right_surfaces(verb_index, left_surface) or (right_surface,),
+            )
 
         if symbol == "OBJ_PHRASE":
             if current_depth < min_depth:
@@ -1254,8 +1467,26 @@ class SCFG:
         if symbol == "DP":
             use_propn = rng.random() < 0.25
             if use_propn:
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
                 left_children = [self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features)]
+                left_children = [
+                    self._terminal_derivation(
+                        "PROPN",
+                        left_surface,
+                        right_surface,
+                        current_depth,
+                        features=features,
+                        possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                    )
+                ]
                 right_children = list(left_children)
                 if self.params.a.proper_with_det:
                     left_det_surface, _ = self._choose_aligned_det(rng, True)
@@ -1298,11 +1529,44 @@ class SCFG:
 
         if symbol == "N_HEAD":
             if rng.random() < 0.25:
-                left_surface, right_surface, features = self._choose_aligned_propn(rng)
-                return self._terminal_derivation("PROPN", left_surface, right_surface, current_depth, features=features, trace="nhead-propn")
+                propn_index = self._choose_aligned_index(
+                    rng,
+                    self._propn_count(self.params.a),
+                    self._propn_count(self.params.b),
+                    "proper noun",
+                )
+                left_surface, left_features = self._propn_entry(self.params.a, propn_index)
+                right_surface, right_features = self._propn_entry(self.params.b, propn_index)
+                features = FeatureUnifier.unify(left_features, right_features) or left_features
+                return self._terminal_derivation(
+                    "PROPN",
+                    left_surface,
+                    right_surface,
+                    current_depth,
+                    features=features,
+                    trace="nhead-propn",
+                    possible_right_surfaces=self._possible_propn_right_surfaces(propn_index, left_surface) or (right_surface,),
+                )
             target_number = inherited_features.number if inherited_features else None
-            left_surface, right_surface, features = self._choose_aligned_noun(rng, target_number)
-            return self._terminal_derivation("N", left_surface, right_surface, current_depth, features=features, trace=f"noun={features.key()}")
+            chosen_number = target_number or rng.choice(("sg", "pl"))
+            noun_index = self._choose_aligned_index(
+                rng,
+                self._noun_count(self.params.a),
+                self._noun_count(self.params.b),
+                "noun",
+            )
+            left_surface, left_features = self._noun_entry(self.params.a, noun_index, chosen_number)
+            right_surface, right_features = self._noun_entry(self.params.b, noun_index, chosen_number)
+            features = FeatureUnifier.unify(left_features, right_features) or left_features or right_features
+            return self._terminal_derivation(
+                "N",
+                left_surface,
+                right_surface,
+                current_depth,
+                features=features,
+                trace=f"noun={features.key()}",
+                possible_right_surfaces=self._possible_noun_right_surfaces(noun_index, left_surface) or (right_surface,),
+            )
 
         if symbol == "AdjP":
             left_adj, right_adj = self._choose_aligned_adj(rng)
@@ -1372,18 +1636,28 @@ class RuleBuilder:
             return self.params.a.verb_lex, self.params.b.verb_lex
         left: list[str] = []
         right: list[str] = []
-        count = min(len(self.params.a.verb_paradigms), len(self.params.b.verb_paradigms))
+        count = min(
+            len(self.params.a.verb_paradigms) if self.params.a.verb_paradigms else len(self.params.a.verb_lex),
+            len(self.params.b.verb_paradigms) if self.params.b.verb_paradigms else len(self.params.b.verb_lex),
+        )
+        bundle_source = self.params.a if self.params.a.agreement_enabled else self.params.b
         keys = [
-            bundle.key(self.params.a.latent_axes)
+            bundle.key(bundle_source.latent_axes)
             for bundle in feature_inventory(
-                self.params.a.latent_axes,
-                gender_values=self.params.a.gender_values,
+                bundle_source.latent_axes,
+                gender_values=bundle_source.gender_values,
             )
         ]
         for index in range(count):
             for key in keys:
-                left.append(self.params.a.verb_paradigms[index]["forms"].get(key, self.params.a.verb_paradigms[index]["lemma"]))
-                right.append(self.params.b.verb_paradigms[index]["forms"].get(key, self.params.b.verb_paradigms[index]["lemma"]))
+                if self.params.a.verb_paradigms:
+                    left.append(self.params.a.verb_paradigms[index]["forms"].get(key, self.params.a.verb_paradigms[index]["lemma"]))
+                else:
+                    left.append(self.params.a.verb_lex[index])
+                if self.params.b.verb_paradigms:
+                    right.append(self.params.b.verb_paradigms[index]["forms"].get(key, self.params.b.verb_paradigms[index]["lemma"]))
+                else:
+                    right.append(self.params.b.verb_lex[index])
         return left, right
 
     def _paired_noun_forms(self) -> tuple[list[str], list[str]]:
@@ -1391,18 +1665,27 @@ class RuleBuilder:
             return self.params.a.noun_lex, self.params.b.noun_lex
         left: list[str] = []
         right: list[str] = []
-        count = min(len(self.params.a.noun_paradigms), len(self.params.b.noun_paradigms))
+        count = min(
+            len(self.params.a.noun_paradigms) if self.params.a.noun_paradigms else len(self.params.a.noun_lex),
+            len(self.params.b.noun_paradigms) if self.params.b.noun_paradigms else len(self.params.b.noun_lex),
+        )
         for index in range(count):
             for key in ("number=sg", "number=pl"):
-                left.append(self.params.a.noun_paradigms[index]["forms"].get(key, self.params.a.noun_paradigms[index]["lemma"]))
-                right.append(self.params.b.noun_paradigms[index]["forms"].get(key, self.params.b.noun_paradigms[index]["lemma"]))
+                if self.params.a.noun_paradigms:
+                    left.append(self.params.a.noun_paradigms[index]["forms"].get(key, self.params.a.noun_paradigms[index]["lemma"]))
+                else:
+                    left.append(self.params.a.noun_lex[index])
+                if self.params.b.noun_paradigms:
+                    right.append(self.params.b.noun_paradigms[index]["forms"].get(key, self.params.b.noun_paradigms[index]["lemma"]))
+                else:
+                    right.append(self.params.b.noun_lex[index])
         return left, right
 
     def _paired_pronoun_forms(self) -> tuple[list[str], list[str]]:
         if not self.params.a.agreement_enabled and not self.params.b.agreement_enabled:
             return self.params.a.pron_lex, self.params.b.pron_lex
-        left = [entry["form"] for entry in self.params.a.pronoun_paradigms]
-        right = [entry["form"] for entry in self.params.b.pronoun_paradigms]
+        left = [entry["form"] for entry in self.params.a.pronoun_paradigms] if self.params.a.pronoun_paradigms else list(self.params.a.pron_lex)
+        right = [entry["form"] for entry in self.params.b.pronoun_paradigms] if self.params.b.pronoun_paradigms else list(self.params.b.pron_lex)
         count = min(len(left), len(right))
         return left[:count], right[:count]
 
@@ -1420,16 +1703,23 @@ class RuleBuilder:
         if not (self.params.a.agreement_enabled or self.params.b.agreement_enabled):
             return self._lex("PRON", self._paired_pronoun_forms())
         lines: list[str] = []
+        bundle_source = self.params.a if self.params.a.pronoun_paradigms else self.params.b
         count = min(
-            len(self.params.a.pronoun_paradigms),
-            len(self.params.b.pronoun_paradigms),
+            len(self.params.a.pronoun_paradigms) if self.params.a.pronoun_paradigms else len(self.params.a.pron_lex),
+            len(self.params.b.pronoun_paradigms) if self.params.b.pronoun_paradigms else len(self.params.b.pron_lex),
         )
         for index in range(count):
-            left_entry = self.params.a.pronoun_paradigms[index]
-            right_entry = self.params.b.pronoun_paradigms[index]
-            label = self._feature_label(left_entry["features"])
+            if self.params.a.pronoun_paradigms:
+                left_form = self.params.a.pronoun_paradigms[index]["form"]
+            else:
+                left_form = self.params.a.pron_lex[index]
+            if self.params.b.pronoun_paradigms:
+                right_form = self.params.b.pronoun_paradigms[index]["form"]
+            else:
+                right_form = self.params.b.pron_lex[index]
+            label = self._feature_label(feature_inventory(bundle_source.agreement_axes)[index])
             lines.append(
-                f"PRON[{label}] -> <'{left_entry['form']}', '{right_entry['form']}'>"
+                f"PRON[{label}] -> <'{left_form}', '{right_form}'>"
             )
         return lines
 
@@ -1437,17 +1727,26 @@ class RuleBuilder:
         if not (self.params.a.agreement_enabled or self.params.b.agreement_enabled):
             return self._lex("N", self._paired_noun_forms())
         lines: list[str] = []
-        count = min(len(self.params.a.noun_paradigms), len(self.params.b.noun_paradigms))
+        count = min(
+            len(self.params.a.noun_paradigms) if self.params.a.noun_paradigms else len(self.params.a.noun_lex),
+            len(self.params.b.noun_paradigms) if self.params.b.noun_paradigms else len(self.params.b.noun_lex),
+        )
         for index in range(count):
-            left_entry = self.params.a.noun_paradigms[index]
-            right_entry = self.params.b.noun_paradigms[index]
-            left_features = left_entry.get("features", FeatureBundle())
+            left_entry = self.params.a.noun_paradigms[index] if self.params.a.noun_paradigms else None
+            right_entry = self.params.b.noun_paradigms[index] if self.params.b.noun_paradigms else None
+            left_features = (
+                left_entry.get("features", FeatureBundle())
+                if left_entry is not None
+                else right_entry.get("features", FeatureBundle()) if right_entry is not None else FeatureBundle()
+            )
             stem = f"N{index + 1}"
             lemma_label = f"{stem}[lemma]"
             if left_features.gender is not None:
                 lemma_label = f"{stem}[lemma.{left_features.gender}]"
             lines.append(
-                f"{lemma_label} -> <'{left_entry['lemma']}', '{right_entry['lemma']}'>"
+                f"{lemma_label} -> <"
+                f"'{left_entry['lemma'] if left_entry is not None else self.params.a.noun_lex[index]}', "
+                f"'{right_entry['lemma'] if right_entry is not None else self.params.b.noun_lex[index]}'>"
             )
             sg_label = f"{stem}[sg]"
             pl_label = f"{stem}[pl]"
@@ -1456,13 +1755,13 @@ class RuleBuilder:
                 pl_label = f"{stem}[pl.{left_features.gender}]"
             lines.append(
                 f"{sg_label} -> <"
-                f"'{left_entry['forms']['number=sg']}', "
-                f"'{right_entry['forms']['number=sg']}'>"
+                f"'{left_entry['forms']['number=sg'] if left_entry is not None else self.params.a.noun_lex[index]}', "
+                f"'{right_entry['forms']['number=sg'] if right_entry is not None else self.params.b.noun_lex[index]}'>"
             )
             lines.append(
                 f"{pl_label} -> <"
-                f"'{left_entry['forms']['number=pl']}', "
-                f"'{right_entry['forms']['number=pl']}'>"
+                f"'{left_entry['forms']['number=pl'] if left_entry is not None else self.params.a.noun_lex[index]}', "
+                f"'{right_entry['forms']['number=pl'] if right_entry is not None else self.params.b.noun_lex[index]}'>"
             )
         return lines
 
@@ -1470,14 +1769,19 @@ class RuleBuilder:
         if not (self.params.a.agreement_enabled or self.params.b.agreement_enabled):
             return self._lex("PROPN", (self.params.a.propn_lex, self.params.b.propn_lex))
         lines: list[str] = []
-        count = min(len(self.params.a.propn_paradigms), len(self.params.b.propn_paradigms))
+        count = min(
+            len(self.params.a.propn_paradigms) if self.params.a.propn_paradigms else len(self.params.a.propn_lex),
+            len(self.params.b.propn_paradigms) if self.params.b.propn_paradigms else len(self.params.b.propn_lex),
+        )
         for index in range(count):
-            left_entry = self.params.a.propn_paradigms[index]
-            right_entry = self.params.b.propn_paradigms[index]
-            label = self._feature_label(left_entry["features"])
+            left_entry = self.params.a.propn_paradigms[index] if self.params.a.propn_paradigms else None
+            right_entry = self.params.b.propn_paradigms[index] if self.params.b.propn_paradigms else None
+            feature_source = left_entry or right_entry or {"features": FeatureBundle(person="3", number="sg")}
+            label = self._feature_label(feature_source["features"])
             lines.append(
                 f"PROPN{index + 1}[{label}] -> "
-                f"<'{left_entry['lemma']}', '{right_entry['lemma']}'>"
+                f"<'{left_entry['lemma'] if left_entry is not None else self.params.a.propn_lex[index]}', "
+                f"'{right_entry['lemma'] if right_entry is not None else self.params.b.propn_lex[index]}'>"
             )
         return lines
 
@@ -1485,24 +1789,32 @@ class RuleBuilder:
         if not (self.params.a.agreement_enabled or self.params.b.agreement_enabled):
             return self._lex("V", self._paired_verb_forms())
         lines: list[str] = []
-        count = min(len(self.params.a.verb_paradigms), len(self.params.b.verb_paradigms))
+        count = min(
+            len(self.params.a.verb_paradigms) if self.params.a.verb_paradigms else len(self.params.a.verb_lex),
+            len(self.params.b.verb_paradigms) if self.params.b.verb_paradigms else len(self.params.b.verb_lex),
+        )
+        bundle_source = self.params.a if self.params.a.agreement_enabled else self.params.b
         bundles = feature_inventory(
-            self.params.a.latent_axes,
-            gender_values=self.params.a.gender_values,
+            bundle_source.latent_axes,
+            gender_values=bundle_source.gender_values,
         )
         for index in range(count):
-            left_entry = self.params.a.verb_paradigms[index]
-            right_entry = self.params.b.verb_paradigms[index]
+            left_entry = self.params.a.verb_paradigms[index] if self.params.a.verb_paradigms else None
+            right_entry = self.params.b.verb_paradigms[index] if self.params.b.verb_paradigms else None
             stem = f"V{index + 1}"
             lines.append(
-                f"{stem}[lemma] -> <'{left_entry['lemma']}', '{right_entry['lemma']}'>"
+                f"{stem}[lemma] -> <"
+                f"'{left_entry['lemma'] if left_entry is not None else self.params.a.verb_lex[index]}', "
+                f"'{right_entry['lemma'] if right_entry is not None else self.params.b.verb_lex[index]}'>"
             )
             for bundle in bundles:
-                key = bundle.key(self.params.a.latent_axes)
+                left_key = bundle.key(self.params.a.latent_axes)
+                right_key = bundle.key(self.params.b.latent_axes)
                 label = self._feature_label(bundle)
                 lines.append(
                     f"{stem}[{label}] -> "
-                    f"<'{left_entry['forms'][key]}', '{right_entry['forms'][key]}'>"
+                    f"<'{left_entry['forms'][left_key] if left_entry is not None else self.params.a.verb_lex[index]}', "
+                    f"'{right_entry['forms'][right_key] if right_entry is not None else self.params.b.verb_lex[index]}'>"
                 )
         return lines
 
@@ -1522,6 +1834,157 @@ class RuleBuilder:
         if self.params.a.pro_drop or self.params.b.pro_drop:
             lines.append("PRO -> <'∅', '∅'>")
         return lines
+
+    def _source_surface(self, surface: str) -> str:
+        return "" if surface.startswith("∅") else surface
+
+    def _surface_in_sample(self, surface: str, sample: str) -> bool:
+        source_surface = self._source_surface(surface).strip()
+        if not source_surface:
+            return False
+        haystack = f" {sample.strip()} "
+        needle = f" {source_surface} "
+        return needle in haystack
+
+    def _compact_paradigm_line(
+        self,
+        stem: str,
+        left_lemma: str,
+        right_lemma: str,
+        forms: list[tuple[str, str, str]],
+    ) -> str:
+        summary = "; ".join(
+            f"{label}=<'{left_surface}', '{right_surface}'>"
+            for label, left_surface, right_surface in forms
+        )
+        return f"{stem} -> <'{left_lemma}', '{right_lemma}'> ({summary})"
+
+    def _compact_simple_entries(
+        self,
+        pos: str,
+        left_items: list[str],
+        right_items: list[str],
+        sample: str,
+        always_include: bool = False,
+    ) -> list[str]:
+        lines: list[str] = []
+        for left_item, right_item in zip(left_items, right_items):
+            if always_include or self._surface_in_sample(left_item, sample):
+                lines.append(f"{pos} -> <'{left_item}', '{right_item}'>")
+        return lines
+
+    def _compact_verb_entries(self, sample: str) -> list[str]:
+        count = min(
+            len(self.params.a.verb_paradigms) if self.params.a.verb_paradigms else len(self.params.a.verb_lex),
+            len(self.params.b.verb_paradigms) if self.params.b.verb_paradigms else len(self.params.b.verb_lex),
+        )
+        bundle_source = self.params.a if self.params.a.agreement_enabled else self.params.b
+        bundles = feature_inventory(
+            bundle_source.latent_axes,
+            gender_values=bundle_source.gender_values,
+        )
+        lines: list[str] = []
+        for index in range(count):
+            left_entry = self.params.a.verb_paradigms[index] if self.params.a.verb_paradigms else None
+            right_entry = self.params.b.verb_paradigms[index] if self.params.b.verb_paradigms else None
+            left_lemma = left_entry["lemma"] if left_entry is not None else self.params.a.verb_lex[index]
+            right_lemma = right_entry["lemma"] if right_entry is not None else self.params.b.verb_lex[index]
+            candidate_forms = []
+            matches_sample = False
+            for bundle in bundles:
+                left_key = bundle.key(self.params.a.latent_axes)
+                right_key = bundle.key(self.params.b.latent_axes)
+                left_surface = left_entry["forms"][left_key] if left_entry is not None else self.params.a.verb_lex[index]
+                right_surface = right_entry["forms"][right_key] if right_entry is not None else self.params.b.verb_lex[index]
+                label = self._feature_label(bundle)
+                candidate_forms.append((label, left_surface, right_surface))
+                matches_sample = matches_sample or self._surface_in_sample(left_surface, sample)
+            if matches_sample:
+                lines.append(self._compact_paradigm_line(f"V{index + 1}", left_lemma, right_lemma, candidate_forms))
+        return lines
+
+    def _compact_noun_entries(self, sample: str) -> list[str]:
+        count = min(
+            len(self.params.a.noun_paradigms) if self.params.a.noun_paradigms else len(self.params.a.noun_lex),
+            len(self.params.b.noun_paradigms) if self.params.b.noun_paradigms else len(self.params.b.noun_lex),
+        )
+        lines: list[str] = []
+        for index in range(count):
+            left_entry = self.params.a.noun_paradigms[index] if self.params.a.noun_paradigms else None
+            right_entry = self.params.b.noun_paradigms[index] if self.params.b.noun_paradigms else None
+            left_lemma = left_entry["lemma"] if left_entry is not None else self.params.a.noun_lex[index]
+            right_lemma = right_entry["lemma"] if right_entry is not None else self.params.b.noun_lex[index]
+            candidate_forms = []
+            matches_sample = False
+            for label, key in (("sg", "number=sg"), ("pl", "number=pl")):
+                left_surface = left_entry["forms"][key] if left_entry is not None else self.params.a.noun_lex[index]
+                right_surface = right_entry["forms"][key] if right_entry is not None else self.params.b.noun_lex[index]
+                candidate_forms.append((label, left_surface, right_surface))
+                matches_sample = matches_sample or self._surface_in_sample(left_surface, sample)
+            if matches_sample:
+                lines.append(self._compact_paradigm_line(f"N{index + 1}", left_lemma, right_lemma, candidate_forms))
+        return lines
+
+    def _compact_propn_entries(self, sample: str) -> list[str]:
+        count = min(
+            len(self.params.a.propn_paradigms) if self.params.a.propn_paradigms else len(self.params.a.propn_lex),
+            len(self.params.b.propn_paradigms) if self.params.b.propn_paradigms else len(self.params.b.propn_lex),
+        )
+        lines: list[str] = []
+        for index in range(count):
+            left_entry = self.params.a.propn_paradigms[index] if self.params.a.propn_paradigms else None
+            right_entry = self.params.b.propn_paradigms[index] if self.params.b.propn_paradigms else None
+            left_surface = left_entry["lemma"] if left_entry is not None else self.params.a.propn_lex[index]
+            right_surface = right_entry["lemma"] if right_entry is not None else self.params.b.propn_lex[index]
+            if self._surface_in_sample(left_surface, sample):
+                feature_source = left_entry or right_entry or {"features": FeatureBundle(person="3", number="sg")}
+                label = self._feature_label(feature_source["features"])
+                lines.append(f"PROPN{index + 1}[{label}] -> <'{left_surface}', '{right_surface}'>")
+        return lines
+
+    def _compact_pronoun_entries(self, sample: str) -> list[str]:
+        if not (self.params.a.agreement_enabled or self.params.b.agreement_enabled):
+            left_items, right_items = self._paired_pronoun_forms()
+            return self._compact_simple_entries("PRON", left_items, right_items, sample)
+        lines: list[str] = []
+        bundle_source = self.params.a if self.params.a.pronoun_paradigms else self.params.b
+        count = min(
+            len(self.params.a.pronoun_paradigms) if self.params.a.pronoun_paradigms else len(self.params.a.pron_lex),
+            len(self.params.b.pronoun_paradigms) if self.params.b.pronoun_paradigms else len(self.params.b.pron_lex),
+        )
+        bundles = feature_inventory(bundle_source.agreement_axes)
+        for index in range(count):
+            left_form = self.params.a.pronoun_paradigms[index]["form"] if self.params.a.pronoun_paradigms else self.params.a.pron_lex[index]
+            right_form = self.params.b.pronoun_paradigms[index]["form"] if self.params.b.pronoun_paradigms else self.params.b.pron_lex[index]
+            if self._surface_in_sample(left_form, sample):
+                lines.append(f"PRON[{self._feature_label(bundles[index])}] -> <'{left_form}', '{right_form}'>")
+        return lines
+
+    def build_compact_prompt_lexicon(self, sample: str) -> list[str]:
+        if not self.is_sync:
+            return self.build_lexicon()
+        lines: list[str] = []
+        lines += self._compact_simple_entries("DET", self.params.a.det_def_lex, self.params.b.det_def_lex, sample)
+        lines += self._compact_simple_entries("T", self.params.a.tense_lex, self.params.b.tense_lex, sample, always_include=True)
+        lines += self._compact_verb_entries(sample)
+        lines += self._compact_noun_entries(sample)
+        lines += self._compact_propn_entries(sample)
+        lines += self._compact_pronoun_entries(sample)
+        lines += self._compact_simple_entries("ADJ", self.params.a.adj_lex, self.params.b.adj_lex, sample)
+        lines += self._compact_simple_entries("C", self.params.a.comp_lex, self.params.b.comp_lex, sample)
+        lines.append("CNULL -> <'∅', '∅'>")
+        if self.params.a.pro_drop or self.params.b.pro_drop:
+            lines.append("PRO -> <'∅', '∅'>")
+        return lines
+
+    def build_compact_prompt_grammar(self, sample: str) -> str:
+        if not self.is_sync:
+            return self.as_cfg
+        return "\n".join(
+            self.build_rules()
+            + self.build_compact_prompt_lexicon(sample)
+            + self.build_agreement_summary()
+        )
 
     def build_rules(self) -> list[str]:
         rules: list[str] = []

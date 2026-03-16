@@ -1,0 +1,345 @@
+{
+  "a": {
+    "head_initial": true,
+    "spec_initial": true,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 1024,
+    "verbs": [
+      "oqtufdiqeq",
+      "ogdupkgad",
+      "tninimeh",
+      "fak vpub",
+      "ktakip",
+      "tewtbaquqec",
+      "untov",
+      "up",
+      "ic",
+      "uh ut",
+      "bidktuhev",
+      "tbutvfig",
+      "gvildib",
+      "bfefed glipgeq",
+      "nezpittur",
+      "zmol",
+      "insuyug",
+      "gig",
+      "zel",
+      "anked"
+    ],
+    "nouns": [
+      "ulstoq",
+      "kepbar",
+      "dduvgoq iq",
+      "zireg",
+      "kgok",
+      "zem",
+      "gek eh",
+      "tef",
+      "pug",
+      "pan",
+      "zun",
+      "zupvif koctoz",
+      "spadmdevij",
+      "bkem fkel",
+      "ev",
+      "vnih",
+      "pkor",
+      "vetbad",
+      "ivpuqbdem",
+      "atitpbop"
+    ],
+    "propns": [
+      "kup",
+      "ovgefporsgoc",
+      "arparbfam keb",
+      "ocgezadnes",
+      "golohdoh",
+      "baxukim",
+      "eqpipffarftuc",
+      "uvorovftus",
+      "nurtkop",
+      "uyfkob pvir",
+      "tpilviz",
+      "ptur",
+      "tnowtfug",
+      "toq",
+      "onbow",
+      "tivin",
+      "kuwsuf",
+      "tnakutik",
+      "forbos",
+      "ptiv"
+    ],
+    "prons": [
+      "gemis",
+      "gbissehpawtfup"
+    ],
+    "adjs": [
+      "aq",
+      "pdupejeb",
+      "ir",
+      "aytban dkek",
+      "knoy dkossijdub",
+      "fiq",
+      "pulebzih",
+      "kgojpgep",
+      "pfalocej",
+      "urel",
+      "azppawezos",
+      "btok",
+      "od",
+      "ufen",
+      "ogdlijiy",
+      "nacfgiqpvom kuy",
+      "igul",
+      "zit",
+      "bker",
+      "iqggiwem"
+    ],
+    "det_def": [
+      "efdusujsbet",
+      "supedenok"
+    ],
+    "det_indef": [
+      "gtal",
+      "ducir"
+    ],
+    "comps": [
+      "ivmvon",
+      "ukay"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "b": {
+    "head_initial": false,
+    "spec_initial": false,
+    "pro_drop": false,
+    "proper_with_det": false,
+    "syllable_structure": "C*VC",
+    "avg_syllables_per_word": 2,
+    "max_consonants": 2,
+    "rng_seed": 1025,
+    "verbs": [
+      "acikpbitvid",
+      "vgex",
+      "spavul",
+      "anirpicox",
+      "op",
+      "akssik",
+      "ixelkfam",
+      "egbbatsig doz",
+      "suyoxizgar",
+      "uxejokah",
+      "ax",
+      "ovtukskoy",
+      "vel kvibir",
+      "pdugzaynucmut",
+      "bket",
+      "dog",
+      "azocpuvmin",
+      "in",
+      "ukus",
+      "puroltoh"
+    ],
+    "nouns": [
+      "bdistfof",
+      "puy",
+      "kepkuy",
+      "kbelop",
+      "pmikbosdinaf",
+      "bosfet",
+      "adbbuksurvaz",
+      "gedssiyan",
+      "ijpgof eb",
+      "kogix",
+      "eq",
+      "mkirengeg",
+      "gvufduypul",
+      "pip gictax",
+      "vokbiz",
+      "ec",
+      "tvaj",
+      "zud",
+      "elppuc",
+      "spubel"
+    ],
+    "propns": [
+      "uhotpobpkuv",
+      "zitam docngiy",
+      "ewboj",
+      "tompdus",
+      "pzil",
+      "nag",
+      "tezzampiv",
+      "obppobix",
+      "agec",
+      "oz lnijgestsaj",
+      "pul",
+      "dzox",
+      "fsereggmud",
+      "ohsiwsgiltgem",
+      "tbuboknijod",
+      "ijnkoj",
+      "ev",
+      "gzim",
+      "muxvowsden",
+      "mnemuhkij"
+    ],
+    "prons": [
+      "smuk ib boq",
+      "etof"
+    ],
+    "adjs": [
+      "diq",
+      "fziremvpal",
+      "kbuq",
+      "dder",
+      "nepec",
+      "knon",
+      "pboszaftfewdet",
+      "pexzgas",
+      "sutfbuxuz",
+      "obisfvup",
+      "uc bzuz",
+      "sazsosgazmup",
+      "owoq",
+      "uc",
+      "oq gfit",
+      "zec",
+      "uw",
+      "am duz",
+      "fbay",
+      "goj gavfeppig"
+    ],
+    "det_def": [
+      "fuw",
+      "egsdow"
+    ],
+    "det_indef": [
+      "sges",
+      "eqekveq"
+    ],
+    "comps": [
+      "kodgowkbuk",
+      "per"
+    ],
+    "tenses": [
+      "∅_T_pres"
+    ],
+    "asps": [
+      "∅_Asp_prog"
+    ],
+    "orthography": "latin",
+    "agreement_enabled": false,
+    "agreement_axes": [
+      "number",
+      "person"
+    ],
+    "agreement_strategy": "suffix",
+    "verb_agreement": true,
+    "noun_number_marking": true,
+    "pronouns_are_featured": true,
+    "latent_gender": false,
+    "realize_gender": false,
+    "gender_values": [
+      "masc",
+      "fem"
+    ],
+    "verb_paradigms": [],
+    "noun_paradigms": [],
+    "propn_paradigms": [],
+    "pronoun_paradigms": [],
+    "agreement_suffixes": {},
+    "space_alpha": 0.5,
+    "space_beta": 3.0,
+    "syllable_max": 4
+  },
+  "name": "c0f7904a527951a4",
+  "grammar_str": "S -> <CP_matrix, CP_matrix>\nCP_matrix -> <CNULL TP, CNULL TP>\nCP_embed -> <C TP, C TP>\nTP -> <NP_SUBJ TBAR, TBAR NP_SUBJ>\nTBAR -> <T VP, VP T>\nNP_SUBJ -> <PRON, PRON>\nNP_SUBJ -> <PROPN, PROPN>\nNP_SUBJ -> <DP, DP>\nVP -> < VBAR, VBAR >\nVBAR -> <V OBJ_PHRASE, OBJ_PHRASE V>\nOBJ_PHRASE -> <DP, DP>\nOBJ_PHRASE -> <CP_embed, CP_embed>\nDP -> <DET NP, DET NP>\nNP -> <N_HEAD, N_HEAD>\nNP -> <AdjP N_HEAD, AdjP N_HEAD>\nAdjP -> <ADJ, ADJ>\nN_HEAD -> <N, N>\nN_HEAD -> <PROPN, PROPN>\nDET -> <'efdusujsbet', 'fuw'>\nDET -> <'supedenok', 'egsdow'>\nT -> <'∅_T_pres', '∅_T_pres'>\nV -> <'oqtufdiqeq', 'acikpbitvid'>\nV -> <'ogdupkgad', 'vgex'>\nV -> <'tninimeh', 'spavul'>\nV -> <'fak vpub', 'anirpicox'>\nV -> <'ktakip', 'op'>\nV -> <'tewtbaquqec', 'akssik'>\nV -> <'untov', 'ixelkfam'>\nV -> <'up', 'egbbatsig doz'>\nV -> <'ic', 'suyoxizgar'>\nV -> <'uh ut', 'uxejokah'>\nV -> <'bidktuhev', 'ax'>\nV -> <'tbutvfig', 'ovtukskoy'>\nV -> <'gvildib', 'vel kvibir'>\nV -> <'bfefed glipgeq', 'pdugzaynucmut'>\nV -> <'nezpittur', 'bket'>\nV -> <'zmol', 'dog'>\nV -> <'insuyug', 'azocpuvmin'>\nV -> <'gig', 'in'>\nV -> <'zel', 'ukus'>\nV -> <'anked', 'puroltoh'>\nN -> <'ulstoq', 'bdistfof'>\nN -> <'kepbar', 'puy'>\nN -> <'dduvgoq iq', 'kepkuy'>\nN -> <'zireg', 'kbelop'>\nN -> <'kgok', 'pmikbosdinaf'>\nN -> <'zem', 'bosfet'>\nN -> <'gek eh', 'adbbuksurvaz'>\nN -> <'tef', 'gedssiyan'>\nN -> <'pug', 'ijpgof eb'>\nN -> <'pan', 'kogix'>\nN -> <'zun', 'eq'>\nN -> <'zupvif koctoz', 'mkirengeg'>\nN -> <'spadmdevij', 'gvufduypul'>\nN -> <'bkem fkel', 'pip gictax'>\nN -> <'ev', 'vokbiz'>\nN -> <'vnih', 'ec'>\nN -> <'pkor', 'tvaj'>\nN -> <'vetbad', 'zud'>\nN -> <'ivpuqbdem', 'elppuc'>\nN -> <'atitpbop', 'spubel'>\nPROPN -> <'kup', 'uhotpobpkuv'>\nPROPN -> <'ovgefporsgoc', 'zitam docngiy'>\nPROPN -> <'arparbfam keb', 'ewboj'>\nPROPN -> <'ocgezadnes', 'tompdus'>\nPROPN -> <'golohdoh', 'pzil'>\nPROPN -> <'baxukim', 'nag'>\nPROPN -> <'eqpipffarftuc', 'tezzampiv'>\nPROPN -> <'uvorovftus', 'obppobix'>\nPROPN -> <'nurtkop', 'agec'>\nPROPN -> <'uyfkob pvir', 'oz lnijgestsaj'>\nPROPN -> <'tpilviz', 'pul'>\nPROPN -> <'ptur', 'dzox'>\nPROPN -> <'tnowtfug', 'fsereggmud'>\nPROPN -> <'toq', 'ohsiwsgiltgem'>\nPROPN -> <'onbow', 'tbuboknijod'>\nPROPN -> <'tivin', 'ijnkoj'>\nPROPN -> <'kuwsuf', 'ev'>\nPROPN -> <'tnakutik', 'gzim'>\nPROPN -> <'forbos', 'muxvowsden'>\nPROPN -> <'ptiv', 'mnemuhkij'>\nPRON -> <'gemis', 'smuk ib boq'>\nPRON -> <'gbissehpawtfup', 'etof'>\nADJ -> <'aq', 'diq'>\nADJ -> <'pdupejeb', 'fziremvpal'>\nADJ -> <'ir', 'kbuq'>\nADJ -> <'aytban dkek', 'dder'>\nADJ -> <'knoy dkossijdub', 'nepec'>\nADJ -> <'fiq', 'knon'>\nADJ -> <'pulebzih', 'pboszaftfewdet'>\nADJ -> <'kgojpgep', 'pexzgas'>\nADJ -> <'pfalocej', 'sutfbuxuz'>\nADJ -> <'urel', 'obisfvup'>\nADJ -> <'azppawezos', 'uc bzuz'>\nADJ -> <'btok', 'sazsosgazmup'>\nADJ -> <'od', 'owoq'>\nADJ -> <'ufen', 'uc'>\nADJ -> <'ogdlijiy', 'oq gfit'>\nADJ -> <'nacfgiqpvom kuy', 'zec'>\nADJ -> <'igul', 'uw'>\nADJ -> <'zit', 'am duz'>\nADJ -> <'bker', 'fbay'>\nADJ -> <'iqggiwem', 'goj gavfeppig'>\nC -> <'ivmvon', 'kodgowkbuk'>\nC -> <'ukay', 'per'>\nCNULL -> <'∅', '∅'>",
+  "n_rules": 18,
+  "n_words": 88,
+  "agreement_metadata": {
+    "enabled": false,
+    "a": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    },
+    "b": {
+      "config": {
+        "enabled": false,
+        "active_axes": [
+          "number",
+          "person"
+        ],
+        "strategy": "suffix",
+        "verb_agreement": true,
+        "noun_number_marking": true,
+        "pronouns_are_featured": true,
+        "latent_gender": false,
+        "realize_gender": false,
+        "gender_values": [
+          "masc",
+          "fem"
+        ]
+      },
+      "suffixes": {},
+      "pronoun_paradigms": [],
+      "verb_paradigms": [],
+      "noun_paradigms": [],
+      "propn_paradigms": []
+    }
+  }
+}

@@ -6,15 +6,16 @@ import pathlib
 import random
 import secrets
 from hashlib import blake2b
-from typing import Dict, Union
+from typing import Any, Dict, Union
 
 import fire
 import numpy as np
 import pandas as pd
 import pyrootutils
+import tiktoken
 
 from scfg.prompt import ChatCompletionResponse, basic_prompt
-from scfg.scfg import SCFG, CFGParams, SCFGParams
+from scfg.scfg import SCFG, CFGParams, SCFGParams, RuleBuilder
 from scfg.utils import get_logger, set_all_seeds
 
 Path = pathlib.Path
@@ -33,6 +34,18 @@ PROJECT_ROOT = path = pyrootutils.find_root(
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
 
+GPT_MESSAGE_TOKEN_LIMIT = 272_000
+DEFAULT_LARGE_GRAMMAR_SIZES = [25, 50, 100, 1_000, 5_000, 7_500, 10_000]
+
+ORTHOGRAPHY_LABELS = {
+    "latin": "Latin",
+    "latin_diacritic": "Latin with diacritics",
+    "cyrillic": "Cyrillic",
+    "hebrew": "Hebrew",
+    "yiddish": "Hebrew",
+    "hebrew_unpointed": "Hebrew without nikkud",
+}
+
 
 def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_000) -> int:
     payload = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str)
@@ -40,27 +53,115 @@ def deterministic_seed(*parts: object, base_seed: int = 42, modulus: int = 10_00
     return base_seed + (int.from_bytes(digest, "big") % modulus)
 
 
-def create_orthography_data(
-    max_depth: int = 5,
-    n_grammars_per_size: int = 2,
-    n_sentences_per_depth: int = 20,
-):
-    """
-    Generates grammars which vary the target orthography.
-    """
+def experiment_dir(exp_name: str) -> Path:
+    return DATA_DIR / f"{exp_name}_exp"
 
-    syllable_structure: str = "C*VC"
-    g_sizes: list[int] = [7500, 10000]
-    target_orthographies: list[str] = [
-        "latin",
-        "cyrillic",
-        "yiddish",
+
+def _write_experiment_grammar_index(
+    exp_dir: Path,
+    exp_name: str,
+    grammar_names: list[str],
+) -> None:
+    with open(exp_dir / f"{exp_name}_grammars.txt", "w") as handle:
+        for name in grammar_names:
+            handle.write(f"{name}\n")
+
+
+def _load_first_sample(exp_dir: Path, grammar_name: str) -> dict[str, Any]:
+    with open(exp_dir / f"samples_{grammar_name}.jsonl", "r") as handle:
+        return json.loads(handle.readline())
+
+
+def _orthography_label(orthography: str) -> str:
+    return ORTHOGRAPHY_LABELS.get(orthography, orthography.replace("_", " ").title())
+
+
+def _wordorder_label(head_initial: bool, spec_initial: bool) -> str:
+    if head_initial and spec_initial:
+        return "Target matches the source order"
+    if not head_initial and spec_initial:
+        return "Target is head-final, spec-initial"
+    if not head_initial and not spec_initial:
+        return "Target is head-final, spec-final"
+    if head_initial and not spec_initial:
+        return "Target is head-initial, spec-final"
+    return f"target head_initial={head_initial}, spec_initial={spec_initial}"
+
+
+def _write_experiment_readme(
+    exp_name: str,
+    title: str,
+    overview: str,
+    matrix_items: list[tuple[str, str]],
+    condition_examples: list[dict[str, str]],
+    regeneration_command: str,
+) -> None:
+    exp_dir = experiment_dir(exp_name)
+    lines = [
+        f"# {title}",
+        "",
+        overview,
+        "",
+        "## Experimental Matrix",
+        "",
     ]
+    for key, value in matrix_items:
+        lines.append(f"- {key}: {value}")
+
+    lines.extend(
+        [
+            "",
+            "## Regeneration",
+            "",
+            "```bash",
+            regeneration_command,
+            "```",
+            "",
+            "## Condition Examples",
+            "",
+            "Examples use the `left_phonetic` and `right_phonetic` surface forms from the sample JSONL files.",
+            "",
+        ]
+    )
+
+    for example in condition_examples:
+        lines.extend(
+            [
+                f"### {example['title']}",
+                "",
+                f"- condition: {example['condition']}",
+                f"- grammar: `{example['grammar_name']}`",
+                f"- example left: `{example['left']}`",
+                f"- example right: `{example['right']}`",
+                "",
+            ]
+        )
+
+    with open(exp_dir / "README.md", "w") as handle:
+        handle.write("\n".join(lines).rstrip() + "\n")
+
+
+def _create_orthography_dataset(
+    exp_name: str,
+    title: str,
+    overview: str,
+    grammar_sizes: list[int],
+    target_orthographies: list[str],
+    max_depth: int,
+    n_grammars_per_size: int,
+    n_sentences_per_depth: int,
+) -> None:
+    syllable_structure = "C*VC"
+    exp_dir = experiment_dir(exp_name)
+    exp_dir.mkdir(parents=True, exist_ok=True)
+
     grammar_names: list[str] = []
+    example_grammars: dict[str, tuple[str, int]] = {}
+
     for orthography in target_orthographies:
-        for g_size in g_sizes:
-            for _ in range(n_grammars_per_size):
-                g_seed = deterministic_seed("orthography", orthography, g_size, _)
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = deterministic_seed(exp_name, orthography, g_size, index)
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
@@ -71,18 +172,22 @@ def create_orthography_data(
                     spec_initial_b=True,
                     pro_drop_a=False,
                     pro_drop_b=False,
-                    n_verbs=g_size // 5,
-                    n_nouns=g_size // 5,
-                    n_adjectives=g_size // 5,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(2, g_size // 5),
                     n_propns=max(2, g_size // 5),
                     n_det_def=2,
                     n_det_indef=2,
                     n_prons=2,
                     n_comps=2,
                     orthography_b=orthography,
+                    exp_name=exp_name,
                 )
                 log.info(
-                    f"Created grammar {grammar_name} with orthography={orthography}, seed={g_seed}"
+                    "Created grammar %s with orthography=%s, seed=%s",
+                    grammar_name,
+                    orthography,
+                    g_seed,
                 )
                 generate_samples(
                     grammar_name=grammar_name,
@@ -90,38 +195,73 @@ def create_orthography_data(
                     min_depth=0,
                     max_depth=max_depth,
                     n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
                 )
                 grammar_names.append(grammar_name)
+                example_grammars.setdefault(orthography, (grammar_name, g_size))
 
-    with open(DATA_DIR / "orthography_grammars.txt", "w") as f:
-        for name in grammar_names:
-            f.write(f"{name}\n")
+    _write_experiment_grammar_index(exp_dir, exp_name, grammar_names)
+
+    condition_examples = []
+    for orthography in target_orthographies:
+        grammar_name, g_size = example_grammars[orthography]
+        sample = _load_first_sample(exp_dir, grammar_name)
+        condition_examples.append(
+            {
+                "title": _orthography_label(orthography),
+                "condition": f"target orthography=`{orthography}`, lexical size target={g_size}",
+                "grammar_name": grammar_name,
+                "left": sample["left_phonetic"],
+                "right": sample["right_phonetic"],
+            }
+        )
+
+    total_grammars = len(grammar_names)
+    total_samples = total_grammars * (max_depth + 1) * n_sentences_per_depth
+    _write_experiment_readme(
+        exp_name=exp_name,
+        title=title,
+        overview=overview,
+        matrix_items=[
+            ("source orthography", "`latin`"),
+            (
+                "target orthographies",
+                ", ".join(f"`{orthography}`" for orthography in target_orthographies),
+            ),
+            ("grammar sizes", str(grammar_sizes)),
+            ("grammars per size and orthography", str(n_grammars_per_size)),
+            ("depth range", f"`0..{max_depth}`"),
+            ("samples per depth", str(n_sentences_per_depth)),
+            ("total grammars", str(total_grammars)),
+            ("total samples", str(total_samples)),
+        ],
+        condition_examples=condition_examples,
+        regeneration_command=f"uv run python main.py exp_{exp_name}",
+    )
 
 
-def create_wordorder_data(
-    max_depth: int = 5,
-    n_grammars_per_size: int = 1,
-    n_sentences_per_depth: int = 20,
-):
-    """
-    Generates grammars which systematically vary word order parameters.
-    """
-
-    syllable_structure: str = "C*VC"
-    g_sizes: list[int] = [7500, 10000]
+def _create_wordorder_dataset(
+    exp_name: str,
+    title: str,
+    overview: str,
+    grammar_sizes: list[int],
+    target_head_spec_params: list[tuple[bool, bool]],
+    max_depth: int,
+    n_grammars_per_size: int,
+    n_sentences_per_depth: int,
+) -> None:
+    syllable_structure = "C*VC"
     source_head_spec_params: tuple[bool, bool] = (True, True)
-    target_head_spec_params: list[tuple[bool, bool]] = [
-        (True, True),
-        (False, True),
-        (False, False),
-    ]
+    exp_dir = experiment_dir(exp_name)
+    exp_dir.mkdir(parents=True, exist_ok=True)
 
     grammar_names: list[str] = []
+    example_grammars: dict[tuple[bool, bool], tuple[str, int]] = {}
 
     for hi_b, si_b in target_head_spec_params:
-        for g_size in g_sizes:
-            for _ in range(n_grammars_per_size):
-                g_seed = deterministic_seed("wordorder", hi_b, si_b, g_size, _)
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = deterministic_seed(exp_name, hi_b, si_b, g_size, index)
                 grammar_name = create_grammar(
                     rng_seed=g_seed,
                     syllable_structure_a=syllable_structure,
@@ -132,17 +272,22 @@ def create_wordorder_data(
                     spec_initial_b=si_b,
                     pro_drop_a=False,
                     pro_drop_b=False,
-                    n_verbs=g_size // 5,
-                    n_nouns=g_size // 5,
-                    n_adjectives=g_size // 5,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(2, g_size // 5),
                     n_propns=max(2, g_size // 5),
                     n_det_def=2,
                     n_det_indef=2,
                     n_prons=2,
                     n_comps=2,
+                    exp_name=exp_name,
                 )
                 log.info(
-                    f"Created grammar {grammar_name} with hi_b={hi_b}, si_b={si_b}, seed={g_seed}"
+                    "Created grammar %s with hi_b=%s, si_b=%s, seed=%s",
+                    grammar_name,
+                    hi_b,
+                    si_b,
+                    g_seed,
                 )
                 generate_samples(
                     grammar_name=grammar_name,
@@ -150,16 +295,228 @@ def create_wordorder_data(
                     min_depth=0,
                     max_depth=max_depth,
                     n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
                 )
                 grammar_names.append(grammar_name)
+                example_grammars.setdefault((hi_b, si_b), (grammar_name, g_size))
 
-    with open(DATA_DIR / "wordorder_grammars.txt", "w") as f:
-        for name in grammar_names:
-            f.write(f"{name}\n")
+    _write_experiment_grammar_index(exp_dir, exp_name, grammar_names)
+
+    condition_examples = []
+    for hi_b, si_b in target_head_spec_params:
+        grammar_name, g_size = example_grammars[(hi_b, si_b)]
+        sample = _load_first_sample(exp_dir, grammar_name)
+        condition_examples.append(
+            {
+                "title": _wordorder_label(hi_b, si_b),
+                "condition": (
+                    f"target head_initial={hi_b}, target spec_initial={si_b}, "
+                    f"lexical size target={g_size}"
+                ),
+                "grammar_name": grammar_name,
+                "left": sample["left_phonetic"],
+                "right": sample["right_phonetic"],
+            }
+        )
+
+    total_grammars = len(grammar_names)
+    total_samples = total_grammars * (max_depth + 1) * n_sentences_per_depth
+    _write_experiment_readme(
+        exp_name=exp_name,
+        title=title,
+        overview=overview,
+        matrix_items=[
+            ("source word order", "`head_initial=True`, `spec_initial=True`"),
+            (
+                "target word orders",
+                ", ".join(
+                    f"`head_initial={hi_b}, spec_initial={si_b}`"
+                    for hi_b, si_b in target_head_spec_params
+                ),
+            ),
+            ("grammar sizes", str(grammar_sizes)),
+            ("grammars per size and word-order condition", str(n_grammars_per_size)),
+            ("depth range", f"`0..{max_depth}`"),
+            ("samples per depth", str(n_sentences_per_depth)),
+            ("total grammars", str(total_grammars)),
+            ("total samples", str(total_samples)),
+        ],
+        condition_examples=condition_examples,
+        regeneration_command=f"uv run python main.py exp_{exp_name}",
+    )
+
+
+def prompt_grammar_str(
+    grammar: dict[str, object],
+    sample: str,
+    prompt_type: str,
+) -> str:
+    if prompt_type == "basic":
+        return str(grammar["grammar_str"])
+    if prompt_type == "compact":
+        params = SCFGParams.from_dict(grammar)
+        return RuleBuilder(params).build_compact_prompt_grammar(sample)
+    raise ValueError(f"Unknown prompt type: {prompt_type}")
+
+
+def estimate_prompt_tokens(prompt: str, model: str) -> int:
+    try:
+        encoder = tiktoken.encoding_for_model(model)
+    except KeyError:
+        encoder = tiktoken.get_encoding("cl100k_base")
+    return len(encoder.encode(prompt))
+
+
+def warn_for_large_prompts(
+    df: pd.DataFrame,
+    model: str,
+    grammar_name: str,
+    threshold: int = GPT_MESSAGE_TOKEN_LIMIT,
+) -> None:
+    if not model.startswith("gpt") or "prompt" not in df:
+        return
+    token_estimates = df["prompt"].apply(lambda prompt: estimate_prompt_tokens(prompt, model))
+    max_tokens = int(token_estimates.max())
+    over_limit = int((token_estimates > threshold).sum())
+    near_limit = int((token_estimates > int(0.8 * threshold)).sum())
+    if near_limit:
+        log.warning(
+            "Grammar %s has %s prompts above 80%% of the %s-token limit for %s; max estimate=%s",
+            grammar_name,
+            near_limit,
+            threshold,
+            model,
+            max_tokens,
+        )
+    if over_limit:
+        log.warning(
+            "Grammar %s has %s prompts estimated above the %s-token limit for %s; max estimate=%s",
+            grammar_name,
+            over_limit,
+            threshold,
+            model,
+            max_tokens,
+        )
+
+
+def create_orthography_data(
+    grammar_sizes: list[int] = [7500, 10000],
+    max_depth: int = 5,
+    n_grammars_per_size: int = 1,
+    n_sentences_per_depth: int = 10,
+    target_orthographies: list[str] = ["latin", "cyrillic", "hebrew"],
+):
+    """
+    Generates grammars which vary the target orthography.
+    """
+    _create_orthography_dataset(
+        exp_name="orthography",
+        title="Orthography Experiment Data",
+        overview=(
+            "This dataset varies only the target-side writing system while keeping the "
+            "source orthography and the syntactic settings fixed."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_orthographies=target_orthographies,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
+
+
+def create_orthography_large_data(
+    grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
+    target_orthographies: list[str] = [
+        "latin",
+        "latin_diacritic",
+        "cyrillic",
+        "hebrew",
+        "hebrew_unpointed",
+    ],
+):
+    """
+    Generates a larger orthography dataset with more grammar sizes and scripts.
+    """
+
+    _create_orthography_dataset(
+        exp_name="orthography_large",
+        title="Large Orthography Experiment Data",
+        overview=(
+            "This dataset expands the orthography experiment with a larger grammar-size "
+            "grid and two additional target-side writing systems."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_orthographies=target_orthographies,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
+
+
+def create_wordorder_data(
+    grammar_sizes: list[int] = [7500, 10000],
+    max_depth: int = 5,
+    n_grammars_per_size: int = 1,
+    n_sentences_per_depth: int = 20,
+    target_head_spec_params: list[tuple[bool, bool]] = [
+        (True, True),
+        (False, True),
+        (False, False),
+    ],
+):
+    """
+    Generates grammars which systematically vary word order parameters.
+    """
+    _create_wordorder_dataset(
+        exp_name="wordorder",
+        title="Word Order Experiment Data",
+        overview=(
+            "This dataset varies target-side head directionality and specifier order "
+            "while keeping the orthography fixed."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_head_spec_params=target_head_spec_params,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
+
+
+def create_wordorder_large_data(
+    grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
+    target_head_spec_params: list[tuple[bool, bool]] = [
+        (True, True),
+        (False, True),
+        (False, False),
+    ],
+):
+    """
+    Generates a larger word-order dataset with a broader grammar-size grid.
+    """
+
+    _create_wordorder_dataset(
+        exp_name="wordorder_large",
+        title="Large Word Order Experiment Data",
+        overview=(
+            "This dataset expands the word-order experiment with more grammar sizes "
+            "and more grammar replicates per condition."
+        ),
+        grammar_sizes=grammar_sizes,
+        target_head_spec_params=target_head_spec_params,
+        max_depth=max_depth,
+        n_grammars_per_size=n_grammars_per_size,
+        n_sentences_per_depth=n_sentences_per_depth,
+    )
 
 
 def create_agreement_data(
-    grammar_sizes: list[int] = [100, 1000],
+    grammar_sizes: list[int] = [25, 50, 100, 1_000, 5_000, 7_500, 10_000],
     max_depth: int = 5,
     n_grammars_per_size: int = 2,
     n_sentences_per_depth: int = 20,
@@ -175,7 +532,9 @@ def create_agreement_data(
 
     grammar_names: list[str] = []
     configurations = [
+        {"agreement_enabled_a": False, "agreement_enabled_b": False},
         {"agreement_enabled_a": False, "agreement_enabled_b": True},
+        {"agreement_enabled_a": True, "agreement_enabled_b": False},
         {"agreement_enabled_a": True, "agreement_enabled_b": True},
     ]
 
@@ -204,8 +563,10 @@ def create_agreement_data(
                     n_propns=max(2, g_size // 10),
                     n_det_def=2,
                     n_det_indef=2,
-                    n_prons=2,
+                    n_prons=6,
                     n_comps=2,
+                    orthography_a="latin",
+                    orthography_b="latin",
                     exp_name=exp_name,
                     agreement_enabled_a=config["agreement_enabled_a"],
                     agreement_enabled_b=config["agreement_enabled_b"],
@@ -570,45 +931,41 @@ def generate_batchfile(
     grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
     with open(grammar_path, "r") as f:
         grammar = json.load(f)
-    grammar_str = grammar["grammar_str"]
     agreement_metadata = grammar.get("agreement_metadata")
     n_words = grammar["n_words"]
     n_rules = grammar["n_rules"]
 
     df = pd.DataFrame(samples)
+    prompt_func = basic_prompt
 
-    if prompt_type == "basic":
-        prompt_func = basic_prompt
-    else:
-        raise ValueError(f"Unknown prompt type: {prompt_type}")
     df["prompt"] = df.apply(
         lambda row: prompt_func(
-            grammar_str=grammar_str,
+            grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
             sample=row["left_phonetic"],
             agreement_metadata=agreement_metadata,
         ),
         axis=1,
     )
+    warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
     df["json"] = df.apply(
         lambda row: ChatCompletionResponse(
             user_prompt=row["prompt"],
             max_completion_tokens=max_completion_tokens,
             n=n,
             metadata={
-                "input_sentence": row["left_phonetic"],
-                "output_sentence": row["right_phonetic"],
                 "grammar_name": grammar_name,
-                "n_words": str(n_words),
-                "n_rules": str(n_rules),
-                "model": model,
+                "sample_id": str(row.name),
                 "depth": str(row["depth"]),
             },
-        ).to_openai_batched_json(model=model, custom_id=f"request-{row.name}"),
+        ).to_openai_batched_json(
+            model=model, custom_id=f"{grammar_name}-sample-{row.name}"
+        ),
         axis=1,
     )
 
     model_pathsafe_name = model.replace("/", "_")
-    batch_jsonl_filename = f"inputs_{grammar_name}_{model_pathsafe_name}.jsonl"
+    prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+    batch_jsonl_filename = f"inputs_{grammar_name}{prompt_label}_{model_pathsafe_name}.jsonl"
     batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
     log.info(f"Writing batch job to {batch_jsonl_path}")
 
@@ -656,43 +1013,36 @@ def generate_experiment_batchfile(
         grammar_path = exp_dir / f"grammar_{grammar_name}.json"
         with open(grammar_path, "r") as f:
             grammar = json.load(f)
-        grammar_str = grammar["grammar_str"]
         agreement_metadata = grammar.get("agreement_metadata")
         n_words = grammar["n_words"]
         n_rules = grammar["n_rules"]
 
         df = pd.DataFrame(samples)
+        prompt_func = basic_prompt
 
-        if prompt_type == "basic":
-            prompt_func = basic_prompt
-        else:
-            raise ValueError(f"Unknown prompt type: {prompt_type}")
         df["prompt"] = df.apply(
             lambda row: prompt_func(
-                grammar_str=grammar_str,
+                grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
                 sample=row["left_phonetic"],
                 agreement_metadata=agreement_metadata,
             ),
             axis=1,
         )
+        warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
         df["json"] = df.apply(
             lambda row: ChatCompletionResponse(
                 user_prompt=row["prompt"],
                 max_completion_tokens=max_completion_tokens,
                 n=n,
                 metadata={
-                    "input_sentence": row["left_phonetic"],
-                    "output_sentence": row["right_phonetic"],
                     "grammar_name": grammar_name,
-                    "n_words": str(n_words),
-                    "n_rules": str(n_rules),
-                    "model": model,
+                    "sample_id": str(row.name),
                     "depth": str(row["depth"]),
                 }
                 if model.startswith("gpt")
                 else None,
             ).to_openai_batched_json(
-                model=model, custom_id=f"{grammar_name}-request-{row.name}"
+                model=model, custom_id=f"{grammar_name}-sample-{row.name}"
             ),
             axis=1,
         )
@@ -735,7 +1085,8 @@ def generate_experiment_batchfile(
         )
 
         model_pathsafe_name: str = model.replace("/", "_")
-        base_fname: str = f"inputs_{exp}_{model_pathsafe_name}_part{i+1}_of_{num_files}"
+        prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+        base_fname: str = f"inputs_{exp}{prompt_label}_{model_pathsafe_name}_part{i+1}_of_{num_files}"
         fname: str = f"{base_fname}_{fname_hash}.jsonl"
         fpath: Path = exp_batch_dir / fname
         log.info(f"Writing batch job to {fpath}")
@@ -776,7 +1127,9 @@ if __name__ == "__main__":
             "exp_complexity": create_complexity_data,
             "exp_large_complexity": create_large_complexity_data,
             "exp_wordorder": create_wordorder_data,
+            "exp_wordorder_large": create_wordorder_large_data,
             "exp_orthography": create_orthography_data,
+            "exp_orthography_large": create_orthography_large_data,
             "exp_agreement": create_agreement_data,
             "exp_size": create_size_data,
             # TODO: add hash id to input files, attach it to requiest custom id

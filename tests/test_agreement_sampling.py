@@ -129,6 +129,39 @@ class AgreementSamplingTest(unittest.TestCase):
             self.assertIn(self.scfg._choose_aligned_tense(rng), tense_pairs)
             self.assertIn(self.scfg._choose_aligned_det(rng, True), det_pairs)
 
+    def test_possible_right_answers_expand_when_source_collapses_number(self):
+        params = SCFGParams(
+            a=CFGParams(
+                agreement_enabled=False,
+                verbs=2,
+                nouns=2,
+                propns=2,
+                prons=6,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+                rng_seed=31,
+            ),
+            b=CFGParams(
+                agreement_enabled=True,
+                verbs=2,
+                nouns=2,
+                propns=2,
+                prons=6,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+                rng_seed=32,
+            ),
+        )
+        scfg = SCFG(params)
+        left_surface, _ = scfg._noun_entry(params.a, 0, "sg")
+        possible = scfg._possible_noun_right_surfaces(0, left_surface)
+        self.assertEqual(2, len(possible))
+        self.assertNotEqual(possible[0], possible[1])
+
 
 if __name__ == "__main__":
     unittest.main()
