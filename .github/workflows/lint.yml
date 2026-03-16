@@ -24,4 +24,4 @@ jobs:
           python-version-file: .python-version
 
       - name: Run prek
-        run: uv run --group dev prek run --all-files --show-diff-on-failure
+        run: uv run --group dev prek run --all-files --stage manual --show-diff-on-failure
