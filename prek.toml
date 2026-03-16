@@ -17,7 +17,8 @@ hooks = [
   },
   {
     id = "no-commit-to-branch",
-    args = ["--branch", "main"]
+    args = ["--branch", "main"],
+    stages = ["pre-commit"]
   },
   { id = "debug-statements" },
   { id = "detect-private-key" }
