@@ -1,9 +1,11 @@
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 MODULE_PATH = Path(__file__).resolve().parent.parent / "open_weights.py"
 SPEC = importlib.util.spec_from_file_location("open_weights_module", MODULE_PATH)
@@ -26,6 +28,22 @@ ERROR_SPEC.loader.exec_module(error_analysis)
 
 
 class OpenWeightsTest(unittest.TestCase):
+    def test_default_wandb_project_uses_repo_default(self):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            self.assertEqual("llm-scfg-vllm", open_weights.default_wandb_project())
+
+    def test_should_enable_wandb_uses_api_key_by_default(self):
+        with mock.patch.dict(os.environ, {"WANDB_API_KEY": "test-key"}, clear=False):
+            self.assertTrue(open_weights.should_enable_wandb())
+
+    def test_should_enable_wandb_honors_disabled_mode(self):
+        with mock.patch.dict(
+            os.environ,
+            {"WANDB_API_KEY": "test-key", "WANDB_MODE": "disabled"},
+            clear=False,
+        ):
+            self.assertFalse(open_weights.should_enable_wandb())
+
     def test_normalize_chat_body_translates_openai_batch_fields(self):
         normalized = open_weights.normalize_chat_body(
             {
