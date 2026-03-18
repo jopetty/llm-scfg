@@ -2,9 +2,11 @@
 
 import json
 import logging
+import os
 import pathlib
 import random
 import secrets
+from functools import lru_cache
 from hashlib import blake2b
 from typing import Any, Dict, Union, cast
 
@@ -367,11 +369,77 @@ def prompt_grammar_str(
 
 
 def estimate_prompt_tokens(prompt: str, model: str) -> int:
+    normalized = model.lower()
+    if "gemma" in normalized:
+        tokenizer = gemma_tokenizer(model)
+        tokens = tokenizer.apply_chat_template(
+            [{"role": "user", "content": prompt}],
+            tokenize=True,
+            add_generation_prompt=True,
+        )
+        return len(cast(list[int], tokens))
+
     try:
         encoder = tiktoken.encoding_for_model(model)
     except KeyError:
         encoder = tiktoken.get_encoding("cl100k_base")
     return len(encoder.encode(prompt))
+
+
+@lru_cache(maxsize=16)
+def gemma_tokenizer(model: str):
+    try:
+        from transformers import AutoTokenizer
+    except ImportError as exc:
+        raise ImportError(
+            "Generating Gemma batch files requires transformers. "
+            "Install the cluster dependency group or add transformers locally."
+        ) from exc
+
+    token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_HUB_TOKEN")
+    return AutoTokenizer.from_pretrained(model, token=token)
+
+
+def model_input_token_limit(model: str) -> int | None:
+    normalized = model.lower()
+    if "gemma-3-270m" in normalized or "gemma-3-1b" in normalized:
+        return 32_000
+    if any(size in normalized for size in ["gemma-3-4b", "gemma-3-12b", "gemma-3-27b"]):
+        return 128_000
+    if "gemma-2" in normalized:
+        return 8_192
+    return None
+
+
+def drop_rows_over_model_context(
+    df: pd.DataFrame,
+    *,
+    model: str,
+    grammar_name: str,
+) -> pd.DataFrame:
+    context_limit = model_input_token_limit(model)
+    if context_limit is None or "prompt" not in df:
+        return df
+
+    token_estimates = df["prompt"].apply(
+        lambda prompt: estimate_prompt_tokens(prompt, model)
+    )
+    over_limit_mask = token_estimates > context_limit
+    dropped = int(over_limit_mask.sum())
+    if dropped:
+        max_tokens = int(token_estimates.max())
+        log.warning(
+            (
+                "Dropping %s prompts for %s because they exceed the %s-token "
+                "input window for %s; max estimate=%s"
+            ),
+            dropped,
+            grammar_name,
+            context_limit,
+            model,
+            max_tokens,
+        )
+    return df.loc[~over_limit_mask].copy()
 
 
 def warn_for_large_prompts(
@@ -960,6 +1028,7 @@ def generate_batchfile(
         ),
         axis=1,
     )
+    df = drop_rows_over_model_context(df, model=model, grammar_name=grammar_name)
     warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
     df["json"] = df.apply(
         lambda row: ChatCompletionResponse(
@@ -1044,6 +1113,7 @@ def generate_experiment_batchfile(
             ),
             axis=1,
         )
+        df = drop_rows_over_model_context(df, model=model, grammar_name=grammar_name)
         warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
         df["json"] = df.apply(
             lambda row: ChatCompletionResponse(

@@ -2,12 +2,95 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import main
 from scfg.scfg import CFGParams
 
 
 class ExperimentCliTest(unittest.TestCase):
+    def test_estimate_prompt_tokens_uses_gemma_chat_template(self):
+        tokenizer = mock.Mock()
+        tokenizer.apply_chat_template.return_value = [1, 2, 3, 4]
+
+        with mock.patch.object(main, "gemma_tokenizer", return_value=tokenizer):
+            token_count = main.estimate_prompt_tokens(
+                "translate this",
+                "google/gemma-3-12b-it",
+            )
+
+        self.assertEqual(4, token_count)
+        tokenizer.apply_chat_template.assert_called_once_with(
+            [{"role": "user", "content": "translate this"}],
+            tokenize=True,
+            add_generation_prompt=True,
+        )
+
+    def test_generate_experiment_batchfile_drops_rows_over_gemma_context(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            data_dir = root / "data"
+            batch_dir = root / "batches"
+            exp_dir = data_dir / "wordorder_large_exp"
+            exp_dir.mkdir(parents=True, exist_ok=True)
+            batch_dir.mkdir(parents=True, exist_ok=True)
+
+            original_project_root = main.PROJECT_ROOT
+            original_data_dir = main.DATA_DIR
+            original_batch_dir = main.BATCH_DIR
+            try:
+                main.PROJECT_ROOT = root
+                main.DATA_DIR = data_dir
+                main.BATCH_DIR = batch_dir
+
+                grammar_name = main.create_grammar(
+                    rng_seed=17,
+                    n_verbs=2,
+                    n_nouns=2,
+                    n_adjectives=1,
+                    n_propns=2,
+                    n_det_def=1,
+                    n_det_indef=1,
+                    n_prons=2,
+                    n_comps=1,
+                    exp_name="wordorder_large",
+                )
+                main.generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=17,
+                    min_depth=0,
+                    max_depth=0,
+                    n_samples_per_depth=2,
+                    exp_name="wordorder_large",
+                )
+                with open(exp_dir / "wordorder_large_grammars.txt", "w") as handle:
+                    handle.write(f"{grammar_name}\n")
+
+                with (
+                    mock.patch.object(main, "model_input_token_limit", return_value=10),
+                    mock.patch.object(
+                        main,
+                        "estimate_prompt_tokens",
+                        side_effect=[5, 20],
+                    ),
+                ):
+                    main.generate_experiment_batchfile(
+                        exp="wordorder_large",
+                        model="google/gemma-3-12b-it",
+                    )
+
+                out_files = list((batch_dir / "wordorder_large_exp").glob("*.jsonl"))
+                self.assertEqual(1, len(out_files))
+                with open(out_files[0]) as handle:
+                    payloads = [json.loads(line) for line in handle]
+
+                self.assertEqual(1, len(payloads))
+                self.assertIn("-sample-0", payloads[0]["custom_id"])
+            finally:
+                main.PROJECT_ROOT = original_project_root
+                main.DATA_DIR = original_data_dir
+                main.BATCH_DIR = original_batch_dir
+
     def test_new_orthographies_round_trip(self):
         cases = [
             ("latin_diacritic", lambda text: any(ord(char) > 127 for char in text)),
