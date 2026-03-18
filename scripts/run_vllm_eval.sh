@@ -9,10 +9,26 @@ DEFAULT_VENV_DIR="/scratch/$USER/venvs/llm-scfg"
 VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VLLM_BIN="${VLLM_BIN:-}"
+ENV_FILE="${ENV_FILE:-.env}"
 
 if [[ -z "$INPUT_PATH" ]]; then
   echo "usage: $0 <input-jsonl-or-batch-dir>" >&2
   exit 1
+fi
+
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+# Keep the common Hugging Face token aliases synchronized for downstream tools.
+if [[ -n "${HUGGINGFACE_HUB_TOKEN:-}" && -z "${HF_TOKEN:-}" ]]; then
+  export HF_TOKEN="$HUGGINGFACE_HUB_TOKEN"
+fi
+if [[ -n "${HF_TOKEN:-}" && -z "${HUGGINGFACE_HUB_TOKEN:-}" ]]; then
+  export HUGGINGFACE_HUB_TOKEN="$HF_TOKEN"
 fi
 
 if [[ -z "$PYTHON_BIN" ]]; then
