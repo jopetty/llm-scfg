@@ -71,6 +71,15 @@ HUGGINGFACE_HUB_TOKEN=...
 
 The cluster launch script [scripts/run_vllm_eval.sh](/Users/jacksonpetty/Development/llm-scfg/scripts/run_vllm_eval.sh) also loads `.env` before starting `vllm serve`, so gated Hugging Face models such as Gemma 3 can authenticate via either `HF_TOKEN` or `HUGGINGFACE_HUB_TOKEN`.
 
+To verify Hugging Face authentication before launching a job:
+
+```bash
+uv run python scripts/check_hf_auth.py google/gemma-3-12b-it
+```
+
+That script loads `.env` from the repo root and checks authenticated access to
+the target repo through the Hugging Face API.
+
 Run the test suite:
 
 ```bash
