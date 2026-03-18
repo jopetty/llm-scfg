@@ -15,4 +15,23 @@ fi
 INPUT_PATH="$1"
 shift
 
-sbatch --export=ALL,INPUT_PATH="${INPUT_PATH}" "$@" scripts/slurm_vllm_eval.sbatch
+mkdir -p logs
+
+SBATCH_ARGS=()
+USER_EXPORT=""
+
+for arg in "$@"; do
+  if [[ "$arg" == --export=* ]]; then
+    USER_EXPORT="${arg#--export=}"
+  else
+    SBATCH_ARGS+=("$arg")
+  fi
+done
+
+if [[ -n "$USER_EXPORT" ]]; then
+  MERGED_EXPORT="ALL,INPUT_PATH=${INPUT_PATH},${USER_EXPORT}"
+else
+  MERGED_EXPORT="ALL,INPUT_PATH=${INPUT_PATH}"
+fi
+
+sbatch --export="${MERGED_EXPORT}" "${SBATCH_ARGS[@]}" scripts/slurm_vllm_eval.sbatch
