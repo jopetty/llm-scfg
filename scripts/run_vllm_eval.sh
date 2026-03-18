@@ -55,6 +55,7 @@ MAX_NUM_SEQS="${MAX_NUM_SEQS:-64}"
 CONCURRENCY="${CONCURRENCY:-32}"
 VLLM_STARTUP_TIMEOUT_SECONDS="${VLLM_STARTUP_TIMEOUT_SECONDS:-600}"
 VLLM_EXTRA_ARGS="${VLLM_EXTRA_ARGS:-}"
+ATTENTION_BACKEND="${ATTENTION_BACKEND:-}"
 
 cleanup() {
   if [[ -n "${SERVER_PID:-}" ]]; then
@@ -65,15 +66,29 @@ cleanup() {
 
 trap cleanup EXIT
 
-"$VLLM_BIN" serve "$MODEL_NAME" \
-  --host "$HOST" \
-  --port "$PORT" \
-  --served-model-name "$SERVED_MODEL_NAME" \
-  --tensor-parallel-size "$TP_SIZE" \
-  --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
-  --max-model-len "$MAX_MODEL_LEN" \
-  --max-num-seqs "$MAX_NUM_SEQS" \
-  $VLLM_EXTRA_ARGS &
+VLLM_ARGS=(
+  serve "$MODEL_NAME"
+  --host "$HOST"
+  --port "$PORT"
+  --served-model-name "$SERVED_MODEL_NAME"
+  --tensor-parallel-size "$TP_SIZE"
+  --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
+  --max-model-len "$MAX_MODEL_LEN"
+  --max-num-seqs "$MAX_NUM_SEQS"
+)
+
+if [[ -n "$ATTENTION_BACKEND" ]]; then
+  VLLM_ARGS+=(--attention-backend "$ATTENTION_BACKEND")
+fi
+
+if [[ -n "$VLLM_EXTRA_ARGS" ]]; then
+  # Intentionally allow shell-style extra flags for cluster-specific tuning.
+  # shellcheck disable=SC2206
+  EXTRA_ARGS=( $VLLM_EXTRA_ARGS )
+  VLLM_ARGS+=("${EXTRA_ARGS[@]}")
+fi
+
+"$VLLM_BIN" "${VLLM_ARGS[@]}" &
 SERVER_PID=$!
 
 deadline=$((SECONDS + VLLM_STARTUP_TIMEOUT_SECONDS))
