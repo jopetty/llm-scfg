@@ -71,7 +71,7 @@ HOST="${HOST:-127.0.0.1}"
 BASE_URL="${BASE_URL:-http://$HOST:$PORT/v1}"
 TP_SIZE="${TP_SIZE:-1}"
 GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.92}"
-MAX_MODEL_LEN="${MAX_MODEL_LEN:-32768}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-}"
 MAX_NUM_SEQS="${MAX_NUM_SEQS:-64}"
 CONCURRENCY="${CONCURRENCY:-32}"
 VLLM_STARTUP_TIMEOUT_SECONDS="${VLLM_STARTUP_TIMEOUT_SECONDS:-600}"
@@ -94,9 +94,12 @@ VLLM_ARGS=(
   --served-model-name "$MODEL_NAME"
   --tensor-parallel-size "$TP_SIZE"
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
-  --max-model-len "$MAX_MODEL_LEN"
   --max-num-seqs "$MAX_NUM_SEQS"
 )
+
+if [[ -n "$MAX_MODEL_LEN" ]]; then
+  VLLM_ARGS+=(--max-model-len "$MAX_MODEL_LEN")
+fi
 
 if [[ -n "$ATTENTION_BACKEND" ]]; then
   VLLM_ARGS+=(--attention-backend "$ATTENTION_BACKEND")
