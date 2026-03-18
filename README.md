@@ -46,6 +46,29 @@ Install dependencies:
 uv sync
 ```
 
+Install the cluster runner environment, including `wandb` and Linux-only `vllm`:
+
+```bash
+uv sync --group cluster
+```
+
+The `vllm` dependency is declared with a Linux platform marker in
+[pyproject.toml](/Users/jacksonpetty/Development/llm-scfg/pyproject.toml), so
+this group resolves cleanly on macOS while still producing a complete GPU
+environment on Linux cluster nodes.
+
+All CLI entrypoints load `.env` from the repo root if present, so cluster-only
+credentials such as `WANDB_API_KEY` can live there.
+
+Example `.env`:
+
+```bash
+WANDB_API_KEY=...
+WANDB_ENTITY=...
+HF_TOKEN=...
+HUGGINGFACE_HUB_TOKEN=...
+```
+
 Run the test suite:
 
 ```bash
@@ -188,11 +211,56 @@ bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
 
 The script starts `vllm serve`, waits for the server to answer on `/v1/models`, and then runs every matching `inputs_*.jsonl` file through [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py).
 
+### Scratch venv bootstrap on NYU HPC
+
+On the NYU cluster, the supported path is to build the project environment on
+`/scratch` and run jobs from that venv instead of depending on a shared Python
+install.
+
+Run this on a compute node:
+
+```bash
+bash scripts/bootstrap_scratch_cluster_venv.sh
+```
+
+That script will:
+
+- install `uv` under `/scratch/$USER/uv`
+- install Python `3.13` under `/scratch/$USER/uv-python`
+- create `/scratch/$USER/venvs/llm-scfg`
+- install this repo with the `cluster` dependency group
+- verify that `openai`, `wandb`, and `vllm` are importable/executable
+
+After bootstrap, the default runtime paths are:
+
+```text
+/scratch/$USER/venvs/llm-scfg/bin/python
+/scratch/$USER/venvs/llm-scfg/bin/vllm
+```
+
+The Slurm wrapper in [scripts/slurm_vllm_eval.sbatch](/Users/jacksonpetty/Development/llm-scfg/scripts/slurm_vllm_eval.sbatch) and the launch script in [scripts/run_vllm_eval.sh](/Users/jacksonpetty/Development/llm-scfg/scripts/run_vllm_eval.sh) both default to that scratch venv, so no extra activation step is needed once bootstrap has finished.
+
+If you want the repo itself on scratch as well, clone it there first and run the
+bootstrap script from that checkout:
+
+```bash
+cd /scratch/$USER
+git clone <repo-url> llm-scfg
+cd llm-scfg
+bash scripts/bootstrap_scratch_cluster_venv.sh
+```
+
 ### Cluster notes
 
 - `scripts/slurm_vllm_eval.sbatch` is a minimal Slurm template for this workflow.
 - `google/gemma-3-12b-it` is the safest initial target for L40S nodes; larger Gemma 3 variants will usually want more GPU memory or tensor parallelism across multiple GPUs.
-- The runner is endpoint-based rather than importing `vllm` directly, so the Python environment here stays small while the cluster image can manage vLLM separately.
+- To build the cluster environment from this repo, run `uv sync --group cluster` on the Linux node or in the cluster image build.
+- The bootstrap script defaults to `/share/apps/images/cuda12.2.2-cudnn8.9.4-devel-ubuntu22.04.3.sif`; override `IMAGE=...` if your partition uses a different Apptainer image.
+- Submit a job after bootstrap with:
+
+```bash
+sbatch --export=ALL,INPUT_PATH=batches/wordorder_large_exp,MODEL_NAME=google/gemma-3-12b-it scripts/slurm_vllm_eval.sbatch
+```
 
 ## Experimental setups
 

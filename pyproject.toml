@@ -26,6 +26,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+cluster = [
+    "vllm>=0.17.1 ; sys_platform == 'linux'",
+    "wandb>=0.25.1",
+]
 dev = [
     "prek>=0.3.6",
     "ty>=0.0.4",

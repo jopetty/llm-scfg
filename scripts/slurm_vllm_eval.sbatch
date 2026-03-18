@@ -21,6 +21,9 @@ export MODEL_NAME="${MODEL_NAME:-google/gemma-3-12b-it}"
 export SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-$MODEL_NAME}"
 export TP_SIZE="${TP_SIZE:-1}"
 export CONCURRENCY="${CONCURRENCY:-32}"
+export VENV_DIR="${VENV_DIR:-/scratch/$USER/venvs/llm-scfg}"
+export PYTHON_BIN="${PYTHON_BIN:-$VENV_DIR/bin/python}"
+export VLLM_BIN="${VLLM_BIN:-$VENV_DIR/bin/vllm}"
 
 # L40S usually fits Gemma 3 12B with TP=1. Larger Gemma 3 variants typically
 # need more GPUs or a higher-memory node; override TP_SIZE and gres as needed.
