@@ -33,7 +33,7 @@ apptainer exec --nv \
     uv venv --python \"\${PYTHON_BIN}\" '${VENV_DIR}'
     source '${VENV_DIR}/bin/activate'
     cd '${REPO_ROOT}'
-    uv sync --python '${VENV_DIR}/bin/python' --group cluster
+    uv sync --active --group cluster
     '${VENV_DIR}/bin/python' -c 'import openai, wandb; print(openai.__version__, wandb.__version__)'
     '${VENV_DIR}/bin/vllm' --help >/dev/null
   "
