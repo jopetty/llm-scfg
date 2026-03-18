@@ -3,13 +3,13 @@
 set -euo pipefail
 
 MODEL_NAME="${MODEL_NAME:-google/gemma-3-12b-it}"
-SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-$MODEL_NAME}"
 INPUT_PATH="${1:-}"
 DEFAULT_VENV_DIR="/scratch/$USER/venvs/llm-scfg"
 VENV_DIR="${VENV_DIR:-$DEFAULT_VENV_DIR}"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VLLM_BIN="${VLLM_BIN:-}"
 ENV_FILE="${ENV_FILE:-.env}"
+INPUT_GLOB="${INPUT_GLOB:-}"
 
 if [[ -z "$INPUT_PATH" ]]; then
   echo "usage: $0 <input-jsonl-or-batch-dir>" >&2
@@ -61,6 +61,11 @@ if [[ -z "$VLLM_BIN" || ! -x "$VLLM_BIN" ]]; then
   exit 1
 fi
 
+if [[ ! -e "$INPUT_PATH" ]]; then
+  echo "input path not found: $INPUT_PATH" >&2
+  exit 1
+fi
+
 PORT="${PORT:-8000}"
 HOST="${HOST:-127.0.0.1}"
 BASE_URL="${BASE_URL:-http://$HOST:$PORT/v1}"
@@ -86,7 +91,7 @@ VLLM_ARGS=(
   serve "$MODEL_NAME"
   --host "$HOST"
   --port "$PORT"
-  --served-model-name "$SERVED_MODEL_NAME"
+  --served-model-name "$MODEL_NAME"
   --tensor-parallel-size "$TP_SIZE"
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
   --max-model-len "$MAX_MODEL_LEN"
@@ -117,17 +122,27 @@ until curl -fsS "$BASE_URL/models" >/dev/null 2>&1; do
 done
 
 if [[ -d "$INPUT_PATH" ]]; then
+  if [[ -z "$INPUT_GLOB" ]]; then
+    MODEL_SAFE_NAME="$("$PYTHON_BIN" -c 'import sys; print(sys.argv[1].replace("/", "_").replace(":", "_"))' "$MODEL_NAME")"
+    INPUT_GLOB="inputs_*_${MODEL_SAFE_NAME}_*.jsonl"
+  fi
+  if ! find "$INPUT_PATH" -maxdepth 1 -name "$INPUT_GLOB" | grep -q .; then
+    echo "no batch files matched $INPUT_GLOB under $INPUT_PATH" >&2
+    echo "set INPUT_GLOB explicitly if needed" >&2
+    exit 1
+  fi
   "$PYTHON_BIN" open_weights.py run_batch_dir \
     --batch_dir="$INPUT_PATH" \
+    --input_glob="$INPUT_GLOB" \
     --base_url="$BASE_URL" \
     --api_key=EMPTY \
-    --model_override="$SERVED_MODEL_NAME" \
+    --model_override="$MODEL_NAME" \
     --concurrency="$CONCURRENCY"
 else
   "$PYTHON_BIN" open_weights.py run_batch_file \
     --input_file="$INPUT_PATH" \
     --base_url="$BASE_URL" \
     --api_key=EMPTY \
-    --model_override="$SERVED_MODEL_NAME" \
+    --model_override="$MODEL_NAME" \
     --concurrency="$CONCURRENCY"
 fi
