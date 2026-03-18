@@ -209,18 +209,22 @@ That means the current analysis in [notebooks/error_analysis.py](/Users/jacksonp
 Generate a standard experiment batch file first:
 
 ```bash
-uv run python main.py gen_exp_batchfile --exp=wordorder_large --model=gpt-5
+uv run python main.py gen_exp_batchfile --exp=wordorder_large --model=google/gemma-3-12b-it
 ```
 
 Replay the resulting files against Gemma 3 via vLLM:
 
 ```bash
-MODEL_NAME=google/gemma-3-12b-it \
-SERVED_MODEL_NAME=google/gemma-3-12b-it \
-bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
+MODEL_NAME=google/gemma-3-12b-it bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
 ```
 
-The script starts `vllm serve`, waits for the server to answer on `/v1/models`, and then runs every matching `inputs_*.jsonl` file through [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py).
+The script starts `vllm serve`, waits for the server to answer on `/v1/models`, and then runs the batch files whose filename model suffix matches `MODEL_NAME` through [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py). By default, a directory run against `google/gemma-3-12b-it` looks for files matching `inputs_*_google_gemma-3-12b-it_*.jsonl`.
+
+If you need to override the filename matching for legacy batch files, set:
+
+```bash
+INPUT_GLOB='inputs_*_gemma-3-12b-it_*.jsonl' bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
+```
 
 ### Scratch venv bootstrap on NYU HPC
 
