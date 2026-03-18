@@ -38,7 +38,7 @@ Current experimental axes:
 
 ## Setup
 
-The repo expects Python 3.13 and uses `uv`.
+The repo expects Python 3.12+ and uses `uv`.
 
 Install dependencies:
 
@@ -217,7 +217,31 @@ On the NYU cluster, the supported path is to build the project environment on
 `/scratch` and run jobs from that venv instead of depending on a shared Python
 install.
 
-Run this on a compute node:
+Do this on a compute node, not the login node. A GPU node is the safest default
+because the bootstrap path uses `apptainer exec --nv` and installs the same
+stack you will use for `vllm` inference. If you already know your cluster image
+and CUDA stack work on a CPU-only compute node, that can also work, but the
+recommended path is an interactive GPU allocation.
+
+Example interactive allocation:
+
+```bash
+srun --account=torch_pr_287_general --partition=<gpu-partition> --gres=gpu:1 --cpus-per-task=8 --mem=64G --time=02:00:00 --pty bash
+```
+
+Then move to scratch and clone the repo there if you want both the checkout and
+the venv on scratch:
+
+```bash
+cd /scratch/$USER
+git clone <repo-url> llm-scfg
+cd llm-scfg
+```
+
+You do not need `uv` preinstalled on the cluster. The bootstrap script installs
+it for you under `/scratch/$USER/uv`.
+
+Run the bootstrap script from the repo root:
 
 ```bash
 bash scripts/bootstrap_scratch_cluster_venv.sh
@@ -226,10 +250,16 @@ bash scripts/bootstrap_scratch_cluster_venv.sh
 That script will:
 
 - install `uv` under `/scratch/$USER/uv`
-- install Python `3.13` under `/scratch/$USER/uv-python`
+- install Python `3.12` under `/scratch/$USER/uv-python`
 - create `/scratch/$USER/venvs/llm-scfg`
 - install this repo with the `cluster` dependency group
 - verify that `openai`, `wandb`, and `vllm` are importable/executable
+
+The bootstrap script pins Python `3.12` on purpose. This matches the Python
+version used in your other cluster setup and is the safer target for the GPU
+runtime stack here. For this `vllm` path, do not separately install upstream
+`flash-attn`; `vllm` ships and selects its own compatible attention backend
+stack.
 
 After bootstrap, the default runtime paths are:
 
@@ -240,23 +270,21 @@ After bootstrap, the default runtime paths are:
 
 The Slurm wrapper in [scripts/slurm_vllm_eval.sbatch](/Users/jacksonpetty/Development/llm-scfg/scripts/slurm_vllm_eval.sbatch) and the launch script in [scripts/run_vllm_eval.sh](/Users/jacksonpetty/Development/llm-scfg/scripts/run_vllm_eval.sh) both default to that scratch venv, so no extra activation step is needed once bootstrap has finished.
 
-If you want the repo itself on scratch as well, clone it there first and run the
-bootstrap script from that checkout:
-
-```bash
-cd /scratch/$USER
-git clone <repo-url> llm-scfg
-cd llm-scfg
-bash scripts/bootstrap_scratch_cluster_venv.sh
-```
-
 ### Cluster notes
 
 - `scripts/slurm_vllm_eval.sbatch` is a minimal Slurm template for this workflow.
+- The Slurm script includes `#SBATCH --account=torch_pr_287_general`, matching the account used in your other NYU cluster scripts.
 - `google/gemma-3-12b-it` is the safest initial target for L40S nodes; larger Gemma 3 variants will usually want more GPU memory or tensor parallelism across multiple GPUs.
 - To build the cluster environment from this repo, run `uv sync --group cluster` on the Linux node or in the cluster image build.
 - The bootstrap script defaults to `/share/apps/images/cuda12.2.2-cudnn8.9.4-devel-ubuntu22.04.3.sif`; override `IMAGE=...` if your partition uses a different Apptainer image.
+- `vllm` auto-selects an attention backend by default. If you want to force FlashAttention for a run, pass `--export=ATTENTION_BACKEND=FLASH_ATTN` at submit time.
 - Submit a job after bootstrap with:
+
+```bash
+scripts/submit_vllm_eval.sh batches/wordorder_large_exp --export=MODEL_NAME=google/gemma-3-12b-it
+```
+
+If you want to bypass the wrapper, the direct form is:
 
 ```bash
 sbatch --export=ALL,INPUT_PATH=batches/wordorder_large_exp,MODEL_NAME=google/gemma-3-12b-it scripts/slurm_vllm_eval.sbatch

@@ -7,7 +7,7 @@ UV_ROOT="${UV_ROOT:-/scratch/$USER/uv}"
 UV_PYTHON_INSTALL_DIR="${UV_PYTHON_INSTALL_DIR:-/scratch/$USER/uv-python}"
 VENV_DIR="${VENV_DIR:-/scratch/$USER/venvs/llm-scfg}"
 UV_CACHE_DIR="${UV_CACHE_DIR:-/scratch/$USER/.cache/uv}"
-PYTHON_VERSION="${PYTHON_VERSION:-3.13}"
+PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
 
 mkdir -p "${UV_CACHE_DIR}" "$(dirname "${VENV_DIR}")"
 
@@ -24,9 +24,9 @@ apptainer exec --nv \
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH='${UV_ROOT}':\$PATH
     uv python install --install-dir '${UV_PYTHON_INSTALL_DIR}' --force '${PYTHON_VERSION}'
-    PYTHON_BIN=\$(find '${UV_PYTHON_INSTALL_DIR}' -path '*/bin/python3.13' | head -n 1)
+    PYTHON_BIN=\$(find '${UV_PYTHON_INSTALL_DIR}' -path '*/bin/python3.12' | head -n 1)
     if [[ -z \"\${PYTHON_BIN}\" ]]; then
-      echo 'Failed to locate installed Python 3.13 in ${UV_PYTHON_INSTALL_DIR}' >&2
+      echo 'Failed to locate installed Python 3.12 in ${UV_PYTHON_INSTALL_DIR}' >&2
       exit 1
     fi
     rm -rf '${VENV_DIR}'
