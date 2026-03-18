@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import pyrootutils
 import tiktoken
+from dotenv import load_dotenv
 
 from scfg.prompt import ChatCompletionResponse, basic_prompt
 from scfg.scfg import SCFG, CFGParams, RuleBuilder, SCFGParams
@@ -35,6 +36,8 @@ PROJECT_ROOT = path = pyrootutils.find_root(
 )
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 GPT_MESSAGE_TOKEN_LIMIT = 272_000
 DEFAULT_LARGE_GRAMMAR_SIZES = [25, 50, 100, 1_000, 5_000, 7_500, 10_000]
