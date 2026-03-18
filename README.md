@@ -11,6 +11,7 @@ The codebase supports:
 - varying structural and morphological properties of the language pair
 - rendering grammars into prompt-friendly displays
 - building JSONL batch requests for model evaluation
+- replaying those JSONL batch requests against local OpenAI-compatible servers such as vLLM
 
 Current experimental axes:
 
@@ -23,10 +24,13 @@ Current experimental axes:
 ## Repository layout
 
 - [main.py](/Users/jacksonpetty/Development/llm-scfg/main.py): main CLI for grammar generation, sample generation, and batch creation
+- [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py): run existing batch JSONL files against local OpenAI-compatible servers and emit analysis-compatible output JSONL
 - [scfg/scfg.py](/Users/jacksonpetty/Development/llm-scfg/scfg/scfg.py): grammar parameterization, lexicon/paradigm generation, rule construction, sampling, and display formatting
 - [scfg/agreement.py](/Users/jacksonpetty/Development/llm-scfg/scfg/agreement.py): feature bundles, inventories, and unification helpers
 - [scfg/prompt.py](/Users/jacksonpetty/Development/llm-scfg/scfg/prompt.py): prompt templates
 - [scripts/preview_grammar.py](/Users/jacksonpetty/Development/llm-scfg/scripts/preview_grammar.py): quick grammar/sample preview tool
+- [scripts/run_vllm_eval.sh](/Users/jacksonpetty/Development/llm-scfg/scripts/run_vllm_eval.sh): launch a local vLLM server and run one input file or directory of batch files through it
+- [scripts/slurm_vllm_eval.sbatch](/Users/jacksonpetty/Development/llm-scfg/scripts/slurm_vllm_eval.sbatch): Slurm template for cluster execution
 - [tests](/Users/jacksonpetty/Development/llm-scfg/tests): `unittest` suite
 - [data](/Users/jacksonpetty/Development/llm-scfg/data): saved grammars and samples
 - [batches](/Users/jacksonpetty/Development/llm-scfg/batches): generated batch JSONL files
@@ -79,6 +83,18 @@ uv run python main.py gen_batchfile \
 ```
 
 This writes a JSONL input file under [batches](/Users/jacksonpetty/Development/llm-scfg/batches).
+
+Run that same JSONL through a local OpenAI-compatible server:
+
+```bash
+uv run python open_weights.py run_batch_file \
+  --input_file=batches/inputs_<grammar_id>_gpt-5-nano.jsonl \
+  --base_url=http://127.0.0.1:8000/v1 \
+  --model_override=google/gemma-3-12b-it \
+  --api_key=EMPTY
+```
+
+This writes a sibling `*_output.jsonl` file in the same OpenAI-like shape that the notebook analysis already consumes.
 
 ## Previewing a grammar
 
@@ -136,6 +152,47 @@ Experiment commands:
 - `exp_size`
 - `exp_complexity`
 - `exp_large_complexity`
+
+Open-weight execution:
+
+- `uv run python open_weights.py run_batch_file ...`
+- `uv run python open_weights.py run_batch_dir ...`
+
+These commands accept the same `inputs_*.jsonl` files produced for OpenAI-style batch APIs. Use `model_override` when replaying a GPT-targeted input file against a local model such as Gemma 3.
+
+## Open-weight pipeline
+
+The open-weight path is deliberately contract-compatible with the existing analysis flow:
+
+- input: the existing `inputs_*.jsonl` chat-completions batch files
+- execution: a local OpenAI-compatible endpoint, typically `vllm serve`
+- output: `*_output.jsonl` files with `custom_id` and `response.body` fields shaped like provider batch results
+
+That means the current analysis in [notebooks/error_analysis.py](/Users/jacksonpetty/Development/llm-scfg/notebooks/error_analysis.py) can ingest the outputs without a separate conversion step.
+
+### Local vLLM run
+
+Generate a standard experiment batch file first:
+
+```bash
+uv run python main.py gen_exp_batchfile --exp=wordorder_large --model=gpt-5
+```
+
+Replay the resulting files against Gemma 3 via vLLM:
+
+```bash
+MODEL_NAME=google/gemma-3-12b-it \
+SERVED_MODEL_NAME=google/gemma-3-12b-it \
+bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
+```
+
+The script starts `vllm serve`, waits for the server to answer on `/v1/models`, and then runs every matching `inputs_*.jsonl` file through [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py).
+
+### Cluster notes
+
+- `scripts/slurm_vllm_eval.sbatch` is a minimal Slurm template for this workflow.
+- `google/gemma-3-12b-it` is the safest initial target for L40S nodes; larger Gemma 3 variants will usually want more GPU memory or tensor parallelism across multiple GPUs.
+- The runner is endpoint-based rather than importing `vllm` directly, so the Python environment here stays small while the cluster image can manage vLLM separately.
 
 ## Experimental setups
 
