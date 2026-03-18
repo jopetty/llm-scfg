@@ -20,6 +20,7 @@ apptainer exec --nv \
     export UV_PYTHON_INSTALL_DIR='${UV_PYTHON_INSTALL_DIR}'
     export UV_CACHE_DIR='${UV_CACHE_DIR}'
     export UV_LINK_MODE=copy
+    export UV_PROJECT_ENVIRONMENT='${VENV_DIR}'
     mkdir -p '${UV_CACHE_DIR}' '$(dirname "${VENV_DIR}")'
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH='${UV_ROOT}':\$PATH
@@ -31,9 +32,8 @@ apptainer exec --nv \
     fi
     rm -rf '${VENV_DIR}'
     uv venv --python \"\${PYTHON_BIN}\" '${VENV_DIR}'
-    source '${VENV_DIR}/bin/activate'
     cd '${REPO_ROOT}'
-    uv sync --active --group cluster
+    uv sync --python \"\${PYTHON_BIN}\" --group cluster
     '${VENV_DIR}/bin/python' -c 'import openai, wandb; print(openai.__version__, wandb.__version__)'
     '${VENV_DIR}/bin/vllm' --help >/dev/null
   "
