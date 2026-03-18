@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -35,8 +36,136 @@ class BatchRequest:
     body: dict[str, Any]
 
 
+@dataclass
+class ProgressState:
+    total_requests: int
+    completed_requests: int = 0
+    succeeded_requests: int = 0
+    failed_requests: int = 0
+
+
 def pathsafe_model_name(model: str) -> str:
     return model.replace("/", "_").replace(":", "_")
+
+
+def env_flag(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def default_wandb_project() -> str:
+    return os.getenv("WANDB_PROJECT", "llm-scfg-vllm")
+
+
+def should_enable_wandb(wandb_enabled: bool | None = None) -> bool:
+    if wandb_enabled is not None:
+        return wandb_enabled
+    if os.getenv("WANDB_MODE", "").strip().lower() == "disabled":
+        return False
+    return bool(os.getenv("WANDB_API_KEY")) or env_flag("WANDB_ENABLE")
+
+
+def maybe_init_wandb_run(
+    *,
+    input_file: str,
+    output_file: str,
+    base_url: str,
+    model_name: str | None,
+    concurrency: int,
+    total_requests: int,
+    wandb_enabled: bool | None,
+    wandb_project: str | None,
+    wandb_entity: str | None,
+    wandb_group: str | None,
+    wandb_name: str | None,
+) -> Any | None:
+    if not should_enable_wandb(wandb_enabled):
+        return None
+    try:
+        import wandb  # type: ignore
+    except ImportError:
+        log.warning("wandb is not installed; skipping progress logging")
+        return None
+
+    resolved_input = Path(input_file)
+    resolved_output = Path(output_file)
+    return wandb.init(
+        project=wandb_project or default_wandb_project(),
+        entity=wandb_entity or os.getenv("WANDB_ENTITY"),
+        group=wandb_group or os.getenv("WANDB_RUN_GROUP"),
+        name=wandb_name or os.getenv("WANDB_RUN_NAME") or resolved_input.stem,
+        config={
+            "input_file": str(resolved_input),
+            "output_file": str(resolved_output),
+            "base_url": base_url,
+            "model_name": model_name,
+            "concurrency": concurrency,
+            "total_requests": total_requests,
+        },
+    )
+
+
+def log_progress(
+    progress: ProgressState,
+    *,
+    started_at: float,
+    wandb_run: Any | None,
+    input_file: str,
+    output_file: str,
+    finished: bool = False,
+) -> None:
+    elapsed = max(time.time() - started_at, 1e-6)
+    payload = {
+        "progress/completed_requests": progress.completed_requests,
+        "progress/succeeded_requests": progress.succeeded_requests,
+        "progress/failed_requests": progress.failed_requests,
+        "progress/remaining_requests": (
+            progress.total_requests - progress.completed_requests
+        ),
+        "progress/total_requests": progress.total_requests,
+        "progress/completion_ratio": (
+            progress.completed_requests / progress.total_requests
+            if progress.total_requests
+            else 1.0
+        ),
+        "progress/requests_per_second": progress.completed_requests / elapsed,
+        "timing/elapsed_seconds": elapsed,
+        "finished": finished,
+    }
+    if wandb_run is not None:
+        wandb_run.log(payload)
+    log.info(
+        ("Progress for %s: %s/%s complete " "(ok=%s failed=%s, %.2f req/s) -> %s"),
+        input_file,
+        progress.completed_requests,
+        progress.total_requests,
+        progress.succeeded_requests,
+        progress.failed_requests,
+        payload["progress/requests_per_second"],
+        output_file,
+    )
+
+
+async def monitor_progress(
+    progress: ProgressState,
+    *,
+    started_at: float,
+    wandb_run: Any | None,
+    input_file: str,
+    output_file: str,
+    log_interval_seconds: float,
+) -> None:
+    while progress.completed_requests < progress.total_requests:
+        await asyncio.sleep(log_interval_seconds)
+        log_progress(
+            progress,
+            started_at=started_at,
+            wandb_run=wandb_run,
+            input_file=input_file,
+            output_file=output_file,
+        )
 
 
 def normalize_chat_body(
@@ -124,6 +253,7 @@ async def invoke_request(
     max_retries: int,
     retry_backoff_seconds: float,
     semaphore: asyncio.Semaphore,
+    progress: ProgressState,
 ) -> dict[str, Any]:
     request_body = normalize_chat_body(request.body, model_override=model_override)
     model_name = request_body.get("model")
@@ -133,6 +263,8 @@ async def invoke_request(
             try:
                 response = await client.chat.completions.create(**request_body)
                 response_body = response.model_dump(mode="json")
+                progress.completed_requests += 1
+                progress.succeeded_requests += 1
                 return build_success_record(
                     request.custom_id,
                     response_body,
@@ -140,6 +272,8 @@ async def invoke_request(
                 )
             except Exception as exc:
                 if attempt >= max_retries:
+                    progress.completed_requests += 1
+                    progress.failed_requests += 1
                     return build_error_record(
                         request.custom_id,
                         model=str(model_name) if model_name is not None else None,
@@ -160,6 +294,12 @@ async def run_batch_requests(
     max_retries: int,
     retry_backoff_seconds: float,
     request_timeout_seconds: float,
+    progress: ProgressState,
+    started_at: float,
+    input_file: str,
+    output_file: str,
+    wandb_run: Any | None,
+    wandb_log_interval_seconds: float,
 ) -> list[dict[str, Any]]:
     client = AsyncOpenAI(
         base_url=base_url,
@@ -175,12 +315,26 @@ async def run_batch_requests(
             max_retries=max_retries,
             retry_backoff_seconds=retry_backoff_seconds,
             semaphore=semaphore,
+            progress=progress,
         )
         for request in requests
     ]
+    monitor_task = asyncio.create_task(
+        monitor_progress(
+            progress,
+            started_at=started_at,
+            wandb_run=wandb_run,
+            input_file=input_file,
+            output_file=output_file,
+            log_interval_seconds=wandb_log_interval_seconds,
+        )
+    )
     try:
         return list(await asyncio.gather(*tasks))
     finally:
+        monitor_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await monitor_task
         await client.close()
 
 
@@ -211,6 +365,12 @@ def run_batch_file(
     retry_backoff_seconds: float = 2.0,
     request_timeout_seconds: float = 600.0,
     overwrite: bool = False,
+    wandb_enabled: bool | None = None,
+    wandb_project: str | None = None,
+    wandb_entity: str | None = None,
+    wandb_group: str | None = None,
+    wandb_name: str | None = None,
+    wandb_log_interval_seconds: float = 15.0,
 ) -> str:
     requests = load_batch_requests(input_file)
     if not requests:
@@ -232,20 +392,52 @@ def run_batch_file(
 
     resolved_output.parent.mkdir(parents=True, exist_ok=True)
     resolved_api_key = api_key or os.getenv(api_key_env) or "EMPTY"
-
+    progress = ProgressState(total_requests=len(requests))
     started_at = time.time()
-    records = asyncio.run(
-        run_batch_requests(
-            requests,
-            base_url=base_url,
-            api_key=resolved_api_key,
-            model_override=model_override,
-            concurrency=concurrency,
-            max_retries=max_retries,
-            retry_backoff_seconds=retry_backoff_seconds,
-            request_timeout_seconds=request_timeout_seconds,
-        )
+    wandb_run = maybe_init_wandb_run(
+        input_file=input_file,
+        output_file=str(resolved_output),
+        base_url=base_url,
+        model_name=model_override or requests[0].body.get("model"),
+        concurrency=concurrency,
+        total_requests=len(requests),
+        wandb_enabled=wandb_enabled,
+        wandb_project=wandb_project,
+        wandb_entity=wandb_entity,
+        wandb_group=wandb_group,
+        wandb_name=wandb_name,
     )
+
+    try:
+        records = asyncio.run(
+            run_batch_requests(
+                requests,
+                base_url=base_url,
+                api_key=resolved_api_key,
+                model_override=model_override,
+                concurrency=concurrency,
+                max_retries=max_retries,
+                retry_backoff_seconds=retry_backoff_seconds,
+                request_timeout_seconds=request_timeout_seconds,
+                progress=progress,
+                started_at=started_at,
+                input_file=input_file,
+                output_file=str(resolved_output),
+                wandb_run=wandb_run,
+                wandb_log_interval_seconds=wandb_log_interval_seconds,
+            )
+        )
+    finally:
+        log_progress(
+            progress,
+            started_at=started_at,
+            wandb_run=wandb_run,
+            input_file=input_file,
+            output_file=str(resolved_output),
+            finished=True,
+        )
+        if wandb_run is not None:
+            wandb_run.finish()
 
     with open(resolved_output, "w") as handle:
         for record in records:
@@ -274,6 +466,12 @@ def run_batch_dir(
     retry_backoff_seconds: float = 2.0,
     request_timeout_seconds: float = 600.0,
     overwrite: bool = False,
+    wandb_enabled: bool | None = None,
+    wandb_project: str | None = None,
+    wandb_entity: str | None = None,
+    wandb_group: str | None = None,
+    wandb_name_prefix: str | None = None,
+    wandb_log_interval_seconds: float = 15.0,
 ) -> list[str]:
     batch_path = Path(batch_dir)
     input_files = sorted(batch_path.glob(input_glob))
@@ -297,6 +495,16 @@ def run_batch_dir(
                 retry_backoff_seconds=retry_backoff_seconds,
                 request_timeout_seconds=request_timeout_seconds,
                 overwrite=overwrite,
+                wandb_enabled=wandb_enabled,
+                wandb_project=wandb_project,
+                wandb_entity=wandb_entity,
+                wandb_group=wandb_group or batch_path.name,
+                wandb_name=(
+                    f"{wandb_name_prefix}-{input_file.stem}"
+                    if wandb_name_prefix
+                    else input_file.stem
+                ),
+                wandb_log_interval_seconds=wandb_log_interval_seconds,
             )
         )
     return outputs

@@ -64,12 +64,15 @@ Example `.env`:
 
 ```bash
 WANDB_API_KEY=...
+WANDB_PROJECT=llm-scfg-vllm
 WANDB_ENTITY=...
 HF_TOKEN=...
 HUGGINGFACE_HUB_TOKEN=...
 ```
 
 The cluster launch script [scripts/run_vllm_eval.sh](/Users/jacksonpetty/Development/llm-scfg/scripts/run_vllm_eval.sh) also loads `.env` before starting `vllm serve`, so gated Hugging Face models such as Gemma 3 can authenticate via either `HF_TOKEN` or `HUGGINGFACE_HUB_TOKEN`.
+
+The open-weight runner in [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py) will also log batch progress to W&B when `WANDB_API_KEY` is present. By default it logs to project `llm-scfg-vllm`; override with `WANDB_PROJECT`, and optionally set `WANDB_ENTITY`, `WANDB_RUN_GROUP`, or `WANDB_RUN_NAME`.
 
 To verify Hugging Face authentication before launching a job:
 
