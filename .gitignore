@@ -218,6 +218,9 @@ data/old
 data/agreement_exp/samples_0ad6acf1ac3b4965.jsonl
 data/agreement_exp/samples_1a27cdd22b89226b.jsonl
 data/agreement_exp/samples_31e9c3c537d6a3b7.jsonl
+
+# Generated notebook analysis cache
+notebooks/cache/error-analysis/
 data/agreement_exp/samples_42e8537300f90e1c.jsonl
 data/agreement_exp/samples_4543206399eb5adf.jsonl
 data/agreement_exp/samples_623c4c3ccd640499.jsonl
