@@ -23,7 +23,7 @@ Palette = dict[str, Color]
 _CM_TO_IN: float = 1.0 / 2.54
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-FIGURES_DIR = PROJECT_ROOT / "notebooks" / "figures"
+FIGURES_DIR = PROJECT_ROOT / "paper" / "figures"
 
 PAPER_WIDTH_IN: float = 5.5
 FIG_HEIGHT_SINGLE_ROW_IN: float = 1.3
