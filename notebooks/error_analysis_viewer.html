@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Error Analysis Viewer</title>
+    <style>
+      :root {
+        --bg: #f5f2ea;
+        --panel: #fffdf8;
+        --panel-strong: #f0eadb;
+        --ink: #22201b;
+        --muted: #6f6a61;
+        --line: #d8d0c0;
+        --accent: #0b6e4f;
+        --accent-soft: #dceee7;
+        --warn: #b65a2a;
+        --shadow: 0 10px 30px rgba(34, 32, 27, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(11, 110, 79, 0.08), transparent 24rem),
+          linear-gradient(180deg, #f8f5ee 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      .page {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 28px 24px 64px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 24px;
+      }
+
+      .hero h1 {
+        font-size: 34px;
+        margin-bottom: 8px;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        padding: 10px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        box-shadow: var(--shadow);
+      }
+
+      .button:hover {
+        border-color: var(--accent);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 20px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .filters {
+        position: sticky;
+        top: 20px;
+        align-self: start;
+      }
+
+      .filters h2,
+      .main h2 {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      .filter-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      select,
+      input[type="search"] {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+      }
+
+      .checkbox input {
+        accent-color: var(--accent);
+      }
+
+      .hint {
+        margin-top: 16px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .main {
+        display: grid;
+        gap: 20px;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, #fff 0%, var(--panel-strong) 100%);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 18px;
+        padding: 14px 16px;
+      }
+
+      .card-label {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .card-value {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .summary-row {
+        display: grid;
+        grid-template-columns: minmax(0, 170px) 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .summary-name {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+
+      .bar-track {
+        height: 14px;
+        background: #ece6d8;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent) 0%, #1c8d67 100%);
+      }
+
+      .bar-fill.family {
+        background: linear-gradient(90deg, #8c5f3d 0%, #b8865d 100%);
+      }
+
+      .summary-pct {
+        color: var(--muted);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        table-layout: fixed;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background: #f7f1e3;
+        z-index: 1;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+        max-width: 28rem;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      tbody tr:hover {
+        background: rgba(11, 110, 79, 0.05);
+      }
+
+      .table-wrap {
+        max-height: 640px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+
+      .pill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0 14px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .legend-swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .highlight-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 10px 0 14px;
+      }
+
+      .highlight-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .highlight-option input {
+        accent-color: var(--accent);
+      }
+
+      .pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .family-pill {
+        background: #efe2d6;
+        color: #7a4e30;
+      }
+
+      .hallucinated-token {
+        color: #b00020;
+        font-weight: 700;
+        background: rgba(176, 0, 32, 0.14);
+        padding: 0 0.2em;
+        border-radius: 0.25em;
+      }
+
+      .english-token {
+        color: #7a5a00;
+        font-weight: 700;
+        background: rgba(255, 215, 0, 0.28);
+        padding: 0 0.2em;
+        border-radius: 0.25em;
+      }
+
+      .source-token {
+        color: #14532d;
+        font-weight: 700;
+        background: rgba(34, 197, 94, 0.2);
+        padding: 0 0.2em;
+        border-radius: 0.25em;
+      }
+
+      .orthography-token {
+        color: #174ea6;
+        font-weight: 700;
+        background: rgba(59, 130, 246, 0.18);
+        padding: 0 0.2em;
+        border-radius: 0.25em;
+      }
+
+      .empty {
+        padding: 28px;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .status {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .status.info {
+        background: #eef6f2;
+        color: #215642;
+      }
+
+      .status.warn {
+        background: #fff2e8;
+        color: #8a4f24;
+      }
+
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      @media (max-width: 1100px) {
+        .layout,
+        .split,
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .filters {
+          position: static;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <div>
+          <h1>Error Analysis Viewer</h1>
+          <p>
+            Browse <span class="mono">rows.csv</span> from
+            <span class="mono">notebooks/cache/error-analysis</span> with
+            category summaries and raw rows.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button class="button" id="reload-button" type="button">Reload Data</button>
+        </div>
+      </section>
+
+      <div class="layout">
+        <aside class="panel filters">
+          <h2>Filters</h2>
+          <div class="filter-grid">
+            <label>
+              Dataset
+              <select id="dataset-filter"></select>
+            </label>
+            <label>
+              Model
+              <select id="model-filter"></select>
+            </label>
+            <label>
+              Error Category
+              <select id="family-filter"></select>
+            </label>
+            <label>
+              Target Orthography
+              <select id="orthography-filter"></select>
+            </label>
+            <label>
+              Grammar Name
+              <input id="grammar-filter" type="search" placeholder="substring match" />
+            </label>
+            <label class="checkbox">
+              <input id="errors-only-filter" type="checkbox" />
+              Only wrong answers
+            </label>
+            <label class="checkbox">
+              <input id="exact-only-filter" type="checkbox" />
+              Only exact matches
+            </label>
+            <label>
+              Row limit
+              <select id="row-limit-filter">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+                <option value="2500">2500</option>
+                <option value="5000">5000</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="status info" id="status-box">
+            Loading cached CSVs...
+          </div>
+          <p class="hint">
+            Open this via a local web server, for example:
+            <span class="mono">uv run python -m http.server</span>, then visit
+            <span class="mono">http://localhost:8000/notebooks/error_analysis_viewer.html</span>.
+          </p>
+        </aside>
+
+        <main class="main">
+          <section class="cards" id="metric-cards"></section>
+
+          <section class="split">
+            <div class="panel">
+              <h2>Available Error Categories</h2>
+              <div class="pill-list" id="all-tags"></div>
+            </div>
+            <div class="panel">
+              <h2>Category Mapping</h2>
+              <div class="pill-list" id="tag-family-pills"></div>
+            </div>
+          </section>
+
+          <section class="split">
+            <div class="panel">
+              <h2>Error Categories Within Current Slice</h2>
+              <div class="summary-list" id="tag-summary"></div>
+            </div>
+            <div class="panel">
+              <h2>Coarse Grouping Within Current Slice</h2>
+              <div class="summary-list" id="family-summary"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Rows</h2>
+            <div class="highlight-controls">
+              <label class="highlight-option">
+                <input type="radio" name="highlight-mode" value="hallucinated" checked />
+                <span class="legend-swatch" style="background: rgba(176, 0, 32, 0.14)"></span>
+                Hallucinated vocab
+              </label>
+              <label class="highlight-option">
+                <input type="radio" name="highlight-mode" value="english" />
+                <span class="legend-swatch" style="background: rgba(255, 215, 0, 0.28)"></span>
+                English vocab
+              </label>
+              <label class="highlight-option">
+                <input type="radio" name="highlight-mode" value="source" />
+                <span class="legend-swatch" style="background: rgba(34, 197, 94, 0.2)"></span>
+                Source vocab
+              </label>
+              <label class="highlight-option">
+                <input type="radio" name="highlight-mode" value="orthography" />
+                <span class="legend-swatch" style="background: rgba(59, 130, 246, 0.18)"></span>
+                Orthography error
+              </label>
+              <label class="highlight-option">
+                <input type="radio" name="highlight-mode" value="none" />
+                No highlight
+              </label>
+            </div>
+            <div class="table-wrap">
+              <table id="rows-table">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const DEFAULT_TAG_TO_FAMILY = {
+        exact_match: "exact_match",
+        word_order_error: "word_order_error",
+        omission: "omission",
+        extra_words: "extra_words",
+        recall_error: "recall_error",
+        source_vocab_error: "source_vocab_error",
+        english_vocab: "english_vocab",
+        hallucinated_vocab: "hallucinated_vocab",
+        orthography_error: "orthography_error",
+        mixed_other: "other",
+      };
+
+      const FILTER_IDS = {
+        dataset: "dataset-filter",
+        model: "model-filter",
+        family: "family-filter",
+        orthography: "orthography-filter",
+        grammar: "grammar-filter",
+        errorsOnly: "errors-only-filter",
+        exactOnly: "exact-only-filter",
+        rowLimit: "row-limit-filter",
+      };
+
+      const TABLE_COLUMNS = [
+        "custom_id",
+        "error_families_str",
+        "input_sentence",
+        "output_sentence",
+        "model_answer",
+      ];
+
+      const state = {
+        rows: [],
+        mapping: { ...DEFAULT_TAG_TO_FAMILY },
+        highlightMode: "hallucinated",
+      };
+
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let value = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i += 1) {
+          const char = text[i];
+          const next = text[i + 1];
+
+          if (inQuotes) {
+            if (char === '"' && next === '"') {
+              value += '"';
+              i += 1;
+            } else if (char === '"') {
+              inQuotes = false;
+            } else {
+              value += char;
+            }
+            continue;
+          }
+
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ",") {
+            row.push(value);
+            value = "";
+          } else if (char === "\n") {
+            row.push(value);
+            rows.push(row);
+            row = [];
+            value = "";
+          } else if (char !== "\r") {
+            value += char;
+          }
+        }
+
+        if (value.length || row.length) {
+          row.push(value);
+          rows.push(row);
+        }
+
+        if (!rows.length) {
+          return [];
+        }
+
+        const headers = rows[0];
+        return rows.slice(1).filter((r) => r.length && r.some((cell) => cell !== "")).map((r) => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = r[index] ?? "";
+          });
+          return obj;
+        });
+      }
+
+      function splitMulti(value) {
+        if (!value) return [];
+        return value
+          .split("|")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function parseBool(value) {
+        return String(value).toLowerCase() === "true";
+      }
+
+      function coerceNumber(value) {
+        if (value === "" || value == null) return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function formatPct(value) {
+        return `${(100 * value).toFixed(1)}%`;
+      }
+
+      function formatMean(value) {
+        if (value == null || Number.isNaN(value)) return "–";
+        return value.toFixed(1);
+      }
+
+      function setStatus(message, kind = "info") {
+        const node = document.getElementById("status-box");
+        node.textContent = message;
+        node.className = `status ${kind}`;
+      }
+
+      function uniqueSorted(values) {
+        return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      }
+
+      function createOption(value, label = value) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        return option;
+      }
+
+      function populateSelect(node, values, selected) {
+        node.innerHTML = "";
+        node.appendChild(createOption("", "All"));
+        values.forEach((value) => node.appendChild(createOption(value)));
+        node.value = values.includes(selected) ? selected : "";
+      }
+
+      function deriveFamiliesFromTags(tags) {
+        return [...new Set(tags.map((tag) => state.mapping[tag] || "other"))];
+      }
+
+      async function loadMapping() {
+        try {
+          const response = await fetch("./cache/error-analysis/failure_tag_family_map.csv");
+          if (!response.ok) return;
+          const csv = parseCsv(await response.text());
+          csv.forEach((row) => {
+            if (row.failure_mode && row.error_family) {
+              state.mapping[row.failure_mode] = row.error_family;
+            }
+          });
+        } catch {
+          // Fallback to built-in mapping.
+        }
+      }
+
+      async function loadRows() {
+        const response = await fetch("./cache/error-analysis/rows.csv");
+        if (!response.ok) {
+          throw new Error(`Unable to fetch rows.csv (${response.status})`);
+        }
+        const parsed = parseCsv(await response.text());
+        state.rows = parsed.map((row) => {
+          const failureTags = splitMulti(row.failure_tags_str || row.failure_mode);
+          const errorFamilies = splitMulti(row.error_families_str);
+          const families =
+            errorFamilies.length > 0
+              ? errorFamilies
+              : deriveFamiliesFromTags(failureTags);
+
+          return {
+            ...row,
+            exact_match: parseBool(row.exact_match),
+            bow_match: parseBool(row.bow_match),
+            depth: coerceNumber(row.depth),
+            n_words: coerceNumber(row.n_words),
+            n_rules: coerceNumber(row.n_rules),
+            prompt_tokens: coerceNumber(row.prompt_tokens),
+            completion_tokens: coerceNumber(row.completion_tokens),
+            failure_tags: failureTags,
+            error_families: families,
+            failure_tags_str: failureTags.join(" | "),
+            error_families_str: families.join(" | "),
+            source_vocab_tokens: splitMulti(row.source_vocab_tokens_str),
+            english_vocab_tokens: splitMulti(row.english_vocab_tokens_str),
+            hallucinated_tokens: splitMulti(row.hallucinated_tokens_str),
+          };
+        });
+      }
+
+      function renderAvailableTags() {
+        const tagContainer = document.getElementById("all-tags");
+        const mappingContainer = document.getElementById("tag-family-pills");
+        tagContainer.innerHTML = "";
+        mappingContainer.innerHTML = "";
+
+        const tags = uniqueSorted(Object.keys(state.mapping));
+        tags.forEach((tag) => {
+          const pill = document.createElement("span");
+          pill.className = "pill";
+          pill.textContent = tag;
+          tagContainer.appendChild(pill);
+
+          const mappingPill = document.createElement("span");
+          mappingPill.className = "pill family-pill";
+          mappingPill.textContent = `${tag} → ${state.mapping[tag]}`;
+          mappingContainer.appendChild(mappingPill);
+        });
+      }
+
+      function getFilters() {
+        return {
+          dataset: document.getElementById(FILTER_IDS.dataset).value,
+          model: document.getElementById(FILTER_IDS.model).value,
+          family: document.getElementById(FILTER_IDS.family).value,
+          orthography: document.getElementById(FILTER_IDS.orthography).value,
+          grammar: document.getElementById(FILTER_IDS.grammar).value.trim().toLowerCase(),
+          errorsOnly: document.getElementById(FILTER_IDS.errorsOnly).checked,
+          exactOnly: document.getElementById(FILTER_IDS.exactOnly).checked,
+          rowLimit: Number(document.getElementById(FILTER_IDS.rowLimit).value),
+        };
+      }
+
+      function applyFilters() {
+        const filters = getFilters();
+        return state.rows.filter((row) => {
+          if (filters.dataset && row.dataset !== filters.dataset) return false;
+          if (filters.model && row.fuzzy_model !== filters.model) return false;
+          if (filters.family && !row.error_families.includes(filters.family)) return false;
+          if (filters.orthography && row.target_orthography !== filters.orthography) return false;
+          if (filters.grammar && !String(row.grammar_name || "").toLowerCase().includes(filters.grammar)) return false;
+          if (filters.errorsOnly && row.exact_match) return false;
+          if (filters.exactOnly && !row.exact_match) return false;
+          return true;
+        });
+      }
+
+      function updateFilterOptions(rows) {
+        const current = getFilters();
+        populateSelect(
+          document.getElementById(FILTER_IDS.dataset),
+          uniqueSorted(state.rows.map((row) => row.dataset)),
+          current.dataset,
+        );
+        populateSelect(
+          document.getElementById(FILTER_IDS.model),
+          uniqueSorted(rows.map((row) => row.fuzzy_model)),
+          current.model,
+        );
+        populateSelect(
+          document.getElementById(FILTER_IDS.family),
+          uniqueSorted(rows.flatMap((row) => row.error_families)),
+          current.family,
+        );
+        populateSelect(
+          document.getElementById(FILTER_IDS.orthography),
+          uniqueSorted(state.rows.map((row) => row.target_orthography)),
+          current.orthography,
+        );
+      }
+
+      function renderMetricCards(rows) {
+        const node = document.getElementById("metric-cards");
+        const wrong = rows.filter((row) => !row.exact_match);
+        const mean = (values) => {
+          const usable = values.filter((value) => value != null);
+          if (!usable.length) return null;
+          return usable.reduce((sum, value) => sum + value, 0) / usable.length;
+        };
+
+        const cards = [
+          { label: "Rows", value: rows.length.toLocaleString() },
+          {
+            label: "Exact Match",
+            value: rows.length ? formatPct(rows.filter((row) => row.exact_match).length / rows.length) : "–",
+          },
+          {
+            label: "Mean Prompt Tokens",
+            value: formatMean(mean(rows.map((row) => row.prompt_tokens))),
+          },
+          {
+            label: "Mean Completion Tokens",
+            value: formatMean(mean(rows.map((row) => row.completion_tokens))),
+          },
+        ];
+
+        node.innerHTML = cards
+          .map(
+            (card) => `
+              <article class="card">
+                <div class="card-label">${card.label}</div>
+                <div class="card-value">${card.value}</div>
+              </article>
+            `,
+          )
+          .join("");
+
+        if (!rows.length) {
+          setStatus("No rows matched the current filters.", "warn");
+        } else if (!wrong.length) {
+          setStatus("Current slice contains only exact matches.", "info");
+        } else {
+          setStatus(`Showing ${rows.length.toLocaleString()} rows. ${wrong.length.toLocaleString()} are wrong answers.`, "info");
+        }
+      }
+
+      function summarizeMulti(rows, key) {
+        const counts = new Map();
+        const wrongRows = rows.filter((row) => !row.exact_match);
+        wrongRows.forEach((row) => {
+          row[key].forEach((item) => {
+            counts.set(item, (counts.get(item) || 0) + 1);
+          });
+        });
+        const total = [...counts.values()].reduce((sum, value) => sum + value, 0);
+        return [...counts.entries()]
+          .map(([name, count]) => ({ name, count, share: total ? count / total : 0 }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+      }
+
+      function renderSummaryList(targetId, summary, family = false) {
+        const node = document.getElementById(targetId);
+        if (!summary.length) {
+          node.innerHTML = '<div class="empty">No wrong-answer tags in this slice.</div>';
+          return;
+        }
+        node.innerHTML = summary
+          .map(
+            (item) => `
+              <div class="summary-row">
+                <div class="summary-name">${item.name}</div>
+                <div class="bar-track">
+                  <div class="bar-fill ${family ? "family" : ""}" style="width:${Math.max(item.share * 100, 1)}%"></div>
+                </div>
+                <div class="summary-pct">${item.count} · ${formatPct(item.share)}</div>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function renderRowsTable(rows) {
+        const limitedRows = rows.slice(0, getFilters().rowLimit);
+        const table = document.getElementById("rows-table");
+        const thead = table.querySelector("thead");
+        const tbody = table.querySelector("tbody");
+
+        const columns = TABLE_COLUMNS.filter((column) =>
+          limitedRows.some((row) => row[column] != null && row[column] !== ""),
+        );
+
+        thead.innerHTML = `<tr>${columns.map((column) => `<th>${column}</th>`).join("")}</tr>`;
+
+        if (!limitedRows.length) {
+          tbody.innerHTML = `<tr><td class="empty" colspan="${Math.max(columns.length, 1)}">No rows to display.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = limitedRows
+          .map((row) => {
+            return `<tr>${columns
+              .map((column) => `<td>${renderCellHtml(row, column)}</td>`)
+              .join("")}</tr>`;
+          })
+          .join("");
+      }
+
+      function renderCellHtml(row, column) {
+        if (column === "model_answer") {
+          return highlightHallucinatedTokens(row);
+        }
+        return escapeHtml(formatCell(row[column]));
+      }
+
+      function formatCell(value) {
+        if (value == null || value === "") return "";
+        if (typeof value === "number") return String(value);
+        return String(value);
+      }
+
+      function highlightHallucinatedTokens(row) {
+        const text = formatCell(row.model_answer);
+        const highlightConfig = getHighlightConfig(row);
+        if (!text || !highlightConfig.tokens.size) {
+          return escapeHtml(text);
+        }
+
+        return text
+          .split(/(\s+)/)
+          .map((part) => {
+            if (!part.trim()) {
+              return escapeHtml(part);
+            }
+            const normalized = normalizeToken(part);
+            if (highlightConfig.tokens.has(normalized)) {
+              return `<span class="${highlightConfig.className}">${escapeHtml(part)}</span>`;
+            }
+            return escapeHtml(part);
+          })
+          .join("");
+      }
+
+      function getHighlightConfig(row) {
+        if (state.highlightMode === "hallucinated") {
+          return {
+            tokens: new Set(
+              (row.hallucinated_tokens || []).map((token) => normalizeToken(token)),
+            ),
+            className: "hallucinated-token",
+          };
+        }
+        if (state.highlightMode === "english") {
+          return {
+            tokens: new Set(
+              (row.english_vocab_tokens || []).map((token) => normalizeToken(token)),
+            ),
+            className: "english-token",
+          };
+        }
+        if (state.highlightMode === "source") {
+          return {
+            tokens: new Set(
+              (row.source_vocab_tokens || []).map((token) => normalizeToken(token)),
+            ),
+            className: "source-token",
+          };
+        }
+        if (state.highlightMode === "orthography") {
+          return {
+            tokens: new Set(
+              orthographyErrorTokens(row).map((token) => normalizeToken(token)),
+            ),
+            className: "orthography-token",
+          };
+        }
+        return { tokens: new Set(), className: "" };
+      }
+
+      function stripLatinDiacritics(text) {
+        return String(text || "").normalize("NFD").replace(/\p{M}+/gu, "");
+      }
+
+      function stripHebrewDiacritics(text) {
+        return String(text || "").replace(/[\u0591-\u05C7]/gu, "");
+      }
+
+      function canonicalOrthographyToken(token, targetOrthography) {
+        const cleaned = normalizeToken(token);
+        if (!cleaned) return "";
+        if (targetOrthography === "latin" || targetOrthography === "latin_diacritic") {
+          return stripLatinDiacritics(cleaned).toLowerCase();
+        }
+        if (
+          targetOrthography === "hebrew" ||
+          targetOrthography === "hebrew_unpointed" ||
+          targetOrthography === "yiddish"
+        ) {
+          return stripHebrewDiacritics(cleaned);
+        }
+        return cleaned.toLowerCase();
+      }
+
+      function hasLatinDiacritic(token) {
+        const cleaned = normalizeToken(token);
+        return cleaned && stripLatinDiacritics(cleaned) !== cleaned;
+      }
+
+      function hasHebrewDiacritic(token) {
+        return /[\u0591-\u05C7]/u.test(String(token || ""));
+      }
+
+      function scriptViolatesTargetOrthography(token, targetOrthography) {
+        const cleaned = normalizeToken(token);
+        if (!cleaned || !/\p{L}/u.test(cleaned) || !targetOrthography) {
+          return false;
+        }
+        if (targetOrthography === "cyrillic") {
+          return !/^\p{Script=Cyrillic}+$/u.test(cleaned);
+        }
+        if (targetOrthography === "latin") {
+          return (
+            !/^\p{Script=Latin}+$/u.test(stripLatinDiacritics(cleaned)) ||
+            hasLatinDiacritic(cleaned)
+          );
+        }
+        if (targetOrthography === "latin_diacritic") {
+          return (
+            !/^\p{Script=Latin}+$/u.test(stripLatinDiacritics(cleaned)) ||
+            !hasLatinDiacritic(cleaned)
+          );
+        }
+        if (
+          targetOrthography === "hebrew" ||
+          targetOrthography === "hebrew_unpointed" ||
+          targetOrthography === "yiddish"
+        ) {
+          if (!/^[\p{Script=Hebrew}\u0591-\u05C7]+$/u.test(cleaned)) {
+            return true;
+          }
+          if ((targetOrthography === "hebrew" || targetOrthography === "yiddish") && !hasHebrewDiacritic(token)) {
+            return true;
+          }
+          if (targetOrthography === "hebrew_unpointed" && /[\u0591-\u05C7]/u.test(cleaned)) {
+            return true;
+          }
+          return false;
+        }
+        return false;
+      }
+
+      function orthographyErrorTokens(row) {
+        if (!row.target_orthography) {
+          return [];
+        }
+
+        const orthography = [];
+        String(row.model_answer || "")
+          .split(/(\s+)/)
+          .forEach((part) => {
+          const token = normalizeToken(part);
+          if (!token) {
+            return;
+          }
+          if (scriptViolatesTargetOrthography(token, row.target_orthography)) {
+            orthography.push(token);
+          }
+        });
+        return [...new Set(orthography)];
+      }
+
+      function normalizeToken(token) {
+        return String(token || "").replace(/^[^\p{L}\p{N}_-]+|[^\p{L}\p{N}_-]+$/gu, "");
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      function render() {
+        updateFilterOptions(state.rows);
+        const filteredRows = applyFilters();
+        renderMetricCards(filteredRows);
+        renderSummaryList("tag-summary", summarizeMulti(filteredRows, "failure_tags"));
+        renderSummaryList("family-summary", summarizeMulti(filteredRows, "error_families"), true);
+        renderRowsTable(filteredRows);
+      }
+
+      async function boot() {
+        try {
+          await loadMapping();
+          await loadRows();
+          renderAvailableTags();
+
+          Object.values(FILTER_IDS).forEach((id) => {
+            document.getElementById(id).addEventListener("input", render);
+            document.getElementById(id).addEventListener("change", render);
+          });
+          document.querySelectorAll('input[name="highlight-mode"]').forEach((node) => {
+            node.addEventListener("change", (event) => {
+              state.highlightMode = event.target.value;
+              render();
+            });
+          });
+          document.getElementById("reload-button").addEventListener("click", async () => {
+            setStatus("Reloading cached CSVs...", "info");
+            await loadMapping();
+            await loadRows();
+            renderAvailableTags();
+            render();
+          });
+
+          render();
+        } catch (error) {
+          console.error(error);
+          setStatus(
+            `Failed to load cached CSVs. Serve the repo over HTTP and rerun error_analysis.py if needed. ${error.message}`,
+            "warn",
+          );
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -231,10 +231,43 @@ PALETTE_MODELS: Palette = darken(
         "gpt-5-nano": sns.color_palette("Reds", n_colors=4)[0],
         "gpt-5-mini": sns.color_palette("Reds", n_colors=4)[1],
         "gpt-5": sns.color_palette("Reds", n_colors=4)[2],
+        "google/gemma-3-1b-it": sns.color_palette("Greens", n_colors=5)[1],
+        "google/gemma-3-4b-it": sns.color_palette("Greens", n_colors=5)[2],
+        "google/gemma-3-12b-it": sns.color_palette("Greens", n_colors=5)[3],
         "gemini-2.5-flash": sns.color_palette("Blues", n_colors=2)[0],
         "gemini-2.5-pro": sns.color_palette("Blues", n_colors=2)[1],
     }
 )
+
+MODEL_ORDER: list[str] = [
+    "gpt-5-nano",
+    "gpt-5-mini",
+    "gpt-5",
+    "google/gemma-3-1b-it",
+    "google/gemma-3-4b-it",
+    "google/gemma-3-12b-it",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+]
+
+MODEL_DISPLAY_NAMES: dict[str, str] = {
+    "gpt-5-nano": "GPT-5 nano",
+    "gpt-5-mini": "GPT-5 mini",
+    "gpt-5": "GPT-5",
+    "google/gemma-3-1b-it": "Gemma 3 1B",
+    "google/gemma-3-4b-it": "Gemma 3 4B",
+    "google/gemma-3-12b-it": "Gemma 3 12B",
+    "gemini-2.5-flash": "Gemini 2.5 Flash",
+    "gemini-2.5-pro": "Gemini 2.5 Pro",
+}
+
+
+def ordered_models(models: Iterable[str]) -> list[str]:
+    seen = {model for model in models if model}
+    known = [model for model in MODEL_ORDER if model in seen]
+    unknown = sorted(seen - set(MODEL_ORDER))
+    return known + unknown
+
 
 PALETTE_WORDORDER_BASE = sns.color_palette(palette="Dark2", n_colors=4)
 PALETTE_WORDORDER: Palette = darken(
@@ -367,6 +400,9 @@ __all__ = [
     "NONSEMANTIC_COLOR",
     "PALETTE_METRICS_BASE",
     "PALETTE_METRICS",
+    "MODEL_ORDER",
+    "MODEL_DISPLAY_NAMES",
+    "ordered_models",
     "PALETTE_MODELS",
     "PALETTE_WORDORDER_BASE",
     "PALETTE_WORDORDER",

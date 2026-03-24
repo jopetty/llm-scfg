@@ -22,6 +22,11 @@ class ErrorAnalysisTest(unittest.TestCase):
         self.assertTrue(
             error_analysis.matches_target_orthography("romá", "latin_diacritic")
         )
+        self.assertFalse(
+            error_analysis.matches_target_orthography("roma", "latin_diacritic")
+        )
+        self.assertTrue(error_analysis.matches_target_orthography("אָב", "hebrew"))
+        self.assertFalse(error_analysis.matches_target_orthography("אב", "hebrew"))
         self.assertTrue(
             error_analysis.matches_target_orthography("אב", "hebrew_unpointed")
         )
@@ -52,9 +57,10 @@ class ErrorAnalysisTest(unittest.TestCase):
                 "input_sentence": "luma sora navi",
                 "target_orthography": "latin",
                 "b_words": ["roma", "nova", "tera"],
+                "target_vocab_tokens": ["roma", "nova", "tera"],
             }
         )
-        self.assertEqual("wrong_script", error_analysis.classify_failure(row))
+        self.assertEqual("orthography_error", error_analysis.classify_failure(row))
 
     def test_classify_failure_detects_hebrew_diacritic_drop(self):
         row = pd.Series(
@@ -65,9 +71,73 @@ class ErrorAnalysisTest(unittest.TestCase):
                 "input_sentence": "ab gd zh",
                 "target_orthography": "hebrew",
                 "b_words": ["אָב", "גד", "זח"],
+                "target_vocab_tokens": ["אָב", "גד", "זח"],
             }
         )
-        self.assertEqual("diacritic_drop", error_analysis.classify_failure(row))
+        self.assertEqual("orthography_error", error_analysis.classify_failure(row))
+
+    def test_classify_failure_tags_allow_multiple_tags(self):
+        row = pd.Series(
+            {
+                "exp": "orthography",
+                "model_answer": "romá tera nova",
+                "output_sentence": "roma nova tera",
+                "input_sentence": "luma sora navi",
+                "target_orthography": "latin",
+                "b_words": ["roma", "nova", "tera"],
+                "target_vocab_tokens": ["roma", "nova", "tera"],
+            }
+        )
+        tags = error_analysis.classify_failure_tags(row)
+        self.assertIn("orthography_error", tags)
+        self.assertNotIn("english_vocab", tags)
+
+    def test_families_from_tags_maps_fine_grained_tags(self):
+        self.assertEqual(
+            ["word_order_error", "orthography_error", "source_vocab_error"],
+            error_analysis.families_from_tags(
+                ["word_order_error", "orthography_error", "source_vocab_error"]
+            ),
+        )
+
+    def test_side_vocab_tokens_splits_multiword_entries(self):
+        self.assertEqual(
+            {"ptoqig", "kat", "dey", "boskor"},
+            error_analysis.side_vocab_tokens(
+                {
+                    "verbs": ["ptoqig kat"],
+                    "nouns": ["dey"],
+                    "adjs": ["boskor"],
+                }
+            ),
+        )
+
+    def test_hallucinated_tokens_extracts_unlicensed_prediction_tokens(self):
+        row = pd.Series(
+            {
+                "model_answer": "roma bogus nova bogus extra",
+                "target_vocab_tokens": ["roma", "nova", "tera"],
+            }
+        )
+        self.assertEqual(
+            ["bogus"],
+            error_analysis.hallucinated_tokens(row),
+        )
+
+    def test_english_vocab_tokens_excludes_short_and_source_vocab_matches(self):
+        row = pd.Series(
+            {
+                "model_answer": "ak hello source",
+                "input_sentence": "source token",
+                "target_vocab_tokens": ["target"],
+            }
+        )
+        self.assertEqual(
+            ["hello"],
+            error_analysis.english_vocab_tokens(
+                row, english_lookup={"ak": True, "hello": True, "source": True}
+            ),
+        )
 
     def test_merge_outputs_inputs_uses_fuzzy_model_when_custom_ids_repeat(self):
         outputs_df = pd.DataFrame(
@@ -116,6 +186,17 @@ class ErrorAnalysisTest(unittest.TestCase):
         self.assertEqual("left-b", by_model.loc["gpt-5-mini", "input_sentence"])
         self.assertEqual("right-b", by_model.loc["gpt-5-mini", "output_sentence"])
 
+    def test_parse_standard_custom_id_extracts_grammar_and_sample(self):
+        self.assertEqual(
+            ("556e6de808525658", "17"),
+            error_analysis.parse_standard_custom_id(
+                "556e6de808525658-c92adf-sample-17"
+            ),
+        )
+        self.assertEqual(
+            (None, None), error_analysis.parse_standard_custom_id("bad-id")
+        )
+
     def test_read_jsonl_prefix_until_keeps_fields_before_possible_right(self):
         content = (
             b'{"left_phonetic": "la", "right_phonetic": "ra", '
@@ -151,9 +232,9 @@ class ErrorAnalysisTest(unittest.TestCase):
             sample_path.write_text(
                 "\n".join(
                     [
-                        '{"left": "a0", "right": "b0"}',
-                        '{"left_phonetic": "a1", "right_phonetic": "b1"}',
-                        '{"left": "a2", "right": "b2"}',
+                        '{"left": "a0", "right": "b0", "depth": 0}',
+                        '{"left_phonetic": "a1", "right_phonetic": "b1", "depth": 1}',
+                        '{"left": "a2", "right": "b2", "depth": 2}',
                     ]
                 )
                 + "\n"
@@ -175,12 +256,14 @@ class ErrorAnalysisTest(unittest.TestCase):
                         "sample_id": "1",
                         "input_sentence": "a1",
                         "output_sentence": "b1",
+                        "depth": 1,
                     },
                     {
                         "grammar_name": grammar_name,
                         "sample_id": "2",
                         "input_sentence": "a2",
                         "output_sentence": "b2",
+                        "depth": 2,
                     },
                 ],
                 sample_df.to_dict(orient="records"),

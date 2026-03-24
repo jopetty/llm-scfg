@@ -4,12 +4,21 @@ import json
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import fire
 import pandas as pd
+from tqdm.auto import tqdm
+
+zipf_frequency_fn: Callable[..., int | float] | None
+try:
+    from wordfreq import zipf_frequency as imported_zipf_frequency
+except ImportError:
+    zipf_frequency_fn = None
+else:
+    zipf_frequency_fn = imported_zipf_frequency
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
@@ -90,7 +99,13 @@ INPUT_COLUMNS = (
     "n_words",
     "n_rules",
 )
-SAMPLE_COLUMNS = ("grammar_name", "sample_id", "input_sentence", "output_sentence")
+SAMPLE_COLUMNS = (
+    "grammar_name",
+    "sample_id",
+    "input_sentence",
+    "output_sentence",
+    "depth",
+)
 
 OUTPUT_INDEX = pd.Index(OUTPUT_COLUMNS)
 INPUT_INDEX = pd.Index(INPUT_COLUMNS)
@@ -99,6 +114,45 @@ SAMPLE_INDEX = pd.Index(SAMPLE_COLUMNS)
 CYRILLIC_RE = re.compile(r"[а-яА-Я]")
 HEBREW_RE = re.compile(r"[\u0590-\u05FF]")
 HEBREW_DIACRITIC_RE = re.compile(r"[\u0591-\u05C7]")
+
+FINE_GRAINED_TAG_ORDER = (
+    "exact_match",
+    "word_order_error",
+    "omission",
+    "extra_words",
+    "recall_error",
+    "source_vocab_error",
+    "english_vocab",
+    "hallucinated_vocab",
+    "orthography_error",
+    "mixed_other",
+)
+
+TAG_TO_FAMILY = {
+    "exact_match": "exact_match",
+    "word_order_error": "word_order_error",
+    "omission": "omission",
+    "extra_words": "extra_words",
+    "recall_error": "recall_error",
+    "source_vocab_error": "source_vocab_error",
+    "english_vocab": "english_vocab",
+    "hallucinated_vocab": "hallucinated_vocab",
+    "orthography_error": "orthography_error",
+    "mixed_other": "other",
+}
+
+LATIN_WORD_RE = re.compile(r"^[A-Za-z]+(?:'[A-Za-z]+)?$")
+ENGLISH_ZIPF_MIN = 3.5
+
+
+def progress(
+    iterable,
+    *,
+    desc: str,
+    total: int | None = None,
+    leave: bool = False,
+):
+    return tqdm(iterable, desc=desc, total=total, leave=leave)
 
 
 def fuzzy_model(model: str | None) -> str:
@@ -125,10 +179,83 @@ def usage_tuple(body: dict) -> tuple[int | None, int | None, int | None]:
     )
 
 
+def parse_standard_custom_id(custom_id: str | None) -> tuple[str | None, str | None]:
+    match = AGREEMENT_CUSTOM_ID_RE.match(custom_id or "")
+    if not match:
+        return None, None
+    return match.group("grammar_name"), match.group("sample_id")
+
+
 def tokenize(text: str | None) -> list[str]:
     if not isinstance(text, str) or not text.strip():
         return []
     return text.split()
+
+
+def normalized_alpha_token(token: str | None) -> str | None:
+    if not isinstance(token, str):
+        return None
+    stripped = token.strip()
+    if not LATIN_WORD_RE.fullmatch(stripped):
+        return None
+    return stripped.lower()
+
+
+def build_english_lookup(token_series: pd.Series) -> dict[str, bool]:
+    normalized_tokens = sorted(
+        {
+            normalized
+            for tokens in token_series
+            for token in (tokens or [])
+            for normalized in [normalized_alpha_token(token)]
+            if normalized and len(normalized) >= 3
+        }
+    )
+    if zipf_frequency_fn is None:
+        return {token: False for token in normalized_tokens}
+    return {
+        token: zipf_frequency_fn(token, "en") >= ENGLISH_ZIPF_MIN
+        for token in normalized_tokens
+    }
+
+
+def side_vocab_tokens(side: dict | None) -> set[str]:
+    if not isinstance(side, dict):
+        return set()
+
+    tokens: list[str] = []
+    for key in [
+        "verbs",
+        "nouns",
+        "propns",
+        "prons",
+        "adjs",
+        "det_def",
+        "det_indef",
+        "comps",
+    ]:
+        tokens.extend(side.get(key, []))
+
+    for key in [
+        "verb_paradigms",
+        "noun_paradigms",
+        "propn_paradigms",
+        "pronoun_paradigms",
+    ]:
+        for item in side.get(key, []):
+            if not isinstance(item, dict):
+                continue
+            if "lemma" in item:
+                tokens.append(str(item["lemma"]))
+            if "form" in item:
+                tokens.append(str(item["form"]))
+            for form in (item.get("forms") or {}).values():
+                tokens.append(str(form))
+
+    vocab: set[str] = set()
+    for token in tokens:
+        vocab.update(tokenize(str(token)))
+    return vocab
 
 
 def bag_equal(left: str | None, right: str | None) -> bool:
@@ -209,8 +336,11 @@ def matches_target_orthography(
     if not isinstance(text, str) or not text.strip():
         return False
 
+    saw_hebrew_diacritic = False
+    saw_latin_word = False
+
     for char in text:
-        if char.isspace():
+        if char.isspace() or char in {"-", "'", "’"}:
             continue
 
         if target_orthography == "cyrillic":
@@ -221,19 +351,34 @@ def matches_target_orthography(
         if target_orthography in {"latin", "latin_diacritic"}:
             if not is_latin_letter(char):
                 return False
-            if target_orthography == "latin" and strip_latin_diacritics(char) != char:
-                return False
+            if strip_latin_diacritics(char) != char:
+                if target_orthography == "latin":
+                    return False
+            saw_latin_word = True
             continue
 
         if target_orthography in {"hebrew", "yiddish", "hebrew_unpointed"}:
             if HEBREW_DIACRITIC_RE.fullmatch(char):
                 if target_orthography == "hebrew_unpointed":
                     return False
+                saw_hebrew_diacritic = True
                 continue
             if not is_hebrew_letter(char):
                 return False
             continue
 
+        return False
+
+    if target_orthography == "latin_diacritic" and saw_latin_word:
+        tokens = [
+            token for token in tokenize(text) if any(char.isalpha() for char in token)
+        ]
+        if not tokens:
+            return False
+        if any(strip_latin_diacritics(token) == token for token in tokens):
+            return False
+
+    if target_orthography in {"hebrew", "yiddish"} and not saw_hebrew_diacritic:
         return False
 
     return True
@@ -296,7 +441,8 @@ def read_jsonl_prefix_until(handle, marker: bytes, chunk_size: int = 65536) -> b
 
 def load_outputs(batch_dir: Path, exp: str) -> pd.DataFrame:
     rows: list[dict] = []
-    for path in sorted(batch_dir.glob("*_output.jsonl")):
+    output_paths = sorted(batch_dir.glob("*_output.jsonl"))
+    for path in progress(output_paths, desc=f"{batch_dir.name}: outputs", leave=False):
         with open(path) as handle:
             for line in handle:
                 item = json.loads(line)
@@ -327,11 +473,16 @@ def load_outputs(batch_dir: Path, exp: str) -> pd.DataFrame:
 
 def load_inputs(batch_dir: Path) -> pd.DataFrame:
     rows: list[dict] = []
-    for path in sorted(batch_dir.glob("inputs_*.jsonl")):
+    input_paths = sorted(batch_dir.glob("inputs_*.jsonl"))
+    for path in progress(input_paths, desc=f"{batch_dir.name}: inputs", leave=False):
+        if path.name.endswith("_output.jsonl"):
+            continue
         with open(path) as handle:
             for line in handle:
                 item = json.loads(line)
-                body = item["body"]
+                body = item.get("body")
+                if not isinstance(body, dict):
+                    continue
                 metadata = body.get("metadata") or {}
                 rows.append(
                     {
@@ -404,7 +555,12 @@ def load_sample_sentences(
     )
 
     rows: list[dict] = []
-    for grammar_name, wanted_ids in needed_ids.items():
+    grammar_items = list(needed_ids.items())
+    for grammar_name, wanted_ids in progress(
+        grammar_items,
+        desc=f"{data_dir.name}: samples",
+        leave=False,
+    ):
         path = data_dir / f"samples_{grammar_name}.jsonl"
         if not path.exists():
             continue
@@ -424,6 +580,7 @@ def load_sample_sentences(
                         or sample.get("left"),
                         "output_sentence": sample.get("right_phonetic")
                         or sample.get("right"),
+                        "depth": pd.to_numeric(sample.get("depth"), errors="coerce"),
                     }
                 )
                 remaining_ids.remove(sample_idx)
@@ -434,7 +591,8 @@ def load_sample_sentences(
 
 def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFrame:
     rows: list[dict] = []
-    for path in sorted(data_dir.glob("grammar_*.json")):
+    grammar_paths = sorted(data_dir.glob("grammar_*.json"))
+    for path in progress(grammar_paths, desc=f"{dataset}: grammars", leave=False):
         with open(path) as handle:
             grammar = json.load(handle)
         grammar_id = path.stem.split("grammar_")[1]
@@ -472,6 +630,7 @@ def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFram
                 ],
                 [],
             ),
+            "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
             "n_words": pd.to_numeric(grammar.get("n_words"), errors="coerce"),
             "n_rules": pd.to_numeric(grammar.get("n_rules"), errors="coerce"),
         }
@@ -498,6 +657,25 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
     inputs_df = load_inputs(spec.batch_dir)
     merged_df = merge_outputs_inputs(outputs_df, inputs_df)
 
+    parsed_ids = merged_df["custom_id"].apply(parse_standard_custom_id)
+    parsed_pairs = parsed_ids.tolist()
+    parsed_df = pd.DataFrame(
+        {
+            "grammar_name_parsed": [pair[0] for pair in parsed_pairs],
+            "sample_id_parsed": [pair[1] for pair in parsed_pairs],
+        }
+    )
+    merged_df = pd.concat([merged_df.reset_index(drop=True), parsed_df], axis=1)
+    merged_df["grammar_name"] = merged_df["grammar_name"].combine_first(
+        merged_df["grammar_name_parsed"]
+    )
+    merged_df["sample_id"] = merged_df["sample_id"].combine_first(
+        merged_df["sample_id_parsed"]
+    )
+    merged_df = merged_df.drop(
+        columns=["grammar_name_parsed", "sample_id_parsed"], errors="ignore"
+    )
+
     needs_sample_df = merged_df.loc[
         (merged_df["input_sentence"].isna() | merged_df["output_sentence"].isna())
         & merged_df["sample_id"].notna(),
@@ -511,7 +689,7 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
             how="left",
             suffixes=("", "_sample"),
         )
-        for column in ["input_sentence", "output_sentence"]:
+        for column in ["input_sentence", "output_sentence", "depth"]:
             sample_column = f"{column}_sample"
             if sample_column in merged_df.columns:
                 merged_df[column] = merged_df[column].combine_first(
@@ -532,6 +710,10 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
                 primary_values.notna(), fallback_values
             )
             merged_df = merged_df.drop(columns=[grammar_column])
+    if spec.exp == "orthography":
+        merged_df["target_orthography"] = merged_df["output_sentence"].apply(
+            lambda text: infer_target_orthography(text, spec.dataset)
+        )
     merged_df["dataset"] = spec.dataset
     return merged_df
 
@@ -607,7 +789,9 @@ def load_agreement_experiment() -> pd.DataFrame:
     with open(data_dir / "agreement_grammars.txt") as handle:
         grammar_ids = [line.strip() for line in handle if line.strip()]
 
-    for grammar_id in grammar_ids:
+    for grammar_id in progress(
+        grammar_ids, desc=f"{data_dir.name}: agreement grammars", leave=False
+    ):
         with open(data_dir / f"grammar_{grammar_id}.json") as handle:
             grammar = json.load(handle)
 
@@ -621,6 +805,7 @@ def load_agreement_experiment() -> pd.DataFrame:
         grammar_rows.append(
             {
                 "grammar_name": grammar_id,
+                "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
                 "n_words": grammar.get("n_words"),
                 "n_rules": grammar.get("n_rules"),
                 "agreement_enabled_a": a_enabled,
@@ -670,76 +855,156 @@ def load_agreement_experiment() -> pd.DataFrame:
     return merged_df
 
 
-def classify_failure(row: pd.Series) -> str:
+def ordered_unique(items: Iterable[str]) -> list[str]:
+    return list(dict.fromkeys(item for item in items if item))
+
+
+def english_vocab_tokens(
+    row: pd.Series, english_lookup: dict[str, bool] | None = None
+) -> list[str]:
+    cached = row.get("english_vocab_tokens")
+    if isinstance(cached, list):
+        return cached
+    pred_tokens = tokenize(row.get("model_answer"))
+    target_vocab_alpha = {
+        normalized
+        for token in row.get("target_vocab_tokens") or []
+        for normalized in [normalized_alpha_token(token)]
+        if normalized
+    }
+    source_vocab_alpha = {
+        normalized
+        for token in tokenize(row.get("input_sentence"))
+        for normalized in [normalized_alpha_token(token)]
+        if normalized
+    }
+    tokens: list[str] = []
+    for token in pred_tokens:
+        normalized = normalized_alpha_token(token)
+        if (
+            not normalized
+            or len(normalized) < 3
+            or normalized in target_vocab_alpha
+            or normalized in source_vocab_alpha
+        ):
+            continue
+        is_english = (
+            english_lookup.get(normalized, False)
+            if english_lookup is not None
+            else (
+                zipf_frequency_fn is not None
+                and zipf_frequency_fn(normalized, "en") >= ENGLISH_ZIPF_MIN
+            )
+        )
+        if is_english:
+            tokens.append(token)
+    return ordered_unique(tokens)
+
+
+def source_vocab_tokens(row: pd.Series) -> list[str]:
+    cached = row.get("source_vocab_tokens")
+    if isinstance(cached, list):
+        return cached
+    pred_tokens = tokenize(row.get("model_answer"))
+    src_vocab = set(tokenize(row.get("input_sentence")))
+    target_vocab = set(row.get("target_vocab_tokens") or [])
+    return ordered_unique(
+        token
+        for token in pred_tokens
+        if token in src_vocab and token not in target_vocab
+    )
+
+
+def classify_failure_tags(row: pd.Series) -> list[str]:
     pred = row.get("model_answer")
     ref = row.get("output_sentence")
-    src = row.get("input_sentence")
 
     if not isinstance(pred, str) or not pred.strip():
-        return "no_answer"
+        return ["mixed_other"]
     if isinstance(ref, str) and pred == ref:
-        return "exact_match"
-    if bag_equal(pred, ref):
-        return "word_order_only"
+        return ["exact_match"]
 
     pred_tokens = tokenize(pred)
     ref_tokens = tokenize(ref)
-    src_tokens = tokenize(src)
-    pred_vocab = set(pred_tokens)
-    ref_vocab = set(ref_tokens)
-    src_vocab = set(src_tokens)
-    b_words = row.get("b_words")
-    target_vocab = set(b_words) if isinstance(b_words, list) else set()
+    target_vocab = set(row.get("target_vocab_tokens") or [])
+    source_tokens = source_vocab_tokens(row)
+    english_tokens = english_vocab_tokens(row)
+    hallucinated = hallucinated_tokens(row)
+    tags: list[str] = []
 
-    repeated_fraction, longest_run = repetition_stats(pred)
-    src_overlap = len(pred_vocab & src_vocab) / max(1, len(pred_vocab))
-    ref_overlap = len(pred_vocab & ref_vocab) / max(1, len(pred_vocab))
-    oov_count = len(pred_vocab - target_vocab) if target_vocab else 0
+    if bag_equal(pred, ref):
+        tags.append("word_order_error")
 
-    if longest_run >= 4 or repeated_fraction >= 0.5:
-        return "repetition_loop"
-    if isinstance(src, str) and pred == src:
-        return "copied_source"
-    if src_overlap >= 0.8 and ref_overlap < 0.5:
-        return "source_lexicon_intrusion"
     if row.get("exp") == "orthography":
         target_orthography = row.get("target_orthography")
         if not matches_target_orthography(pred, target_orthography):
-            return "wrong_script"
+            tags.append("orthography_error")
         if (
             target_orthography in {"hebrew", "hebrew_unpointed", "yiddish"}
             and strip_hebrew_diacritics(pred) == strip_hebrew_diacritics(ref)
             and pred != ref
         ):
-            return "diacritic_drop"
+            tags.append("orthography_error")
         if (
             target_orthography in {"latin", "latin_diacritic"}
             and strip_latin_diacritics(pred) == strip_latin_diacritics(ref)
             and pred != ref
         ):
-            return "diacritic_drop"
-    if len(pred_tokens) < max(1, len(ref_tokens) // 2):
-        return "too_short"
-    if len(pred_tokens) > len(ref_tokens) + max(2, len(ref_tokens) // 2):
-        return "too_long"
-    if oov_count > 0:
-        return "hallucinated_vocab"
+            tags.append("orthography_error")
+
+    if len(pred_tokens) < len(ref_tokens):
+        tags.append("omission")
+    if len(pred_tokens) > len(ref_tokens):
+        tags.append("extra_words")
+    if source_tokens:
+        tags.append("source_vocab_error")
+    if english_tokens:
+        tags.append("english_vocab")
+    if hallucinated:
+        tags.append("hallucinated_vocab")
     if (
-        pred_tokens
-        and ref_tokens
-        and (
-            pred_tokens == ref_tokens[: len(pred_tokens)]
-            or pred_tokens == ref_tokens[-len(pred_tokens) :]
-        )
+        len(pred_tokens) == len(ref_tokens)
+        and pred_tokens != ref_tokens
+        and not bag_equal(pred, ref)
+        and all(token in target_vocab for token in pred_tokens)
     ):
-        return "partial_span"
-    if len(pred_tokens) == len(ref_tokens):
-        return "same_length_substitution"
-    return "mixed_other"
+        tags.append("recall_error")
+
+    if not tags:
+        tags.append("mixed_other")
+    return ordered_unique(tags)
+
+
+def classify_failure(row: pd.Series) -> str:
+    return classify_failure_tags(row)[0]
+
+
+def families_from_tags(tags: Sequence[str]) -> list[str]:
+    return ordered_unique(TAG_TO_FAMILY.get(tag, "other") for tag in tags)
+
+
+def hallucinated_tokens(row: pd.Series) -> list[str]:
+    cached = row.get("hallucinated_tokens")
+    if isinstance(cached, list):
+        return cached
+    pred_tokens = tokenize(row.get("model_answer"))
+    target_vocab = set(row.get("target_vocab_tokens") or [])
+    source_tokens_set = set(source_vocab_tokens(row))
+    english_tokens_set = set(english_vocab_tokens(row))
+    if not pred_tokens or not target_vocab:
+        return []
+    return ordered_unique(
+        token
+        for token in pred_tokens
+        if token not in target_vocab
+        and token not in source_tokens_set
+        and token not in english_tokens_set
+    )
 
 
 def enrich(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    df["pred_tokens"] = df["model_answer"].apply(tokenize)
     df["exact_match"] = df.apply(
         lambda row: isinstance(row.get("model_answer"), str)
         and isinstance(row.get("output_sentence"), str)
@@ -750,7 +1015,21 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
         lambda row: bag_equal(row.get("model_answer"), row.get("output_sentence")),
         axis=1,
     )
-    df["failure_mode"] = df.apply(classify_failure, axis=1)
+    df["source_vocab_tokens"] = df.apply(source_vocab_tokens, axis=1)
+    df["source_vocab_tokens_str"] = df["source_vocab_tokens"].apply("|".join)
+    english_lookup = build_english_lookup(df["pred_tokens"])
+    df["english_vocab_tokens"] = df.apply(
+        lambda row: english_vocab_tokens(row, english_lookup), axis=1
+    )
+    df["english_vocab_tokens_str"] = df["english_vocab_tokens"].apply("|".join)
+    df["hallucinated_tokens"] = df.apply(hallucinated_tokens, axis=1)
+    df["hallucinated_tokens_str"] = df["hallucinated_tokens"].apply("|".join)
+    df["failure_tags"] = df.apply(classify_failure_tags, axis=1)
+    df["failure_mode"] = df["failure_tags"].apply(lambda tags: tags[0])
+    df["failure_tags_str"] = df["failure_tags"].apply("|".join)
+    df["error_families"] = df["failure_tags"].apply(families_from_tags)
+    df["error_family"] = df["error_families"].apply(lambda families: families[0])
+    df["error_families_str"] = df["error_families"].apply("|".join)
     df["pred_len"] = df["model_answer"].apply(lambda text: len(tokenize(text)))
     df["ref_len"] = df["output_sentence"].apply(lambda text: len(tokenize(text)))
     df["src_len"] = df["input_sentence"].apply(lambda text: len(tokenize(text)))
@@ -760,7 +1039,9 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_dataset() -> pd.DataFrame:
-    parts = [load_standard_experiment(spec) for spec in STANDARD_EXPERIMENTS]
+    parts = []
+    for spec in progress(STANDARD_EXPERIMENTS, desc="standard experiments"):
+        parts.append(load_standard_experiment(spec))
     parts.append(load_agreement_experiment())
     return enrich(pd.concat(parts, ignore_index=True, sort=False))
 
@@ -780,7 +1061,13 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
         "model_answer",
         "exact_match",
         "bow_match",
+        "failure_tags_str",
         "failure_mode",
+        "error_families_str",
+        "error_family",
+        "source_vocab_tokens_str",
+        "english_vocab_tokens_str",
+        "hallucinated_tokens_str",
         "target_word_order",
         "target_orthography",
         "agreement_condition",
@@ -800,20 +1087,38 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
     df[available_row_columns].to_csv(row_path, index=False)
 
     wrong_df = df[~df["exact_match"]].copy()
+    tag_rows_df = wrong_df.drop(columns=["failure_mode"], errors="ignore").explode(
+        "failure_tags"
+    )
+    tag_rows_df = tag_rows_df.rename(columns={"failure_tags": "failure_mode"})
+    tag_rows_df["error_family"] = tag_rows_df["failure_mode"].map(TAG_TO_FAMILY)
 
     summary_df = (
-        wrong_df.groupby(["dataset", "exp", "fuzzy_model", "failure_mode"])
+        tag_rows_df.groupby(
+            ["dataset", "exp", "fuzzy_model", "failure_mode", "error_family"]
+        )
         .size()
         .rename("count")
         .reset_index()
     )
-    summary_df["pct_within_model_exp"] = summary_df.groupby(["dataset", "fuzzy_model"])[
-        "count"
-    ].transform(lambda series: 100 * series / series.sum())
+    summary_df["pct_within_model_exp"] = summary_df.groupby(
+        ["dataset", "exp", "fuzzy_model"]
+    )["count"].transform(lambda series: 100 * series / series.sum())
     summary_df = summary_df.sort_values(
         ["dataset", "exp", "fuzzy_model", "count"], ascending=[True, True, True, False]
     )
     summary_df.to_csv(out_dir / "failure_mode_summary.csv", index=False)
+
+    mapping_df = pd.DataFrame(
+        [
+            {
+                "failure_mode": tag,
+                "error_family": TAG_TO_FAMILY.get(tag, "other"),
+            }
+            for tag in FINE_GRAINED_TAG_ORDER
+        ]
+    )
+    mapping_df.to_csv(out_dir / "failure_tag_family_map.csv", index=False)
 
     metric_df = (
         df.groupby(["dataset", "exp", "fuzzy_model"])
@@ -837,12 +1142,17 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
             rows=("custom_id", "size"),
             exact_match=("exact_match", "mean"),
             bow_match=("bow_match", "mean"),
-            wrong_script=("failure_mode", lambda s: (s == "wrong_script").mean()),
-            diacritic_drop=("failure_mode", lambda s: (s == "diacritic_drop").mean()),
-            too_short=("failure_mode", lambda s: (s == "too_short").mean()),
-            same_length_substitution=(
-                "failure_mode",
-                lambda s: (s == "same_length_substitution").mean(),
+            orthography_error=(
+                "failure_tags",
+                lambda s: s.map(lambda tags: "orthography_error" in tags).mean(),
+            ),
+            omission=(
+                "failure_tags",
+                lambda s: s.map(lambda tags: "omission" in tags).mean(),
+            ),
+            recall_error=(
+                "failure_tags",
+                lambda s: s.map(lambda tags: "recall_error" in tags).mean(),
             ),
         )
         .reset_index()
@@ -850,15 +1160,15 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
     orthography_summary.to_csv(out_dir / "orthography_summary.csv", index=False)
 
     example_modes = [
-        "repetition_loop",
-        "source_lexicon_intrusion",
-        "wrong_script",
-        "diacritic_drop",
-        "same_length_substitution",
-        "partial_span",
-        "too_short",
+        "word_order_error",
+        "omission",
+        "extra_words",
+        "recall_error",
+        "source_vocab_error",
+        "english_vocab",
         "hallucinated_vocab",
-        "word_order_only",
+        "orthography_error",
+        "mixed_other",
     ]
     examples = {}
     example_columns = [
@@ -866,7 +1176,10 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
         "exp",
         "fuzzy_model",
         "custom_id",
+        "error_family",
         "failure_mode",
+        "failure_tags_str",
+        "hallucinated_tokens_str",
         "input_sentence",
         "output_sentence",
         "model_answer",
@@ -879,7 +1192,7 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
         "completion_tokens",
     ]
     for mode in example_modes:
-        subset = wrong_df[wrong_df["failure_mode"] == mode]
+        subset = wrong_df[wrong_df["failure_tags"].map(lambda tags: mode in tags)]
         examples[mode] = subset[example_columns].head(20).to_dict(orient="records")
 
     with open(out_dir / "example_rows.json", "w") as handle:
