@@ -23,7 +23,7 @@ Palette = dict[str, Color]
 _CM_TO_IN: float = 1.0 / 2.54
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-FIGURES_DIR = PROJECT_ROOT / "notebooks" / "figures"
+FIGURES_DIR = PROJECT_ROOT / "paper" / "figures"
 
 PAPER_WIDTH_IN: float = 5.5
 FIG_HEIGHT_SINGLE_ROW_IN: float = 1.3
@@ -338,16 +338,20 @@ def save_figure(
     fig=None,
     tight: bool = True,
     transparent: bool = True,
+    save_png: bool = False,
     png_dpi: int = 300,
     **savefig_kwargs: Any,
-) -> tuple[Path, Path]:
-    """Save the current figure as both PDF and PNG."""
+) -> tuple[Path, Path | None]:
+    """Save the current figure as PDF and optionally as PNG.
+    Pass a path stem like ``figures/plot_name`` or a filename such as
+    ``figures/plot_name.pdf``; the suffix is normalized and the PDF is always
+    written. Set ``save_png=True`` to also write a PNG alongside it.
+    """
 
     figure = fig if fig is not None else plt.gcf()
     output_base = Path(path)
     if output_base.suffix.lower() in {".pdf", ".png"}:
         output_base = output_base.with_suffix("")
-    output_base = FIGURES_DIR / output_base
     output_base.parent.mkdir(parents=True, exist_ok=True)
 
     save_kwargs = dict(savefig_kwargs)
@@ -359,8 +363,10 @@ def save_figure(
     png_path = output_base.with_suffix(".png")
 
     figure.savefig(pdf_path, **save_kwargs)
-    figure.savefig(png_path, dpi=png_dpi, **save_kwargs)
-    return pdf_path, png_path
+    if save_png:
+        figure.savefig(png_path, dpi=png_dpi, **save_kwargs)
+        return pdf_path, png_path
+    return pdf_path, None
 
 
 __all__ = [
