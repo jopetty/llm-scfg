@@ -30,6 +30,8 @@ This file records project-specific guidance for future coding agents working in
   task clearly calls for it.
 - Notebook caches under `notebooks/cache/` are generated artifacts and should
   not be committed.
+- If you ever make or edit a figure that has multiple rows/columns, always use a
+  `gridspec` to manage the layout instead of manually calling subplots.
 
 ## Git / commit conventions learned from this project
 

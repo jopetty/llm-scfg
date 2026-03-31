@@ -26,7 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FIGURES_DIR = PROJECT_ROOT / "paper" / "figures"
 
 PAPER_WIDTH_IN: float = 5.5
-FIG_HEIGHT_SINGLE_ROW_IN: float = 1.3
+FIG_HEIGHT_SINGLE_ROW_IN: float = 1.0
 FIG_HEIGHT_DOUBLE_ROW_IN: float = 2.8
 
 # Backwards-compatible aliases used throughout existing notebooks in this repo.
@@ -251,12 +251,12 @@ MODEL_ORDER: list[str] = [
 ]
 
 MODEL_DISPLAY_NAMES: dict[str, str] = {
-    "gpt-5-nano": "GPT-5 nano",
-    "gpt-5-mini": "GPT-5 mini",
-    "gpt-5": "GPT-5",
-    "google/gemma-3-1b-it": "Gemma 3 1B",
-    "google/gemma-3-4b-it": "Gemma 3 4B",
-    "google/gemma-3-12b-it": "Gemma 3 12B",
+    "gpt-5-nano": "gpt-5-nano",
+    "gpt-5-mini": "gpt-5-mini",
+    "gpt-5": "gpt-5",
+    "google/gemma-3-1b-it": "gemma-3-1b-it",
+    "google/gemma-3-4b-it": "gemma-3-4b-it",
+    "google/gemma-3-12b-it": "gemma-3-12b-it",
     "gemini-2.5-flash": "Gemini 2.5 Flash",
     "gemini-2.5-pro": "Gemini 2.5 Pro",
 }
