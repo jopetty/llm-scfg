@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt Viewer</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Agreement Experiment</p>
+          <h1>Prompt and Response Viewer</h1>
+        </div>
+        <div class="stats" id="stats"></div>
+      </header>
+
+      <section class="filters">
+        <label class="field search">
+          <span>Search</span>
+          <input id="search" type="search" placeholder="custom id, input sentence, answer" />
+        </label>
+        <label class="field">
+          <span>Model</span>
+          <select id="model">
+            <option value="">All models</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Depth</span>
+          <select id="depth">
+            <option value="">All depths</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Agreement</span>
+          <select id="agreement-condition">
+            <option value="">All conditions</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Status</span>
+          <select id="status">
+            <option value="">All statuses</option>
+            <option value="ok">ok</option>
+            <option value="missing">missing</option>
+            <option value="error">error</option>
+          </select>
+        </label>
+      </section>
+
+      <main class="layout">
+        <aside class="list-panel">
+          <div class="panel-header">
+            <h2>Records</h2>
+            <button id="load-more" type="button">Load more</button>
+          </div>
+          <div class="record-list" id="record-list"></div>
+        </aside>
+
+        <section class="detail-panel">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-card">
+              <p class="empty-eyebrow">Detail View</p>
+              <h2>Select a record</h2>
+              <p>
+                Pick any row on the left to inspect the prompt, extracted grammar,
+                model response, and raw batch JSON.
+              </p>
+            </div>
+          </div>
+          <div class="detail" id="detail" hidden>
+            <div class="detail-header">
+              <div>
+                <p class="detail-title" id="detail-title"></p>
+                <p class="detail-subtitle" id="detail-subtitle"></p>
+              </div>
+              <span class="pill" id="detail-status"></span>
+            </div>
+
+            <div class="detail-grid">
+              <section class="card">
+                <h3>Summary</h3>
+                <dl class="meta" id="summary-meta"></dl>
+              </section>
+              <section class="card">
+                <h3>Prompt</h3>
+                <pre id="prompt-text"></pre>
+              </section>
+              <section class="card">
+                <h3>Grammar</h3>
+                <pre id="grammar-text"></pre>
+              </section>
+              <section class="card">
+                <h3>Response</h3>
+                <pre id="response-text"></pre>
+              </section>
+              <section class="card">
+                <h3>Input JSON</h3>
+                <pre id="input-json"></pre>
+              </section>
+              <section class="card">
+                <h3>Output JSON</h3>
+                <pre id="output-json"></pre>
+              </section>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

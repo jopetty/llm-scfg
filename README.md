@@ -167,6 +167,25 @@ The preview output includes:
 - sampled `left` / `right` sentence pairs
 - sampled agreement features for the subject and verb
 
+## Prompt viewer
+
+Use the lightweight web viewer when you want to inspect prompt text and model
+responses from existing batch JSONL files.
+
+Run the agreement experiment viewer:
+
+```bash
+uv run python prompt_viewer.py serve
+```
+
+By default this serves [batches/agreement_exp_compact](/Users/jacksonpetty/Development/llm-scfg/batches/agreement_exp_compact) at `http://127.0.0.1:8123`.
+
+To point the same viewer at a different batch directory:
+
+```bash
+uv run python prompt_viewer.py serve --batch_dir=batches/wordorder_large_exp --port=8124
+```
+
 ## Main CLI commands
 
 The CLI is exposed through `python main.py <command> ...` using `fire`.

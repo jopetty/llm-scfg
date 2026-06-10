@@ -220,7 +220,7 @@ data/agreement_exp/samples_1a27cdd22b89226b.jsonl
 data/agreement_exp/samples_31e9c3c537d6a3b7.jsonl
 
 # Generated notebook analysis cache
-notebooks/cache/error-analysis/
+notebooks/cache/
 data/agreement_exp/samples_42e8537300f90e1c.jsonl
 data/agreement_exp/samples_4543206399eb5adf.jsonl
 data/agreement_exp/samples_623c4c3ccd640499.jsonl
@@ -232,3 +232,5 @@ data/agreement_exp/samples_b716750402939057.jsonl
 data/agreement_exp/samples_cb8d41a6e118b530.jsonl
 data/agreement_exp/samples_cd657c2de9a8b0b6.jsonl
 data/agreement_exp/samples_f7805e5f817efa28.jsonl
+
+.claude/
