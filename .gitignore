@@ -232,3 +232,5 @@ data/agreement_exp/samples_b716750402939057.jsonl
 data/agreement_exp/samples_cb8d41a6e118b530.jsonl
 data/agreement_exp/samples_cd657c2de9a8b0b6.jsonl
 data/agreement_exp/samples_f7805e5f817efa28.jsonl
+
+.claude/

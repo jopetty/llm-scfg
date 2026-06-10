@@ -84,7 +84,7 @@ def maybe_init_wandb_run(
     if not should_enable_wandb(wandb_enabled):
         return None
     try:
-        import wandb  # type: ignore
+        import wandb
     except ImportError:
         log.warning("wandb is not installed; skipping progress logging")
         return None
