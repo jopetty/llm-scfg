@@ -4,10 +4,57 @@ from typing import Any, cast
 from unittest.mock import patch
 
 from scfg.agreement import FeatureBundle
-from scfg.scfg import SCFG, CFGParams, SCFGParams
+from scfg.scfg import SCFG, CFGParams, RuleBuilder, SCFGParams
 
 
 class SCFGGenerationTest(unittest.TestCase):
+    def test_cfg_params_rng_seed_controls_direct_lexicon_generation(self):
+        first = CFGParams(
+            rng_seed=123,
+            verbs=5,
+            nouns=5,
+            propns=5,
+            prons=3,
+            adjs=3,
+            det_def=2,
+            det_indef=2,
+            comps=2,
+        )
+        second = CFGParams(
+            rng_seed=123,
+            verbs=5,
+            nouns=5,
+            propns=5,
+            prons=3,
+            adjs=3,
+            det_def=2,
+            det_indef=2,
+            comps=2,
+        )
+
+        self.assertEqual(first.verb_lex, second.verb_lex)
+        self.assertEqual(first.noun_lex, second.noun_lex)
+        self.assertEqual(first.propn_lex, second.propn_lex)
+        self.assertEqual(first.pron_lex, second.pron_lex)
+
+    def test_compact_prompt_grammar_supports_plain_cfg_params(self):
+        params = CFGParams(
+            verbs=1,
+            nouns=1,
+            propns=1,
+            prons=1,
+            adjs=1,
+            det_def=1,
+            det_indef=1,
+            comps=1,
+            rng_seed=13,
+        )
+
+        grammar = RuleBuilder(params).build_compact_prompt_grammar("unused")
+
+        self.assertIn("S -> CP_matrix", grammar)
+        self.assertIn("V -> '", grammar)
+
     def test_cfg_round_trip_preserves_agreement_metadata(self):
         params = CFGParams(
             agreement_enabled=True,

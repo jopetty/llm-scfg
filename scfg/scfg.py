@@ -308,6 +308,7 @@ class CFGParams:
             return list(val)
 
         self.rng = random.Random(self.rng_seed)
+        self.np_rng = np.random.default_rng(self.rng_seed)
 
         if self.orthography == "latin":
             self.consonants = LATIN_CONSONANTS
@@ -445,20 +446,20 @@ class CFGParams:
 
     def _sample_string(self) -> str:
         def _zero_truncated_poisson(rate: float) -> int:
-            u: float = np.random.uniform(np.exp(-rate), 1)
+            u: float = float(self.np_rng.uniform(np.exp(-rate), 1))
             t: float = -np.log(u)
-            return 1 + np.random.poisson(rate - t)
+            return 1 + int(self.np_rng.poisson(rate - t))
 
         def _beta_binomial(n: int, alpha: float, beta: float) -> int:
-            p: float = np.random.beta(alpha, beta)
-            return np.random.binomial(n, p)
+            p: float = float(self.np_rng.beta(alpha, beta))
+            return int(self.np_rng.binomial(n, p))
 
         def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
             if n_spaces <= 0:
                 return "".join(syllables)
             positions: list[int] = list(range(1, len(syllables)))
             chosen_positions: set[int] = set(
-                random.sample(positions, min(n_spaces, len(positions)))
+                self.rng.sample(positions, min(n_spaces, len(positions)))
             )
             result_parts: list[str] = []
             for i, syllable in enumerate(syllables):
@@ -2494,9 +2495,7 @@ class RuleBuilder:
 
     def build_compact_prompt_grammar(self, sample: str) -> str:
         if not self.is_sync:
-            # TODO: `RuleBuilder` does not define `as_cfg`; this nonsync path is likely
-            # broken at runtime and should be replaced with the intended CFG string.
-            return self.as_cfg  # ty: ignore[unresolved-attribute]
+            return "\n".join(self.build_rules() + self.build_lexicon())
         return "\n".join(
             self.build_rules()
             + self.build_compact_prompt_lexicon(sample)

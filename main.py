@@ -389,6 +389,15 @@ def estimate_prompt_tokens(prompt: str, model: str) -> int:
     return len(encoder.encode(prompt))
 
 
+def add_prompt_token_estimates(df: pd.DataFrame, model: str) -> pd.DataFrame:
+    df = df.copy()
+    if "prompt" in df and "prompt_tokens" not in df:
+        df["prompt_tokens"] = df["prompt"].apply(
+            lambda prompt: estimate_prompt_tokens(prompt, model)
+        )
+    return df
+
+
 @lru_cache(maxsize=16)
 def gemma_tokenizer(model: str):
     try:
@@ -424,9 +433,8 @@ def drop_rows_over_model_context(
     if context_limit is None or "prompt" not in df:
         return df
 
-    token_estimates = df["prompt"].apply(
-        lambda prompt: estimate_prompt_tokens(prompt, model)
-    )
+    df = add_prompt_token_estimates(df, model)
+    token_estimates = pd.to_numeric(df["prompt_tokens"], errors="coerce")
     over_limit_mask = token_estimates > context_limit
     dropped = int(over_limit_mask.sum())
     if dropped:
@@ -453,9 +461,8 @@ def warn_for_large_prompts(
 ) -> None:
     if not model.startswith("gpt") or "prompt" not in df:
         return
-    token_estimates = df["prompt"].apply(
-        lambda prompt: estimate_prompt_tokens(prompt, model)
-    )
+    df = add_prompt_token_estimates(df, model)
+    token_estimates = pd.to_numeric(df["prompt_tokens"], errors="coerce")
     max_tokens = int(token_estimates.max())
     over_limit = int((token_estimates > threshold).sum())
     near_limit = int((token_estimates > int(0.8 * threshold)).sum())
@@ -483,6 +490,25 @@ def warn_for_large_prompts(
             model,
             max_tokens,
         )
+
+
+def sample_metadata(
+    *,
+    grammar_name: str,
+    sample_id: str,
+    row: pd.Series,
+    grammar: dict[str, object],
+) -> dict[str, str]:
+    return {
+        "grammar_name": grammar_name,
+        "sample_id": sample_id,
+        "depth": str(row["depth"]),
+        "input_sentence": str(row.get("left_phonetic") or row.get("left") or ""),
+        "output_sentence": str(row.get("right_phonetic") or row.get("right") or ""),
+        "n_words": str(grammar.get("n_words", "")),
+        "n_rules": str(grammar.get("n_rules", "")),
+        "prompt_tokens": str(row.get("prompt_tokens", "")),
+    }
 
 
 def create_orthography_data(
@@ -1031,6 +1057,7 @@ def generate_batchfile(
         ),
         axis=1,
     )
+    df = add_prompt_token_estimates(df, model)
     df = drop_rows_over_model_context(df, model=model, grammar_name=grammar_name)
     warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
     df["json"] = df.apply(
@@ -1038,11 +1065,12 @@ def generate_batchfile(
             user_prompt=row["prompt"],
             max_completion_tokens=max_completion_tokens,
             n=n,
-            metadata={
-                "grammar_name": grammar_name,
-                "sample_id": str(row.name),
-                "depth": str(row["depth"]),
-            },
+            metadata=sample_metadata(
+                grammar_name=grammar_name,
+                sample_id=str(row.name),
+                row=row,
+                grammar=grammar,
+            ),
         ).to_openai_batched_json(
             model=model, custom_id=f"{grammar_name}-sample-{row.name}"
         ),
@@ -1116,6 +1144,7 @@ def generate_experiment_batchfile(
             ),
             axis=1,
         )
+        df = add_prompt_token_estimates(df, model)
         df = drop_rows_over_model_context(df, model=model, grammar_name=grammar_name)
         warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
         df["json"] = df.apply(
@@ -1123,13 +1152,12 @@ def generate_experiment_batchfile(
                 user_prompt=row["prompt"],
                 max_completion_tokens=max_completion_tokens,
                 n=n,
-                metadata={
-                    "grammar_name": grammar_name,
-                    "sample_id": str(row.name),
-                    "depth": str(row["depth"]),
-                }
-                if model.startswith("gpt")
-                else None,
+                metadata=sample_metadata(
+                    grammar_name=grammar_name,
+                    sample_id=str(row.name),
+                    row=row,
+                    grammar=grammar,
+                ),
             ).to_openai_batched_json(
                 model=model, custom_id=f"{grammar_name}-sample-{row.name}"
             ),

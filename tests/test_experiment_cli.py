@@ -86,6 +86,9 @@ class ExperimentCliTest(unittest.TestCase):
 
                 self.assertEqual(1, len(payloads))
                 self.assertIn("-sample-0", payloads[0]["custom_id"])
+                metadata = payloads[0]["body"]["metadata"]
+                self.assertEqual(grammar_name, metadata["grammar_name"])
+                self.assertEqual("5", metadata["prompt_tokens"])
             finally:
                 main.PROJECT_ROOT = original_project_root
                 main.DATA_DIR = original_data_dir

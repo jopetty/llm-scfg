@@ -119,14 +119,15 @@ class AgreementCliTest(unittest.TestCase):
                     payload = json.loads(handle.readline())
                 prompt = payload["body"]["messages"][0]["content"]
                 self.assertIn("Some lexical items in this grammar inflect", prompt)
-                self.assertEqual(
-                    {
-                        "grammar_name": grammar_name,
-                        "sample_id": "0",
-                        "depth": "0",
-                    },
-                    payload["body"]["metadata"],
-                )
+                metadata = payload["body"]["metadata"]
+                self.assertEqual(grammar_name, metadata["grammar_name"])
+                self.assertEqual("0", metadata["sample_id"])
+                self.assertEqual("0", metadata["depth"])
+                self.assertIn("input_sentence", metadata)
+                self.assertIn("output_sentence", metadata)
+                self.assertIn("n_words", metadata)
+                self.assertIn("n_rules", metadata)
+                self.assertIn("prompt_tokens", metadata)
                 self.assertTrue(payload["custom_id"].startswith(f"{grammar_name}-"))
                 self.assertIn("-sample-0", payload["custom_id"])
             finally:
