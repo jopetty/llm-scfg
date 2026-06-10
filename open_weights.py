@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import importlib
 import json
 import logging
 import os
@@ -84,7 +85,7 @@ def maybe_init_wandb_run(
     if not should_enable_wandb(wandb_enabled):
         return None
     try:
-        import wandb
+        wandb = importlib.import_module("wandb")
     except ImportError:
         log.warning("wandb is not installed; skipping progress logging")
         return None
