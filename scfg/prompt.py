@@ -35,6 +35,7 @@ def basic_prompt(
     grammar_str: str,
     sample: str,
     agreement_metadata: dict | None = None,
+    few_shot_examples: list[dict[str, str]] | None = None,
 ):
     agreement_note = ""
     if agreement_metadata and agreement_metadata.get("enabled"):
@@ -46,6 +47,22 @@ def basic_prompt(
             "pair, for example `V -> <'lemma_a', 'lemma_b'> "
             "(3.sg.fem=<'form_a', 'form_b'>; ...)`. Use those annotations to "
             "determine which surface form is required in the target language."
+        )
+
+    examples_note = ""
+    if few_shot_examples:
+        example_lines = [
+            (
+                f"    {index}. Source: `{example['input']}`\n"
+                f"       Target: `{example['output']}`"
+            )
+            for index, example in enumerate(few_shot_examples, start=1)
+        ]
+        examples_note = (
+            "\n\n"
+            "    Here are example translations produced by this same grammar:\n"
+            + "\n".join(example_lines)
+            + "\n\n"
         )
 
     prompt: str = (
@@ -91,6 +108,7 @@ def basic_prompt(
         "    ```\n"
         f"    {grammar_str}\n"
         "    ```\n\n"
+        f"{examples_note}"
         f"    Here is the input sentence: `{sample}`.\n\n"
         "    Remember to end your response with the format `Final answer: "
         "<output sentence>`."

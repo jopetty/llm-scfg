@@ -242,7 +242,10 @@ def grammar_conditions(experiment: str, grammar: dict[str, Any]) -> dict[str, st
             [
                 f"n_words={grammar.get('n_words', '')}",
                 f"word_order={word_order_label(left)}->{word_order_label(right)}",
-                f"orthography={left.get('orthography', '')}->{right.get('orthography', '')}",
+                (
+                    f"orthography={left.get('orthography', '')}"
+                    f"->{right.get('orthography', '')}"
+                ),
                 f"agreement={agreement_label(left, right)}",
             ]
         ),
@@ -257,7 +260,9 @@ def grammar_conditions(experiment: str, grammar: dict[str, Any]) -> dict[str, st
     }
 
 
-def discover_experiment_dirs(data_dir: Path, experiments: list[str] | None) -> list[Path]:
+def discover_experiment_dirs(
+    data_dir: Path, experiments: list[str] | None
+) -> list[Path]:
     if experiments:
         dirs = []
         for exp in experiments:
@@ -438,10 +443,7 @@ def print_table(rows: list[dict[str, Any]], *, limit: int) -> None:
     widths = {
         column: max(
             len(column),
-            *[
-                len(format_number(row.get(column), digits=3))
-                for row in display_rows
-            ],
+            *[len(format_number(row.get(column), digits=3)) for row in display_rows],
         )
         for column in columns
     }

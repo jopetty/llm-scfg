@@ -94,6 +94,77 @@ class ExperimentCliTest(unittest.TestCase):
                 main.DATA_DIR = original_data_dir
                 main.BATCH_DIR = original_batch_dir
 
+    def test_fewshot_experiment_writes_shots_and_batches_by_k(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            data_dir = root / "data"
+            batch_dir = root / "batches"
+            batch_dir.mkdir(parents=True, exist_ok=True)
+
+            original_data_dir = main.DATA_DIR
+            original_batch_dir = main.BATCH_DIR
+            try:
+                main.DATA_DIR = data_dir
+                main.BATCH_DIR = batch_dir
+
+                main.create_fewshot_data(
+                    grammar_sizes=[25],
+                    max_depth=0,
+                    n_grammars_per_size=1,
+                    n_sentences_per_depth=1,
+                    n_shot_examples=1,
+                    target_head_spec_params=[(False, True)],
+                )
+                fewshot_dir = data_dir / "fewshot_exp"
+                self.assertTrue((fewshot_dir / "README.md").exists())
+                self.assertTrue((fewshot_dir / "fewshot_grammars.txt").exists())
+                fewshot_readme = (fewshot_dir / "README.md").read_text()
+                self.assertIn("few-shot k values", fewshot_readme)
+                self.assertIn("shots_*.jsonl", fewshot_readme)
+
+                with open(fewshot_dir / "fewshot_grammars.txt") as handle:
+                    grammar_names = [line.strip() for line in handle if line.strip()]
+                self.assertEqual(1, len(grammar_names))
+                grammar_name = grammar_names[0]
+                self.assertTrue(
+                    (fewshot_dir / f"samples_{grammar_name}.jsonl").exists()
+                )
+                self.assertTrue((fewshot_dir / f"shots_{grammar_name}.jsonl").exists())
+
+                with (
+                    mock.patch.object(main, "estimate_prompt_tokens", return_value=5),
+                    mock.patch.object(main.secrets, "token_hex", return_value="abc123"),
+                ):
+                    main.generate_experiment_batchfile(
+                        exp="fewshot",
+                        model="gpt-5-nano",
+                        k_shots=[0, 1],
+                    )
+
+                out_files = list((batch_dir / "fewshot_exp").glob("*.jsonl"))
+                self.assertEqual(1, len(out_files))
+                self.assertIn("inputs_fewshot_kshots_gpt-5-nano", out_files[0].name)
+                with open(out_files[0]) as handle:
+                    payloads = [json.loads(line) for line in handle]
+
+                self.assertEqual(2, len(payloads))
+                payloads_by_k = {
+                    payload["body"]["metadata"]["k_shots"]: payload
+                    for payload in payloads
+                }
+                self.assertEqual({"0", "1"}, set(payloads_by_k))
+                self.assertIn("-k0-sample-0", payloads_by_k["0"]["custom_id"])
+                self.assertIn("-k1-sample-0", payloads_by_k["1"]["custom_id"])
+                prompt_0 = payloads_by_k["0"]["body"]["messages"][0]["content"]
+                prompt_1 = payloads_by_k["1"]["body"]["messages"][0]["content"]
+                self.assertNotIn("Here are example translations", prompt_0)
+                self.assertIn("Here are example translations", prompt_1)
+                self.assertIn("Source:", prompt_1)
+                self.assertIn("Target:", prompt_1)
+            finally:
+                main.DATA_DIR = original_data_dir
+                main.BATCH_DIR = original_batch_dir
+
     def test_new_orthographies_round_trip(self):
         cases = [
             ("latin_diacritic", lambda text: any(ord(char) > 127 for char in text)),

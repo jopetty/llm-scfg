@@ -41,6 +41,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 GPT_MESSAGE_TOKEN_LIMIT = 272_000
 DEFAULT_LARGE_GRAMMAR_SIZES = [25, 50, 100, 1_000, 5_000, 7_500, 10_000]
+FEWSHOT_K_VALUES = [0, 1, 2, 4, 8, 16]
 
 ORTHOGRAPHY_LABELS = {
     "latin": "Latin",
@@ -77,6 +78,11 @@ def _write_experiment_grammar_index(
 def _load_first_sample(exp_dir: Path, grammar_name: str) -> dict[str, Any]:
     with open(exp_dir / f"samples_{grammar_name}.jsonl", "r") as handle:
         return json.loads(handle.readline())
+
+
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    with open(path) as handle:
+        return [json.loads(line) for line in handle]
 
 
 def _orthography_label(orthography: str) -> str:
@@ -371,6 +377,16 @@ def prompt_grammar_str(
     raise ValueError(f"Unknown prompt type: {prompt_type}")
 
 
+def normalize_k_shots(k_shots: int | list[int] | tuple[int, ...]) -> list[int]:
+    if isinstance(k_shots, int):
+        values = [k_shots]
+    else:
+        values = list(k_shots)
+    if any(k < 0 for k in values):
+        raise ValueError(f"k_shots must be non-negative; got {values}")
+    return list(dict.fromkeys(values))
+
+
 def estimate_prompt_tokens(prompt: str, model: str) -> int:
     normalized = model.lower()
     if "gemma" in normalized:
@@ -498,6 +514,7 @@ def sample_metadata(
     sample_id: str,
     row: pd.Series,
     grammar: dict[str, object],
+    k_shots: int,
 ) -> dict[str, str]:
     return {
         "grammar_name": grammar_name,
@@ -508,7 +525,50 @@ def sample_metadata(
         "n_words": str(grammar.get("n_words", "")),
         "n_rules": str(grammar.get("n_rules", "")),
         "prompt_tokens": str(row.get("prompt_tokens", "")),
+        "k_shots": str(k_shots),
     }
+
+
+def shot_examples_from_samples(
+    shot_samples: list[dict[str, Any]],
+    *,
+    k_shots: int,
+    exclude_sample_id: int | None = None,
+) -> list[dict[str, str]]:
+    if k_shots == 0:
+        return []
+
+    examples: list[dict[str, str]] = []
+    for index, sample in enumerate(shot_samples):
+        if exclude_sample_id is not None and index == exclude_sample_id:
+            continue
+        examples.append(
+            {
+                "input": str(sample.get("left_phonetic") or sample.get("left") or ""),
+                "output": str(
+                    sample.get("right_phonetic") or sample.get("right") or ""
+                ),
+            }
+        )
+        if len(examples) >= k_shots:
+            break
+    if len(examples) < k_shots:
+        raise ValueError(
+            f"Requested {k_shots} few-shot examples but only found {len(examples)}"
+        )
+    return examples
+
+
+def load_shot_samples(
+    *,
+    grammar_dir: Path,
+    grammar_name: str,
+    fallback_samples: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], bool]:
+    shots_path = grammar_dir / f"shots_{grammar_name}.jsonl"
+    if shots_path.exists():
+        return _load_jsonl(shots_path), True
+    return fallback_samples, False
 
 
 def create_orthography_data(
@@ -625,6 +685,139 @@ def create_wordorder_large_data(
         max_depth=max_depth,
         n_grammars_per_size=n_grammars_per_size,
         n_sentences_per_depth=n_sentences_per_depth,
+    )
+
+
+def create_fewshot_data(
+    grammar_sizes: list[int] = [25, 50, 100, 1000],
+    max_depth: int = 5,
+    n_grammars_per_size: int = 2,
+    n_sentences_per_depth: int = 20,
+    n_shot_examples: int = max(FEWSHOT_K_VALUES),
+    target_head_spec_params: list[tuple[bool, bool]] = [
+        (True, True),
+        (False, True),
+        (False, False),
+    ],
+) -> None:
+    """
+    Generates Latin-script word-order grammars with held-out few-shot pools.
+    """
+    syllable_structure = "C*VC"
+    source_head_spec_params: tuple[bool, bool] = (True, True)
+    exp_name = "fewshot"
+    exp_dir = experiment_dir(exp_name)
+    exp_dir.mkdir(parents=True, exist_ok=True)
+
+    grammar_names: list[str] = []
+    example_grammars: dict[tuple[bool, bool], tuple[str, int]] = {}
+    n_shots_per_depth = max(1, (n_shot_examples + max_depth) // (max_depth + 1))
+
+    for hi_b, si_b in target_head_spec_params:
+        for g_size in grammar_sizes:
+            for index in range(n_grammars_per_size):
+                g_seed = deterministic_seed(exp_name, hi_b, si_b, g_size, index)
+                grammar_name = create_grammar(
+                    rng_seed=g_seed,
+                    syllable_structure_a=syllable_structure,
+                    syllable_structure_b=syllable_structure,
+                    head_initial_a=source_head_spec_params[0],
+                    head_initial_b=hi_b,
+                    spec_initial_a=source_head_spec_params[1],
+                    spec_initial_b=si_b,
+                    pro_drop_a=False,
+                    pro_drop_b=False,
+                    n_verbs=max(2, g_size // 5),
+                    n_nouns=max(2, g_size // 5),
+                    n_adjectives=max(2, g_size // 5),
+                    n_propns=max(2, g_size // 5),
+                    n_det_def=2,
+                    n_det_indef=2,
+                    n_prons=2,
+                    n_comps=2,
+                    exp_name=exp_name,
+                )
+                log.info(
+                    "Created few-shot grammar %s with hi_b=%s, si_b=%s, seed=%s",
+                    grammar_name,
+                    hi_b,
+                    si_b,
+                    g_seed,
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=g_seed,
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_sentences_per_depth,
+                    exp_name=exp_name,
+                )
+                generate_samples(
+                    grammar_name=grammar_name,
+                    rng_seed=deterministic_seed("fewshot_shots", grammar_name),
+                    min_depth=0,
+                    max_depth=max_depth,
+                    n_samples_per_depth=n_shots_per_depth,
+                    exp_name=exp_name,
+                    output_prefix="shots",
+                )
+                grammar_names.append(grammar_name)
+                example_grammars.setdefault((hi_b, si_b), (grammar_name, g_size))
+
+    _write_experiment_grammar_index(exp_dir, exp_name, grammar_names)
+
+    condition_examples = []
+    for hi_b, si_b in target_head_spec_params:
+        grammar_name, g_size = example_grammars[(hi_b, si_b)]
+        sample = _load_first_sample(exp_dir, grammar_name)
+        condition_examples.append(
+            {
+                "title": _wordorder_label(hi_b, si_b),
+                "condition": (
+                    f"target head_initial={hi_b}, target spec_initial={si_b}, "
+                    f"lexical size target={g_size}"
+                ),
+                "grammar_name": grammar_name,
+                "left": sample["left_phonetic"],
+                "right": sample["right_phonetic"],
+            }
+        )
+
+    total_grammars = len(grammar_names)
+    total_eval_samples = total_grammars * (max_depth + 1) * n_sentences_per_depth
+    total_shot_samples = total_grammars * (max_depth + 1) * n_shots_per_depth
+    _write_experiment_readme(
+        exp_name=exp_name,
+        title="Few-Shot Word Order Experiment Data",
+        overview=(
+            "This dataset varies the number of in-context examples for Latin-script "
+            "source and target grammars while using the word-order conditions from "
+            "the main word-order experiment. Each grammar has a dedicated "
+            "`shots_*.jsonl` pool held out from the evaluated `samples_*.jsonl` rows."
+        ),
+        matrix_items=[
+            ("source word order", "`head_initial=True`, `spec_initial=True`"),
+            (
+                "target word orders",
+                ", ".join(
+                    f"`head_initial={hi_b}, spec_initial={si_b}`"
+                    for hi_b, si_b in target_head_spec_params
+                ),
+            ),
+            ("source orthography", "`latin`"),
+            ("target orthography", "`latin`"),
+            ("few-shot k values", str(FEWSHOT_K_VALUES)),
+            ("grammar sizes", str(grammar_sizes)),
+            ("grammars per size and word-order condition", str(n_grammars_per_size)),
+            ("depth range", f"`0..{max_depth}`"),
+            ("evaluation samples per depth", str(n_sentences_per_depth)),
+            ("shot-pool samples per depth", str(n_shots_per_depth)),
+            ("total grammars", str(total_grammars)),
+            ("total evaluation samples", str(total_eval_samples)),
+            ("total shot-pool samples", str(total_shot_samples)),
+        ],
+        condition_examples=condition_examples,
+        regeneration_command="uv run python main.py exp_fewshot",
     )
 
 
@@ -986,6 +1179,7 @@ def generate_samples(
     max_depth: int = 10,
     n_samples_per_depth: int = 2,
     exp_name: str | None = None,
+    output_prefix: str = "samples",
 ):
     filepath = f"grammar_{grammar_name}.json"
     grammar_dir: Path = DATA_DIR
@@ -1022,7 +1216,7 @@ def generate_samples(
         out_dir.mkdir(parents=True, exist_ok=True)
 
     # Save samples to a file
-    samples_filepath = out_dir / f"samples_{params.name}.jsonl"
+    samples_filepath = out_dir / f"{output_prefix}_{params.name}.jsonl"
     with open(samples_filepath, "w") as f:
         for s in samples:
             f.write(json.dumps(s, ensure_ascii=False) + "\n")
@@ -1034,106 +1228,26 @@ def generate_batchfile(
     model: str = "o4-mini",
     max_completion_tokens: int | None = None,
     n: int = 1,
+    k_shots: int | list[int] = 0,
 ):
-    samples = []
-    with open(DATA_DIR / f"samples_{grammar_name}.jsonl", "r") as f:
-        for line in f:
-            sample = json.loads(line)
-            samples.append(sample)
+    samples = _load_jsonl(DATA_DIR / f"samples_{grammar_name}.jsonl")
+    shot_samples, has_dedicated_shots = load_shot_samples(
+        grammar_dir=DATA_DIR,
+        grammar_name=grammar_name,
+        fallback_samples=samples,
+    )
 
     grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
     with open(grammar_path, "r") as f:
         grammar = json.load(f)
     agreement_metadata = grammar.get("agreement_metadata")
 
-    df = pd.DataFrame(samples)
     prompt_func = basic_prompt
-
-    df["prompt"] = df.apply(
-        lambda row: prompt_func(
-            grammar_str=prompt_grammar_str(grammar, row["left_phonetic"], prompt_type),
-            sample=row["left_phonetic"],
-            agreement_metadata=agreement_metadata,
-        ),
-        axis=1,
-    )
-    df = add_prompt_token_estimates(df, model)
-    df = drop_rows_over_model_context(df, model=model, grammar_name=grammar_name)
-    warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
-    df["json"] = df.apply(
-        lambda row: ChatCompletionResponse(
-            user_prompt=row["prompt"],
-            max_completion_tokens=max_completion_tokens,
-            n=n,
-            metadata=sample_metadata(
-                grammar_name=grammar_name,
-                sample_id=str(row.name),
-                row=row,
-                grammar=grammar,
-            ),
-        ).to_openai_batched_json(
-            model=model, custom_id=f"{grammar_name}-sample-{row.name}"
-        ),
-        axis=1,
-    )
-
-    model_pathsafe_name = model.replace("/", "_")
-    prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
-    batch_jsonl_filename = (
-        f"inputs_{grammar_name}{prompt_label}_{model_pathsafe_name}.jsonl"
-    )
-    batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
-    log.info(f"Writing batch job to {batch_jsonl_path}")
-
-    with open(batch_jsonl_path, "w") as f:
-        for j in df["json"]:
-            f.write(f"{j}\n")
-
-
-def generate_experiment_batchfile(
-    exp: str,
-    prompt_type: str = "basic",
-    model: str = "gpt-5-nano",
-    max_completion_tokens: int | None = None,
-    n: int = 1,
-    max_filesize_mb: int = 200,
-):
-    """
-    Generates a single batchfile for multiple grammars.
-    """
-
-    # experiment_name = grammar_list.split(".")[0]
-
-    exp_dir = PROJECT_ROOT / DATA_DIR / (exp + "_exp")
-    exp_batch_dir = BATCH_DIR / (exp + "_exp")
-    grammar_list_fname = exp + "_grammars.txt"
-    grammar_list_filepath = exp_dir / grammar_list_fname
-
-    exp_batch_dir.mkdir(parents=True, exist_ok=True)
-
-    grammar_names: list[str] = []
-    with open(grammar_list_filepath, "r") as f:
-        for line in f:
-            grammar_name = line.strip()
-            if grammar_name:
-                grammar_names.append(grammar_name)
-
+    k_values = normalize_k_shots(k_shots)
     all_samples = []
-    for grammar_name in grammar_names:
-        samples = []
-        with open(exp_dir / f"samples_{grammar_name}.jsonl", "r") as f:
-            for line in f:
-                sample = json.loads(line)
-                samples.append(sample)
 
-        grammar_path = exp_dir / f"grammar_{grammar_name}.json"
-        with open(grammar_path, "r") as f:
-            grammar = json.load(f)
-        agreement_metadata = grammar.get("agreement_metadata")
-
+    for k in k_values:
         df = pd.DataFrame(samples)
-        prompt_func = basic_prompt
-
         df["prompt"] = df.apply(
             lambda row: prompt_func(
                 grammar_str=prompt_grammar_str(
@@ -1141,6 +1255,11 @@ def generate_experiment_batchfile(
                 ),
                 sample=row["left_phonetic"],
                 agreement_metadata=agreement_metadata,
+                few_shot_examples=shot_examples_from_samples(
+                    shot_samples,
+                    k_shots=k,
+                    exclude_sample_id=None if has_dedicated_shots else int(row.name),
+                ),
             ),
             axis=1,
         )
@@ -1157,15 +1276,134 @@ def generate_experiment_batchfile(
                     sample_id=str(row.name),
                     row=row,
                     grammar=grammar,
+                    k_shots=k,
                 ),
             ).to_openai_batched_json(
-                model=model, custom_id=f"{grammar_name}-sample-{row.name}"
+                model=model,
+                custom_id=(
+                    f"{grammar_name}-sample-{row.name}"
+                    if k == 0 and len(k_values) == 1
+                    else f"{grammar_name}-k{k}-sample-{row.name}"
+                ),
             ),
             axis=1,
         )
-
         all_samples.append(df)
 
+    all_df = pd.concat(all_samples, ignore_index=True)
+
+    model_pathsafe_name = model.replace("/", "_")
+    prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+    shot_label = (
+        ""
+        if k_values == [0]
+        else f"_k{k_values[0]}"
+        if len(k_values) == 1
+        else "_kshots"
+    )
+    batch_jsonl_filename = (
+        f"inputs_{grammar_name}{prompt_label}{shot_label}_{model_pathsafe_name}.jsonl"
+    )
+    batch_jsonl_path = BATCH_DIR / batch_jsonl_filename
+    log.info(f"Writing batch job to {batch_jsonl_path}")
+
+    with open(batch_jsonl_path, "w") as f:
+        for j in all_df["json"]:
+            f.write(f"{j}\n")
+
+
+def generate_experiment_batchfile(
+    exp: str,
+    prompt_type: str = "basic",
+    model: str = "gpt-5-nano",
+    max_completion_tokens: int | None = None,
+    n: int = 1,
+    max_filesize_mb: int = 200,
+    k_shots: int | list[int] = 0,
+):
+    """
+    Generates a single batchfile for multiple grammars.
+    """
+    exp_dir = DATA_DIR / (exp + "_exp")
+    exp_batch_dir = BATCH_DIR / (exp + "_exp")
+    grammar_list_fname = exp + "_grammars.txt"
+    grammar_list_filepath = exp_dir / grammar_list_fname
+
+    exp_batch_dir.mkdir(parents=True, exist_ok=True)
+
+    grammar_names: list[str] = []
+    with open(grammar_list_filepath, "r") as handle:
+        for line in handle:
+            if grammar_name := line.strip():
+                grammar_names.append(grammar_name)
+
+    k_values = normalize_k_shots(k_shots)
+    all_samples = []
+    for grammar_name in grammar_names:
+        samples = _load_jsonl(exp_dir / f"samples_{grammar_name}.jsonl")
+        shot_samples, has_dedicated_shots = load_shot_samples(
+            grammar_dir=exp_dir,
+            grammar_name=grammar_name,
+            fallback_samples=samples,
+        )
+
+        grammar_path = exp_dir / f"grammar_{grammar_name}.json"
+        with open(grammar_path, "r") as handle:
+            grammar = json.load(handle)
+        agreement_metadata = grammar.get("agreement_metadata")
+
+        for k in k_values:
+            df = pd.DataFrame(samples)
+            prompt_func = basic_prompt
+            df["prompt"] = df.apply(
+                lambda row: prompt_func(
+                    grammar_str=prompt_grammar_str(
+                        grammar, row["left_phonetic"], prompt_type
+                    ),
+                    sample=row["left_phonetic"],
+                    agreement_metadata=agreement_metadata,
+                    few_shot_examples=shot_examples_from_samples(
+                        shot_samples,
+                        k_shots=k,
+                        exclude_sample_id=None
+                        if has_dedicated_shots
+                        else int(row.name),
+                    ),
+                ),
+                axis=1,
+            )
+            df = add_prompt_token_estimates(df, model)
+            df = drop_rows_over_model_context(
+                df, model=model, grammar_name=grammar_name
+            )
+            warn_for_large_prompts(df, model=model, grammar_name=grammar_name)
+            df["json"] = df.apply(
+                lambda row: ChatCompletionResponse(
+                    user_prompt=row["prompt"],
+                    max_completion_tokens=max_completion_tokens,
+                    n=n,
+                    metadata=sample_metadata(
+                        grammar_name=grammar_name,
+                        sample_id=str(row.name),
+                        row=row,
+                        grammar=grammar,
+                        k_shots=k,
+                    ),
+                ).to_openai_batched_json(
+                    model=model,
+                    custom_id=(
+                        f"{grammar_name}-sample-{row.name}"
+                        if k == 0 and len(k_values) == 1
+                        else f"{grammar_name}-k{k}-sample-{row.name}"
+                    ),
+                ),
+                axis=1,
+            )
+
+            all_samples.append(df)
+
+    if not all_samples:
+        raise ValueError(f"No samples found for experiment {exp}")
     all_df = pd.concat(all_samples, ignore_index=True)
 
     # if the all_df["json"] column entries as strings exceed max_filesize_mb,
@@ -1174,23 +1412,27 @@ def generate_experiment_batchfile(
         all_df["json"].apply(lambda x: len((x + "-aaaaaa\n").encode("utf-8"))).sum()
     )
 
-    total_size_mb = total_size_bytes / (1024 * 1024) * 1.05  # add 10% buffer
-
-    # num_files = minimum number of files needed
+    total_size_mb = total_size_bytes / (1024 * 1024) * 1.05
     num_files = max(1, int(total_size_mb // max_filesize_mb) + 1)
-
-    # partition all_df into num_files parts
     partitioned_dfs = list(np.array_split(all_df, num_files))
+
+    model_pathsafe_name: str = model.replace("/", "_")
+    prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
+    shot_label = (
+        ""
+        if k_values == [0]
+        else f"_k{k_values[0]}"
+        if len(k_values) == 1
+        else "_kshots"
+    )
 
     for i, raw_part_df in enumerate(partitioned_dfs):
         part_df = cast(pd.DataFrame, raw_part_df)
         fname_hash: str = secrets.token_hex(3)
 
-        # Add fname_hash to each custom_id so we can retrieve the
-        # input file without metadata
-        part_df["json"] = part_df["json"].apply(
-            lambda x: json.loads(x)
-        )  # parse json string
+        # Add fname_hash to each custom_id so we can retrieve the input file
+        # without metadata.
+        part_df["json"] = part_df["json"].apply(json.loads)
         part_df["json"] = part_df["json"].apply(
             lambda x: {
                 **x,
@@ -1201,10 +1443,8 @@ def generate_experiment_batchfile(
             lambda x: json.dumps(x, ensure_ascii=False)
         )
 
-        model_pathsafe_name: str = model.replace("/", "_")
-        prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
         base_fname: str = (
-            f"inputs_{exp}{prompt_label}_{model_pathsafe_name}"
+            f"inputs_{exp}{prompt_label}{shot_label}_{model_pathsafe_name}"
             f"_part{i + 1}_of_{num_files}"
         )
         fname: str = f"{base_fname}_{fname_hash}.jsonl"
@@ -1251,6 +1491,7 @@ if __name__ == "__main__":
             "exp_orthography": create_orthography_data,
             "exp_orthography_large": create_orthography_large_data,
             "exp_agreement": create_agreement_data,
+            "exp_fewshot": create_fewshot_data,
             "exp_size": create_size_data,
             # TODO: add hash id to input files, attach it to requiest custom id
             # to make grammar identificaiton easier for gemini
