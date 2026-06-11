@@ -55,6 +55,7 @@ class LexicalFrequencySummaryTest(unittest.TestCase):
                 experiments=["mini"],
                 model="cl100k_base",
                 max_samples_per_grammar=None,
+                data_source="local",
             )
 
             source = next(row for row in summary if row["side"] == "source")

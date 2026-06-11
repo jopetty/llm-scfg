@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,6 +13,16 @@ import pyrootutils
 import tiktoken
 
 PROJECT_ROOT = pyrootutils.find_root(indicator=".project-root")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scfg.hf_data import (  # noqa: E402
+    discover_hf_experiments,
+    experiment_label,
+    load_hf_experiment_data,
+    resolve_hf_dataset_repo,
+)
+
 DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "notebooks" / "cache" / "lexical_frequency"
 
@@ -63,6 +74,50 @@ def experiment_dirs(data_dir: Path, experiments: list[str] | None) -> list[Path]
             for experiment in experiments
         ]
     return sorted(path for path in data_dir.glob("*_exp") if path.is_dir())
+
+
+def iter_local_experiment_data(
+    data_dir: Path, experiments: list[str] | None
+) -> list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]]:
+    records: list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]] = []
+    for exp_dir in experiment_dirs(data_dir, experiments):
+        if not exp_dir.exists():
+            continue
+        experiment = exp_dir.name.removesuffix("_exp")
+        for grammar_path in sorted(exp_dir.glob("grammar_*.json")):
+            with open(grammar_path) as handle:
+                grammar = json.load(handle)
+            grammar_name = str(
+                grammar.get("name") or grammar_path.stem.removeprefix("grammar_")
+            )
+            samples_path = exp_dir / f"samples_{grammar_name}.jsonl"
+            if not samples_path.exists():
+                continue
+            with open(samples_path) as handle:
+                samples = [json.loads(line) for line in handle]
+            records.append((experiment, grammar_name, grammar, samples))
+    return records
+
+
+def iter_hf_experiment_data(
+    hf_repo_id: str | None, experiments: list[str] | None
+) -> list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]]:
+    records: list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]] = []
+    selected_experiments = experiments or discover_hf_experiments(hf_repo_id)
+    for experiment in selected_experiments:
+        exp_data = load_hf_experiment_data(exp=experiment, hf_repo_id=hf_repo_id)
+        for grammar_name, item in exp_data.items():
+            records.append(
+                (
+                    experiment_label(
+                        str(item["grammar"].get("experiment", experiment))
+                    ),
+                    grammar_name,
+                    item["grammar"],
+                    item["samples"],
+                )
+            )
+    return records
 
 
 def side_metadata(grammar: dict[str, Any], side: str) -> dict[str, str]:
@@ -135,32 +190,46 @@ def summarize(
     experiments: list[str] | None,
     model: str,
     max_samples_per_grammar: int | None,
+    data_source: str = "hf",
+    hf_repo_id: str | None = None,
 ) -> list[dict[str, Any]]:
     encoder = load_encoder(model)
     groups: dict[tuple[str, str, str, str, str], GroupCounts] = {}
-    for exp_dir in experiment_dirs(data_dir, experiments):
-        if not exp_dir.exists():
-            continue
-        experiment = exp_dir.name.removesuffix("_exp")
-        for grammar_path in sorted(exp_dir.glob("grammar_*.json")):
-            with open(grammar_path) as handle:
-                grammar = json.load(handle)
-            grammar_name = str(
-                grammar.get("name") or grammar_path.stem.removeprefix("grammar_")
-            )
-            samples_path = exp_dir / f"samples_{grammar_name}.jsonl"
-            if not samples_path.exists():
-                continue
-            side_bases = {
-                side: {
-                    "experiment": experiment,
-                    "side": side,
-                    "grammar_n_words": str(grammar.get("n_words", "")),
-                    "grammar_n_rules": str(grammar.get("n_rules", "")),
-                    **side_metadata(grammar, side),
-                }
-                for side in ["source", "target"]
+    normalized_source = data_source.lower()
+    if normalized_source == "local":
+        records = iter_local_experiment_data(data_dir, experiments)
+    elif normalized_source == "hf":
+        records = iter_hf_experiment_data(hf_repo_id, experiments)
+    else:
+        raise ValueError("data_source must be one of: local, hf")
+
+    for experiment, grammar_name, grammar, samples in records:
+        side_bases = {
+            side: {
+                "experiment": experiment,
+                "side": side,
+                "grammar_n_words": str(grammar.get("n_words", "")),
+                "grammar_n_rules": str(grammar.get("n_rules", "")),
+                **side_metadata(grammar, side),
             }
+            for side in ["source", "target"]
+        }
+        for side, base in side_bases.items():
+            key = (
+                base["experiment"],
+                base["side"],
+                base["orthography"],
+                base["word_order"],
+                base["lexical_frequency_profile"],
+            )
+            groups.setdefault(key, GroupCounts(base=base))
+
+        for sample_index, sample in enumerate(samples):
+            if (
+                max_samples_per_grammar is not None
+                and sample_index >= max_samples_per_grammar
+            ):
+                break
             for side, base in side_bases.items():
                 key = (
                     base["experiment"],
@@ -169,25 +238,7 @@ def summarize(
                     base["word_order"],
                     base["lexical_frequency_profile"],
                 )
-                groups.setdefault(key, GroupCounts(base=base))
-
-            with open(samples_path) as handle:
-                for sample_index, line in enumerate(handle):
-                    if (
-                        max_samples_per_grammar is not None
-                        and sample_index >= max_samples_per_grammar
-                    ):
-                        break
-                    sample = json.loads(line)
-                    for side, base in side_bases.items():
-                        key = (
-                            base["experiment"],
-                            base["side"],
-                            base["orthography"],
-                            base["word_order"],
-                            base["lexical_frequency_profile"],
-                        )
-                        groups[key].add_sample(grammar_name, sample, side)
+                groups[key].add_sample(grammar_name, sample, side)
 
     return [
         summarize_group(group, encoder)
@@ -233,6 +284,15 @@ def parse_args() -> argparse.Namespace:
         description="Summarize realized word frequency and word length correlations."
     )
     parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
+    parser.add_argument("--data-source", choices=["hf", "local"], default="hf")
+    parser.add_argument(
+        "--hf-repo-id",
+        default=None,
+        help=(
+            "Hugging Face dataset repo id. Defaults to LLM_SCFG_HF_REPO_ID "
+            "or jowenpetty/scfg."
+        ),
+    )
     parser.add_argument("--output", type=Path, default=OUTPUT_DIR / "summary.json")
     parser.add_argument("--experiments", nargs="*")
     parser.add_argument("--model", default="gpt-5")
@@ -247,6 +307,8 @@ def main() -> None:
         experiments=args.experiments,
         model=args.model,
         max_samples_per_grammar=args.max_samples_per_grammar,
+        data_source=args.data_source,
+        hf_repo_id=args.hf_repo_id,
     )
     print_table(rows)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -255,7 +317,9 @@ def main() -> None:
             {
                 "metadata": {
                     "model": args.model,
+                    "data_source": args.data_source,
                     "data_dir": str(args.data_dir),
+                    "hf_repo_id": resolve_hf_dataset_repo(args.hf_repo_id),
                     "experiments": args.experiments,
                     "max_samples_per_grammar": args.max_samples_per_grammar,
                 },

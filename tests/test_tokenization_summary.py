@@ -73,6 +73,7 @@ class TokenizationSummaryTest(unittest.TestCase):
                 experiments=["mini"],
                 model_names=["cl100k_base"],
                 max_samples_per_grammar=None,
+                data_source="local",
             )
 
             self.assertTrue(output_path.exists())

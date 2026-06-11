@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import statistics
+import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,6 +14,16 @@ import pyrootutils
 import tiktoken
 
 PROJECT_ROOT = pyrootutils.find_root(indicator=".project-root")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scfg.hf_data import (  # noqa: E402
+    discover_hf_experiments,
+    experiment_label,
+    load_hf_experiment_data,
+    resolve_hf_dataset_repo,
+)
+
 DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "notebooks" / "cache" / "tokenization"
 
@@ -287,6 +298,46 @@ def iter_grammars(exp_dir: Path) -> list[Path]:
     return [path for path in paths if path.exists()]
 
 
+def iter_local_experiment_data(
+    data_dir: Path, experiments: list[str] | None
+) -> list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]]:
+    records: list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]] = []
+    for exp_dir in discover_experiment_dirs(data_dir, experiments):
+        experiment = exp_dir.name.removesuffix("_exp")
+        for grammar_path in iter_grammars(exp_dir):
+            with open(grammar_path) as handle:
+                grammar = json.load(handle)
+            grammar_name = str(grammar.get("name") or grammar_path.stem[8:])
+            samples_path = exp_dir / f"samples_{grammar_name}.jsonl"
+            samples: list[dict[str, Any]] = []
+            if samples_path.exists():
+                with open(samples_path) as handle:
+                    samples = [json.loads(line) for line in handle]
+            records.append((experiment, grammar_name, grammar, samples))
+    return records
+
+
+def iter_hf_experiment_data(
+    hf_repo_id: str | None, experiments: list[str] | None
+) -> list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]]:
+    records: list[tuple[str, str, dict[str, Any], list[dict[str, Any]]]] = []
+    selected_experiments = experiments or discover_hf_experiments(hf_repo_id)
+    for experiment in selected_experiments:
+        exp_data = load_hf_experiment_data(exp=experiment, hf_repo_id=hf_repo_id)
+        for grammar_name, item in exp_data.items():
+            records.append(
+                (
+                    experiment_label(
+                        str(item["grammar"].get("experiment", experiment))
+                    ),
+                    grammar_name,
+                    item["grammar"],
+                    item["samples"],
+                )
+            )
+    return records
+
+
 def add_to_accumulators(
     accumulators: dict[tuple[tuple[str, str], ...], SummaryAccumulator],
     *,
@@ -312,86 +363,84 @@ def summarize(
     experiments: list[str] | None,
     model_names: list[str],
     max_samples_per_grammar: int | None,
+    data_source: str = "hf",
+    hf_repo_id: str | None = None,
 ) -> dict[str, Any]:
     tokenizers = load_tokenizers(model_names)
     accumulators: dict[tuple[tuple[str, str], ...], SummaryAccumulator] = defaultdict(
         SummaryAccumulator
     )
 
-    for exp_dir in discover_experiment_dirs(data_dir, experiments):
-        experiment = exp_dir.name.removesuffix("_exp")
-        for grammar_path in iter_grammars(exp_dir):
-            with open(grammar_path) as handle:
-                grammar = json.load(handle)
-            grammar_name = str(grammar.get("name") or grammar_path.stem[8:])
-            conditions = grammar_conditions(experiment, grammar)
+    normalized_source = data_source.lower()
+    if normalized_source == "local":
+        records = iter_local_experiment_data(data_dir, experiments)
+    elif normalized_source == "hf":
+        records = iter_hf_experiment_data(hf_repo_id, experiments)
+    else:
+        raise ValueError("data_source must be one of: local, hf")
 
-            for tokenizer in tokenizers:
+    for experiment, grammar_name, grammar, samples in records:
+        conditions = grammar_conditions(experiment, grammar)
+
+        for tokenizer in tokenizers:
+            add_to_accumulators(
+                accumulators,
+                base={
+                    **conditions,
+                    "corpus": "grammar_text",
+                    "language_side": "both",
+                    "language_role": "prompt",
+                    "language_orthography": "mixed",
+                },
+                text=str(grammar.get("grammar_str", "")),
+                tokenizer=tokenizer,
+                grammar_name=grammar_name,
+            )
+
+            for side, role in [("a", "source"), ("b", "target")]:
+                side_data = grammar.get(side, {})
                 add_to_accumulators(
                     accumulators,
                     base={
                         **conditions,
-                        "corpus": "grammar_text",
-                        "language_side": "both",
-                        "language_role": "prompt",
-                        "language_orthography": "mixed",
+                        "corpus": "vocabulary_words",
+                        "language_side": side,
+                        "language_role": role,
+                        "language_orthography": str(side_data.get("orthography", "")),
                     },
-                    text=str(grammar.get("grammar_str", "")),
+                    text=" ".join(side_vocab_tokens(side_data)),
                     tokenizer=tokenizer,
                     grammar_name=grammar_name,
                 )
 
-                for side, role in [("a", "source"), ("b", "target")]:
+        for sample_idx, sample in enumerate(samples):
+            if (
+                max_samples_per_grammar is not None
+                and sample_idx >= max_samples_per_grammar
+            ):
+                break
+            for tokenizer in tokenizers:
+                for side, role, field_name in [
+                    ("a", "source", "left_phonetic"),
+                    ("b", "target", "right_phonetic"),
+                ]:
                     side_data = grammar.get(side, {})
                     add_to_accumulators(
                         accumulators,
                         base={
                             **conditions,
-                            "corpus": "vocabulary_words",
+                            "corpus": "sample_sentences",
                             "language_side": side,
                             "language_role": role,
                             "language_orthography": str(
                                 side_data.get("orthography", "")
                             ),
                         },
-                        text=" ".join(side_vocab_tokens(side_data)),
+                        text=str(sample.get(field_name) or ""),
                         tokenizer=tokenizer,
                         grammar_name=grammar_name,
+                        sample_item=True,
                     )
-
-            samples_path = exp_dir / f"samples_{grammar_name}.jsonl"
-            if not samples_path.exists():
-                continue
-            with open(samples_path) as handle:
-                for sample_idx, line in enumerate(handle):
-                    if (
-                        max_samples_per_grammar is not None
-                        and sample_idx >= max_samples_per_grammar
-                    ):
-                        break
-                    sample = json.loads(line)
-                    for tokenizer in tokenizers:
-                        for side, role, field_name in [
-                            ("a", "source", "left_phonetic"),
-                            ("b", "target", "right_phonetic"),
-                        ]:
-                            side_data = grammar.get(side, {})
-                            add_to_accumulators(
-                                accumulators,
-                                base={
-                                    **conditions,
-                                    "corpus": "sample_sentences",
-                                    "language_side": side,
-                                    "language_role": role,
-                                    "language_orthography": str(
-                                        side_data.get("orthography", "")
-                                    ),
-                                },
-                                text=str(sample.get(field_name) or ""),
-                                tokenizer=tokenizer,
-                                grammar_name=grammar_name,
-                                sample_item=True,
-                            )
 
     rows = [
         accumulator.to_row(dict(key))
@@ -399,7 +448,9 @@ def summarize(
     ]
     payload = {
         "metadata": {
+            "data_source": normalized_source,
             "data_dir": str(data_dir),
+            "hf_repo_id": resolve_hf_dataset_repo(hf_repo_id),
             "models": model_names,
             "max_samples_per_grammar": max_samples_per_grammar,
             "n_rows": len(rows),
@@ -469,6 +520,20 @@ def parse_args() -> argparse.Namespace:
         )
     )
     parser.add_argument(
+        "--data-source",
+        choices=["hf", "local"],
+        default="hf",
+        help="Read generated data from Hugging Face parquet artifacts or local data/.",
+    )
+    parser.add_argument(
+        "--hf-repo-id",
+        default=None,
+        help=(
+            "Hugging Face dataset repo id. Defaults to LLM_SCFG_HF_REPO_ID "
+            "or jowenpetty/scfg."
+        ),
+    )
+    parser.add_argument(
         "--data-dir",
         type=Path,
         default=DATA_DIR,
@@ -519,6 +584,8 @@ def main() -> None:
         experiments=args.experiments,
         model_names=args.models,
         max_samples_per_grammar=args.max_samples_per_grammar,
+        data_source=args.data_source,
+        hf_repo_id=args.hf_repo_id,
     )
     print_table(payload["rows"], limit=args.table_limit)
     print(f"\nWrote JSON summary to {args.output}")
