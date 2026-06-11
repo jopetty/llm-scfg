@@ -83,6 +83,17 @@ uv run python scripts/check_hf_auth.py google/gemma-3-12b-it
 That script loads `.env` from the repo root and checks authenticated access to
 the target repo through the Hugging Face API.
 
+Generated experiment data is stored in the Hugging Face dataset repo
+`jowenpetty/scfg` by default. Override this with `LLM_SCFG_HF_REPO_ID` when
+using a fork or private copy:
+
+```bash
+LLM_SCFG_HF_REPO_ID=<owner>/<dataset> uv run python main.py gen_exp_batchfile \
+  --exp=wordorder \
+  --model=gpt-5-nano \
+  --data_source=hf
+```
+
 Run the test suite:
 
 ```bash
@@ -183,7 +194,7 @@ By default this serves [batches/agreement_exp_compact](/Users/jacksonpetty/Devel
 To point the same viewer at a different batch directory:
 
 ```bash
-uv run python prompt_viewer.py serve --batch_dir=batches/wordorder_large_exp --port=8124
+uv run python prompt_viewer.py serve --batch_dir=batches/wordorder_exp --port=8124
 ```
 
 ## Main CLI commands
@@ -201,9 +212,7 @@ Core commands:
 Experiment commands:
 
 - `exp_wordorder`
-- `exp_wordorder_large`
 - `exp_orthography`
-- `exp_orthography_large`
 - `exp_agreement`
 - `exp_size`
 - `exp_complexity`
@@ -231,13 +240,16 @@ That means the current analysis in [notebooks/error_analysis.py](/Users/jacksonp
 Generate a standard experiment batch file first:
 
 ```bash
-uv run python main.py gen_exp_batchfile --exp=wordorder_large --model=google/gemma-3-12b-it
+uv run python main.py gen_exp_batchfile \
+  --exp=wordorder \
+  --model=google/gemma-3-12b-it \
+  --data_source=hf
 ```
 
 Replay the resulting files against Gemma 3 via vLLM:
 
 ```bash
-MODEL_NAME=google/gemma-3-12b-it bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
+MODEL_NAME=google/gemma-3-12b-it bash scripts/run_vllm_eval.sh batches/wordorder_exp
 ```
 
 The script starts `vllm serve`, waits for the server to answer on `/v1/models`, and then runs the batch files whose filename model suffix matches `MODEL_NAME` through [open_weights.py](/Users/jacksonpetty/Development/llm-scfg/open_weights.py). By default, a directory run against `google/gemma-3-12b-it` looks for files matching `inputs_*_google_gemma-3-12b-it_*.jsonl`.
@@ -245,7 +257,7 @@ The script starts `vllm serve`, waits for the server to answer on `/v1/models`, 
 If you need to override the filename matching for legacy batch files, set:
 
 ```bash
-INPUT_GLOB='inputs_*_gemma-3-12b-it_*.jsonl' bash scripts/run_vllm_eval.sh batches/wordorder_large_exp
+INPUT_GLOB='inputs_*_gemma-3-12b-it_*.jsonl' bash scripts/run_vllm_eval.sh batches/wordorder_exp
 ```
 
 ### Scratch venv bootstrap on NYU HPC
@@ -318,13 +330,13 @@ The Slurm wrapper in [scripts/slurm_vllm_eval.sbatch](/Users/jacksonpetty/Develo
 - Submit a job after bootstrap with:
 
 ```bash
-scripts/submit_vllm_eval.sh batches/wordorder_large_exp --export=MODEL_NAME=google/gemma-3-12b-it
+scripts/submit_vllm_eval.sh batches/wordorder_exp --export=MODEL_NAME=google/gemma-3-12b-it
 ```
 
 If you want to bypass the wrapper, the direct form is:
 
 ```bash
-sbatch --export=ALL,INPUT_PATH=batches/wordorder_large_exp,MODEL_NAME=google/gemma-3-12b-it scripts/slurm_vllm_eval.sbatch
+sbatch --export=ALL,INPUT_PATH=batches/wordorder_exp,MODEL_NAME=google/gemma-3-12b-it scripts/slurm_vllm_eval.sbatch
 ```
 
 ## Experimental setups
@@ -335,7 +347,6 @@ Run:
 
 ```bash
 uv run python main.py exp_wordorder
-uv run python main.py exp_wordorder_large
 ```
 
 This experiment varies:
@@ -343,7 +354,7 @@ This experiment varies:
 - head directionality
 - specifier order
 
-It keeps orthography and agreement mostly fixed. Outputs live in [data/wordorder_exp](/Users/jacksonpetty/Development/llm-scfg/data/wordorder_exp) and [data/wordorder_large_exp](/Users/jacksonpetty/Development/llm-scfg/data/wordorder_large_exp).
+It keeps orthography and agreement mostly fixed. Outputs live in [data/wordorder_exp](/Users/jacksonpetty/Development/llm-scfg/data/wordorder_exp).
 
 ### Orthography
 
@@ -351,10 +362,9 @@ Run:
 
 ```bash
 uv run python main.py exp_orthography
-uv run python main.py exp_orthography_large
 ```
 
-This experiment varies the target-side orthography and related surface-form properties while holding syntax mostly fixed. The large variant uses `hebrew` and `hebrew_unpointed` as separate target-script conditions. Outputs live in [data/orthography_exp](/Users/jacksonpetty/Development/llm-scfg/data/orthography_exp) and [data/orthography_large_exp](/Users/jacksonpetty/Development/llm-scfg/data/orthography_large_exp).
+This experiment varies the target-side orthography and related surface-form properties while holding syntax mostly fixed. It uses `hebrew` and `hebrew_unpointed` as separate target-script conditions. Outputs live in [data/orthography_exp](/Users/jacksonpetty/Development/llm-scfg/data/orthography_exp).
 
 ### Agreement
 

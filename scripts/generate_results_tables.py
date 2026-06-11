@@ -3,10 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 import unicodedata
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any, cast
 
 import pandas as pd
 import pyrootutils
@@ -14,10 +16,19 @@ import sacrebleu
 from tqdm.auto import tqdm
 
 PROJECT_ROOT = pyrootutils.find_root(indicator=".project-root")
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scfg.hf_data import (  # noqa: E402
+    experiment_label,
+    load_hf_experiment_data,
+)
+
 DATA_DIR = PROJECT_ROOT / "data"
 BATCHES_DIR = PROJECT_ROOT / "batches"
 OUTPUT_DIR = PROJECT_ROOT / "paper" / "includes"
 CACHE_DIR = PROJECT_ROOT / "notebooks" / "cache" / "results-tables"
+DEFAULT_DATA_SOURCE = "hf"
 
 METRIC_ORDER = [
     ("exact_match", "Exact Match"),
@@ -204,6 +215,136 @@ def extract_possible_right_phonetic_array(line: str) -> str:
         line.index(marker, start) for marker in end_markers if marker in line[start:]
     )
     return line[start:end]
+
+
+def sample_id(sample: dict) -> str:
+    return str(sample.get("row_index") or 0)
+
+
+def load_reference_experiment(
+    exp: str,
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> dict[str, dict[str, Any]]:
+    normalized_source = data_source.lower()
+    if normalized_source == "hf":
+        return load_hf_experiment_data(exp=exp, hf_repo_id=hf_repo_id)
+    if normalized_source != "local":
+        raise ValueError("data_source must be one of: local, hf")
+
+    exp_dir = DATA_DIR / (exp if exp.endswith("_exp") else f"{exp}_exp")
+    exp_label = exp.removesuffix("_exp")
+    index_path = exp_dir / f"{exp_label}_grammars.txt"
+    if index_path.exists():
+        grammar_ids = [line.strip() for line in index_path.read_text().splitlines()]
+    else:
+        grammar_ids = [
+            path.stem.removeprefix("grammar_")
+            for path in sorted(exp_dir.glob("grammar_*.json"))
+        ]
+
+    records: dict[str, dict[str, object]] = {}
+    for grammar_id in grammar_ids:
+        if not grammar_id:
+            continue
+        grammar_path = exp_dir / f"grammar_{grammar_id}.json"
+        samples_path = exp_dir / f"samples_{grammar_id}.jsonl"
+        if not grammar_path.exists() or not samples_path.exists():
+            continue
+        grammar = json.loads(grammar_path.read_text())
+        with samples_path.open() as handle:
+            samples = [
+                {**json.loads(line), "row_index": index}
+                for index, line in enumerate(handle)
+            ]
+        records[grammar_id] = {"grammar": grammar, "samples": samples, "shots": []}
+    return records
+
+
+def reference_samples_df(
+    exp: str,
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
+    rows = []
+    for grammar_name, item in load_reference_experiment(
+        exp, data_source=data_source, hf_repo_id=hf_repo_id
+    ).items():
+        samples = cast(list[dict[str, Any]], item.get("samples") or [])
+        for sample in samples:
+            rows.append(
+                {
+                    "grammar_name": grammar_name,
+                    "sample_id": sample_id(sample),
+                    "input_sentence": sample.get("left_phonetic") or sample.get("left"),
+                    "output_sentence": sample.get("right_phonetic")
+                    or sample.get("right"),
+                    "right_phonetic": sample.get("right_phonetic"),
+                    "possible_right_phonetic_json": json.dumps(
+                        sample.get("possible_right_phonetic") or [],
+                        ensure_ascii=False,
+                    ),
+                    "input_length": len(
+                        str(
+                            sample.get("left_phonetic") or sample.get("left") or ""
+                        ).split()
+                    ),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def reference_grammars_df(
+    exp: str,
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
+    orthography_labels = {
+        "latin": "Latin → Latin",
+        "latin_diacritic": "Latin → Latin (diacritics)",
+        "cyrillic": "Latin → Cyrillic",
+        "hebrew": "Latin → Hebrew (pointed)",
+        "yiddish": "Latin → Hebrew (pointed)",
+        "hebrew_unpointed": "Latin → Hebrew",
+    }
+    rows = []
+    exp_data = load_reference_experiment(
+        exp, data_source=data_source, hf_repo_id=hf_repo_id
+    )
+    for grammar_name, item in exp_data.items():
+        grammar = cast(dict[str, Any], item["grammar"])
+        row = {
+            "grammar_name": grammar_name,
+            "size": int(grammar["n_rules"]) + int(grammar["n_words"]),
+            "grammar_size": int(grammar["n_rules"]) + int(grammar["n_words"]),
+        }
+        if experiment_label(exp) == "wordorder":
+            share_head = grammar["a"]["head_initial"] == grammar["b"]["head_initial"]
+            share_spec = grammar["a"]["spec_initial"] == grammar["b"]["spec_initial"]
+            if share_head and share_spec:
+                row["target_word_order"] = "SVO"
+            elif not share_head and share_spec:
+                row["target_word_order"] = "SOV"
+            elif not share_head and not share_spec:
+                row["target_word_order"] = "OVS"
+            else:
+                row["target_word_order"] = "VOS"
+        if experiment_label(exp) == "agreement":
+            meta = grammar.get("agreement_metadata", {})
+            a_enabled = bool(meta.get("a", {}).get("config", {}).get("enabled", False))
+            b_enabled = bool(meta.get("b", {}).get("config", {}).get("enabled", False))
+            row["grammar_size"] = 5 * len(grammar["a"]["verbs"])
+            row["agreement_condition"] = (
+                f"{'Agr' if a_enabled else 'NoAgr'} → "
+                f"{'Agr' if b_enabled else 'NoAgr'}"
+            )
+        if experiment_label(exp) == "orthography":
+            row["target_orthography"] = orthography_labels[grammar["b"]["orthography"]]
+        rows.append(row)
+    return pd.DataFrame(rows)
 
 
 def compute_metrics(
@@ -577,55 +718,18 @@ def load_size_results() -> tuple[pd.DataFrame, pd.DataFrame]:
     return size_summary, length_summary
 
 
-def load_wordorder_results() -> tuple[pd.DataFrame, pd.DataFrame]:
-    data_exp_dir = DATA_DIR / "wordorder_large_exp"
-    exp_dir = BATCHES_DIR / "wordorder_large_exp"
-    grammar_ids = [
-        line.strip()
-        for line in (data_exp_dir / "wordorder_large_grammars.txt")
-        .read_text()
-        .splitlines()
-        if line.strip()
-    ]
-
-    samples = []
-    for grammar_id in tqdm(grammar_ids, desc="wordorder samples"):
-        with (data_exp_dir / f"samples_{grammar_id}.jsonl").open() as handle:
-            for sample_id, line in enumerate(handle):
-                sample = json.loads(line)
-                samples.append(
-                    {
-                        "grammar_name": grammar_id,
-                        "sample_id": str(sample_id),
-                        "output_sentence": sample["right_phonetic"],
-                        "input_length": len(sample["left_phonetic"].split()),
-                    }
-                )
-    samples_df = pd.DataFrame(samples)
-
-    grammar_rows = []
-    for path in tqdm(
-        sorted(data_exp_dir.glob("grammar_*.json")), desc="wordorder grammars"
-    ):
-        grammar = json.loads(path.read_text())
-        share_head = grammar["a"]["head_initial"] == grammar["b"]["head_initial"]
-        share_spec = grammar["a"]["spec_initial"] == grammar["b"]["spec_initial"]
-        if share_head and share_spec:
-            target_word_order = "SVO"
-        elif not share_head and share_spec:
-            target_word_order = "SOV"
-        elif not share_head and not share_spec:
-            target_word_order = "OVS"
-        else:
-            target_word_order = "VOS"
-        grammar_rows.append(
-            {
-                "grammar_name": path.stem.split("grammar_")[1],
-                "size": int(grammar["n_rules"]) + int(grammar["n_words"]),
-                "target_word_order": target_word_order,
-            }
-        )
-    grammars_df = pd.DataFrame(grammar_rows)
+def load_wordorder_results(
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    exp_dir = BATCHES_DIR / "wordorder_exp"
+    samples_df = reference_samples_df(
+        "wordorder", data_source=data_source, hf_repo_id=hf_repo_id
+    )
+    grammars_df = reference_grammars_df(
+        "wordorder", data_source=data_source, hf_repo_id=hf_repo_id
+    )
 
     rows = []
     for path in tqdm(sorted(exp_dir.glob("*_output.jsonl")), desc="wordorder outputs"):
@@ -693,57 +797,37 @@ def load_wordorder_results() -> tuple[pd.DataFrame, pd.DataFrame]:
     return size_summary, length_summary
 
 
-def load_agreement_results() -> tuple[pd.DataFrame, pd.DataFrame]:
-    exp_data_dir = DATA_DIR / "agreement_exp"
+def load_agreement_results(
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     exp_batch_dir = BATCHES_DIR / "agreement_exp_compact"
 
-    grammar_ids = [
-        line.strip()
-        for line in (exp_data_dir / "agreement_grammars.txt").read_text().splitlines()
-        if line.strip()
-    ]
-
-    grammar_rows = []
-    for grammar_id in tqdm(grammar_ids, desc="agreement grammars"):
-        grammar = json.loads((exp_data_dir / f"grammar_{grammar_id}.json").read_text())
-        meta = grammar.get("agreement_metadata", {})
-        a_enabled = bool(meta.get("a", {}).get("config", {}).get("enabled", False))
-        b_enabled = bool(meta.get("b", {}).get("config", {}).get("enabled", False))
-        grammar_rows.append(
-            {
-                "grammar_name": grammar_id,
-                "grammar_size": 5 * len(grammar["a"]["verbs"]),
-                "agreement_condition": f"{'Agr' if a_enabled else 'NoAgr'} → {'Agr' if b_enabled else 'NoAgr'}",  # noqa E501
-            }
-        )
-    grammars_df = pd.DataFrame(grammar_rows)
-
-    sample_rows = []
-    possible_right_map: dict[tuple[str, str], str] = {}
-    right_phonetic_map: dict[tuple[str, str], str] = {}
-    for grammar_id in tqdm(grammar_ids, desc="agreement samples"):
-        with (exp_data_dir / f"samples_{grammar_id}.jsonl").open() as handle:
-            for sample_id, line in enumerate(handle):
-                parsed = json.loads(line)
-                possible_right_map[(grammar_id, str(sample_id))] = (
-                    extract_possible_right_phonetic_array(line)
-                )
-                right_phonetic_map[(grammar_id, str(sample_id))] = parsed[
-                    "right_phonetic"
-                ]
-                sample_rows.append(
-                    {
-                        "grammar_name": grammar_id,
-                        "sample_id": str(sample_id),
-                        "right_phonetic": parsed["right_phonetic"],
-                        "input_length": len(parsed["left_phonetic"].split()),
-                    }
-                )
-    samples_df = pd.DataFrame(sample_rows).merge(
+    grammars_df = reference_grammars_df(
+        "agreement", data_source=data_source, hf_repo_id=hf_repo_id
+    )
+    samples_df = reference_samples_df(
+        "agreement", data_source=data_source, hf_repo_id=hf_repo_id
+    ).merge(
         grammars_df,
         on="grammar_name",
         how="left",
         validate="many_to_one",
+    )
+    possible_right_map = dict(
+        zip(
+            zip(samples_df["grammar_name"], samples_df["sample_id"], strict=True),
+            samples_df["possible_right_phonetic_json"],
+            strict=True,
+        )
+    )
+    right_phonetic_map = dict(
+        zip(
+            zip(samples_df["grammar_name"], samples_df["sample_id"], strict=True),
+            samples_df["right_phonetic"],
+            strict=True,
+        )
     )
 
     chrf_metric = sacrebleu.metrics.CHRF(beta=2, word_order=2)
@@ -842,53 +926,19 @@ def load_agreement_results() -> tuple[pd.DataFrame, pd.DataFrame]:
     return size_summary, length_summary
 
 
-def load_orthography_results() -> tuple[pd.DataFrame, pd.DataFrame]:
-    exp_data_dir = DATA_DIR / "orthography_large_exp"
-    exp_batch_dir = BATCHES_DIR / "orthography_large_exp"
+def load_orthography_results(
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    exp_batch_dir = BATCHES_DIR / "orthography_exp"
 
-    grammar_ids = [
-        line.strip()
-        for line in (exp_data_dir / "orthography_large_grammars.txt")
-        .read_text()
-        .splitlines()
-        if line.strip()
-    ]
-
-    grammar_rows = []
-    orthography_labels = {
-        "latin": "Latin → Latin",
-        "latin_diacritic": "Latin → Latin (diacritics)",
-        "cyrillic": "Latin → Cyrillic",
-        "hebrew": "Latin → Hebrew (pointed)",
-        "hebrew_unpointed": "Latin → Hebrew",
-    }
-    for grammar_id in tqdm(grammar_ids, desc="orthography grammars"):
-        grammar = json.loads((exp_data_dir / f"grammar_{grammar_id}.json").read_text())
-        grammar_rows.append(
-            {
-                "grammar_name": grammar_id,
-                "grammar_size": int(grammar["n_rules"]) + int(grammar["n_words"]),
-                "target_orthography": orthography_labels[grammar["b"]["orthography"]],
-            }
-        )
-    grammars_df = pd.DataFrame(grammar_rows)
-
-    sample_rows = []
-    for grammar_id in tqdm(grammar_ids, desc="orthography samples"):
-        with (exp_data_dir / f"samples_{grammar_id}.jsonl").open() as handle:
-            for sample_id, line in enumerate(handle):
-                sample = json.loads(line)
-                sample_rows.append(
-                    {
-                        "grammar_name": grammar_id,
-                        "sample_id": str(sample_id),
-                        "input_sentence": sample.get("left_phonetic")
-                        or sample.get("left"),
-                        "output_sentence": sample.get("right_phonetic")
-                        or sample.get("right"),
-                    }
-                )
-    samples_df = pd.DataFrame(sample_rows).merge(
+    grammars_df = reference_grammars_df(
+        "orthography", data_source=data_source, hf_repo_id=hf_repo_id
+    )
+    samples_df = reference_samples_df(
+        "orthography", data_source=data_source, hf_repo_id=hf_repo_id
+    ).merge(
         grammars_df,
         on="grammar_name",
         how="left",
@@ -969,10 +1019,20 @@ def main() -> None:
         action="store_true",
         help="Recompute cached table values instead of loading them from notebooks/cache/results-tables.",  # noqa E501
     )
+    parser.add_argument("--data-source", choices=["hf", "local"], default="hf")
+    parser.add_argument(
+        "--hf-repo-id",
+        default=None,
+        help=(
+            "Hugging Face dataset repo id. Defaults to LLM_SCFG_HF_REPO_ID "
+            "or jowenpetty/scfg."
+        ),
+    )
     args = parser.parse_args()
+    cache_prefix = "hf" if args.data_source == "hf" else f"local_{DATA_DIR.name}"
 
     size_size_df, size_length_df = load_or_compute_cached_pair(
-        "size_values", load_size_results, force=args.force
+        f"{cache_prefix}_size_values", load_size_results, force=args.force
     )
     write_output(
         "results_tables_size.tex",
@@ -991,10 +1051,14 @@ def main() -> None:
     )
 
     wordorder_size_df, wordorder_length_df = load_or_compute_cached_pair(
-        "wordorder_large_values", load_wordorder_results, force=args.force
+        f"{cache_prefix}_wordorder_values",
+        lambda: load_wordorder_results(
+            data_source=args.data_source, hf_repo_id=args.hf_repo_id
+        ),
+        force=args.force,
     )
     write_output(
-        "results_tables_wordorder_large.tex",
+        "results_tables_wordorder.tex",
         build_condition_tables(
             df=wordorder_size_df,
             condition_col="target_word_order",
@@ -1022,7 +1086,11 @@ def main() -> None:
     )
 
     agreement_size_df, agreement_length_df = load_or_compute_cached_pair(
-        "agreement_values", load_agreement_results, force=args.force
+        f"{cache_prefix}_agreement_values",
+        lambda: load_agreement_results(
+            data_source=args.data_source, hf_repo_id=args.hf_repo_id
+        ),
+        force=args.force,
     )
     write_output(
         "results_tables_agreement.tex",
@@ -1053,10 +1121,14 @@ def main() -> None:
     )
 
     orthography_size_df, orthography_length_df = load_or_compute_cached_pair(
-        "orthography_large_values", load_orthography_results, force=args.force
+        f"{cache_prefix}_orthography_values",
+        lambda: load_orthography_results(
+            data_source=args.data_source, hf_repo_id=args.hf_repo_id
+        ),
+        force=args.force,
     )
     write_output(
-        "results_tables_orthography_large.tex",
+        "results_tables_orthography.tex",
         build_condition_tables(
             df=orthography_size_df,
             condition_col="target_orthography",

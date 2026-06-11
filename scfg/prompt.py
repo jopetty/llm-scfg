@@ -35,6 +35,7 @@ def basic_prompt(
     grammar_str: str,
     sample: str,
     agreement_metadata: dict | None = None,
+    few_shot_examples: list[dict[str, str]] | None = None,
 ):
     agreement_note = ""
     if agreement_metadata and agreement_metadata.get("enabled"):
@@ -48,16 +49,32 @@ def basic_prompt(
             "determine which surface form is required in the target language."
         )
 
+    examples_note = ""
+    if few_shot_examples:
+        example_lines = [
+            (
+                f"    {index}. Source: `{example['input']}`\n"
+                f"       Target: `{example['output']}`"
+            )
+            for index, example in enumerate(few_shot_examples, start=1)
+        ]
+        examples_note = (
+            "\n\n"
+            "    Here are example translations produced by this same grammar:\n"
+            + "\n".join(example_lines)
+            + "\n\n"
+        )
+
     prompt: str = (
         "You will be presented with a synchronous context-free grammar (SCFG) "
         "which defines a mapping between two context-free languages. You will "
         "also be presented with a sentence produced by one of the languages "
-        "defined by the grammar. You task is to use the rules of the grammar "
+        "defined by the grammar. Your task is to use the rules of the grammar "
         "to translate the sentence from the source language into the target "
         "language.\n\n"
         "    A grammar is defined by a set of production rules. Rules come in "
-        "two forms: non-lexical rules, of the form `A -> <B C, D E>` where "
-        "all of `A, B, C, D, E` are non-terminal symbols; and lexical rules, "
+        "two forms: non-lexical rules, of the form `A -> <B C, C B>` where "
+        "all of `A, B, C` are non-terminal symbols; and lexical rules, "
         "of the form `A -> <'a', 'b'>` where `A` is a non-terminal symbol and "
         "`'a'` and `'b'` are terminal symbols (words). The right-hand side of "
         "each production rule consists of a pair demarcated by angle "
@@ -65,7 +82,7 @@ def basic_prompt(
         "left-hand side in one language, and the second element shows the "
         "expansion in the other language. The order of the symbols may differ "
         "between the two languages. All grammars are guaranteed to start with "
-        "a distinguised start symbol `S`. All grammars are defined according "
+        "a distinguished start symbol `S`. All grammars are defined according "
         "to X-bar style rules, intended to model natural language syntax. "
         "This means that productions are built are phrases (XP) which produce "
         "specifiers (YP) and bar-level projections (XBar); these bar-level "
@@ -91,6 +108,7 @@ def basic_prompt(
         "    ```\n"
         f"    {grammar_str}\n"
         "    ```\n\n"
+        f"{examples_note}"
         f"    Here is the input sentence: `{sample}`.\n\n"
         "    Remember to end your response with the format `Final answer: "
         "<output sentence>`."

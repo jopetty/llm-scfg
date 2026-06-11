@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import unicodedata
 from collections import Counter
 from collections.abc import Callable, Iterable, Sequence
@@ -12,6 +13,16 @@ import fire
 import pandas as pd
 from tqdm.auto import tqdm
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from scfg.hf_data import (  # noqa: E402
+    experiment_label,
+    load_hf_experiment_data,
+    resolve_hf_dataset_repo,
+)
+
 zipf_frequency_fn: Callable[..., int | float] | None
 try:
     from wordfreq import zipf_frequency as imported_zipf_frequency
@@ -20,10 +31,10 @@ except ImportError:
 else:
     zipf_frequency_fn = imported_zipf_frequency
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
 OUTPUT_DIR = PROJECT_ROOT / "notebooks" / "cache" / "error-analysis"
+DEFAULT_DATA_SOURCE = "hf"
 
 ANSWER_RE = re.compile(
     r"final\s*answer\s*(?::|-|—)?\s*(?:is\s*)?([^\n]+)", re.IGNORECASE | re.DOTALL
@@ -62,15 +73,15 @@ STANDARD_EXPERIMENTS = (
     ),
     ExperimentSpec(
         exp="wordorder",
-        dataset="wordorder_large_exp",
-        batch_dir=BATCH_DIR / "wordorder_large_exp",
-        data_dir=DATA_DIR / "wordorder_large_exp",
+        dataset="wordorder_exp",
+        batch_dir=BATCH_DIR / "wordorder_exp",
+        data_dir=DATA_DIR / "wordorder_exp",
     ),
     ExperimentSpec(
         exp="orthography",
-        dataset="orthography_large_exp",
-        batch_dir=BATCH_DIR / "orthography_large_exp",
-        data_dir=DATA_DIR / "orthography_large_exp",
+        dataset="orthography_exp",
+        batch_dir=BATCH_DIR / "orthography_exp",
+        data_dir=DATA_DIR / "orthography_exp",
     ),
 )
 
@@ -388,7 +399,7 @@ def infer_target_orthography(sample_word: str, dataset: str) -> str:
     if CYRILLIC_RE.search(sample_word):
         return "cyrillic"
     if HEBREW_RE.search(sample_word):
-        if dataset == "orthography_large_exp":
+        if dataset == "orthography_exp":
             return (
                 "hebrew"
                 if HEBREW_DIACRITIC_RE.search(sample_word)
@@ -589,6 +600,51 @@ def load_sample_sentences(
     return pd.DataFrame(rows, columns=SAMPLE_INDEX)
 
 
+def sample_id(sample: dict) -> str:
+    return str(sample.get("row_index") or 0)
+
+
+def load_hf_sample_sentences(
+    exp: str,
+    sample_index_df: pd.DataFrame,
+    *,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
+    if sample_index_df.empty:
+        return pd.DataFrame(columns=SAMPLE_INDEX)
+
+    needed_df = sample_index_df.dropna(subset=["grammar_name", "sample_id"]).copy()
+    if needed_df.empty:
+        return pd.DataFrame(columns=SAMPLE_INDEX)
+
+    needed = set(
+        zip(
+            needed_df["grammar_name"].astype(str),
+            needed_df["sample_id"].astype(str),
+            strict=True,
+        )
+    )
+    rows: list[dict] = []
+    for grammar_name, item in load_hf_experiment_data(
+        exp=exp, hf_repo_id=hf_repo_id
+    ).items():
+        for sample in item.get("samples") or []:
+            row_id = sample_id(sample)
+            if (grammar_name, row_id) not in needed:
+                continue
+            rows.append(
+                {
+                    "grammar_name": grammar_name,
+                    "sample_id": row_id,
+                    "input_sentence": sample.get("left_phonetic") or sample.get("left"),
+                    "output_sentence": sample.get("right_phonetic")
+                    or sample.get("right"),
+                    "depth": pd.to_numeric(sample.get("depth"), errors="coerce"),
+                }
+            )
+    return pd.DataFrame(rows, columns=SAMPLE_INDEX)
+
+
 def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFrame:
     rows: list[dict] = []
     grammar_paths = sorted(data_dir.glob("grammar_*.json"))
@@ -652,7 +708,89 @@ def load_grammar_metadata(exp: str, data_dir: Path, dataset: str) -> pd.DataFram
     return pd.DataFrame(rows)
 
 
-def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
+def grammar_metadata_row(exp: str, dataset: str, grammar_name: str, grammar: dict):
+    row = {
+        "grammar_name": grammar_name,
+        "a_words": sum(
+            [
+                grammar["a"][key]
+                for key in [
+                    "verbs",
+                    "nouns",
+                    "propns",
+                    "prons",
+                    "adjs",
+                    "det_def",
+                    "det_indef",
+                    "comps",
+                ]
+            ],
+            [],
+        ),
+        "b_words": sum(
+            [
+                grammar["b"][key]
+                for key in [
+                    "verbs",
+                    "nouns",
+                    "propns",
+                    "prons",
+                    "adjs",
+                    "det_def",
+                    "det_indef",
+                    "comps",
+                ]
+            ],
+            [],
+        ),
+        "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
+        "n_words": pd.to_numeric(grammar.get("n_words"), errors="coerce"),
+        "n_rules": pd.to_numeric(grammar.get("n_rules"), errors="coerce"),
+    }
+    if exp == "wordorder":
+        share_head = grammar["a"]["head_initial"] == grammar["b"]["head_initial"]
+        share_spec = grammar["a"]["spec_initial"] == grammar["b"]["spec_initial"]
+        if share_head and share_spec:
+            row["target_word_order"] = "SVO"
+        elif share_head and not share_spec:
+            row["target_word_order"] = "VOS"
+        elif not share_head and share_spec:
+            row["target_word_order"] = "SOV"
+        else:
+            row["target_word_order"] = "OVS"
+    if exp == "orthography":
+        sample_word = next((word for word in row["b_words"] if word), "")
+        row["target_orthography"] = infer_target_orthography(sample_word, dataset)
+    return row
+
+
+def load_hf_grammar_metadata(
+    exp: str,
+    *,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
+    rows = []
+    dataset = f"{experiment_label(exp)}_exp"
+    for grammar_name, item in load_hf_experiment_data(
+        exp=exp, hf_repo_id=hf_repo_id
+    ).items():
+        rows.append(
+            grammar_metadata_row(
+                exp=experiment_label(exp),
+                dataset=dataset,
+                grammar_name=grammar_name,
+                grammar=item["grammar"],
+            )
+        )
+    return pd.DataFrame(rows)
+
+
+def load_standard_experiment(
+    spec: ExperimentSpec,
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
     outputs_df = load_outputs(spec.batch_dir, spec.exp)
     inputs_df = load_inputs(spec.batch_dir)
     merged_df = merge_outputs_inputs(outputs_df, inputs_df)
@@ -681,7 +819,14 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
         & merged_df["sample_id"].notna(),
         ["grammar_name", "sample_id"],
     ]
-    sample_df = load_sample_sentences(spec.data_dir, needs_sample_df)
+    if data_source == "hf":
+        sample_df = load_hf_sample_sentences(
+            spec.exp, needs_sample_df, hf_repo_id=hf_repo_id
+        )
+    elif data_source == "local":
+        sample_df = load_sample_sentences(spec.data_dir, needs_sample_df)
+    else:
+        raise ValueError("data_source must be one of: local, hf")
     if not sample_df.empty:
         merged_df = merged_df.merge(
             sample_df,
@@ -697,7 +842,10 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
                 )
                 merged_df = merged_df.drop(columns=[sample_column])
 
-    grammar_df = load_grammar_metadata(spec.exp, spec.data_dir, spec.dataset)
+    if data_source == "hf":
+        grammar_df = load_hf_grammar_metadata(spec.exp, hf_repo_id=hf_repo_id)
+    else:
+        grammar_df = load_grammar_metadata(spec.exp, spec.data_dir, spec.dataset)
     merged_df = merged_df.merge(
         grammar_df, on="grammar_name", how="left", suffixes=("", "_grammar")
     )
@@ -718,7 +866,11 @@ def load_standard_experiment(spec: ExperimentSpec) -> pd.DataFrame:
     return merged_df
 
 
-def load_agreement_experiment() -> pd.DataFrame:
+def load_agreement_experiment(
+    *,
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
     exp = "agreement"
     batch_dir = BATCH_DIR / "agreement_exp_compact"
     data_dir = DATA_DIR / "agreement_exp"
@@ -786,65 +938,116 @@ def load_agreement_experiment() -> pd.DataFrame:
     grammar_rows: list[dict] = []
     sample_rows: list[dict] = []
 
-    with open(data_dir / "agreement_grammars.txt") as handle:
-        grammar_ids = [line.strip() for line in handle if line.strip()]
-
-    for grammar_id in progress(
-        grammar_ids, desc=f"{data_dir.name}: agreement grammars", leave=False
-    ):
-        with open(data_dir / f"grammar_{grammar_id}.json") as handle:
-            grammar = json.load(handle)
-
-        agreement_metadata = grammar.get("agreement_metadata", {})
-        a_enabled = bool(
-            agreement_metadata.get("a", {}).get("config", {}).get("enabled", False)
+    if data_source == "hf":
+        exp_data = load_hf_experiment_data(exp=exp, hf_repo_id=hf_repo_id)
+        grammar_iter = progress(
+            exp_data.items(), desc="agreement_exp: agreement grammars", leave=False
         )
-        b_enabled = bool(
-            agreement_metadata.get("b", {}).get("config", {}).get("enabled", False)
-        )
-        grammar_rows.append(
-            {
-                "grammar_name": grammar_id,
-                "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
-                "n_words": grammar.get("n_words"),
-                "n_rules": grammar.get("n_rules"),
-                "agreement_enabled_a": a_enabled,
-                "agreement_enabled_b": b_enabled,
-                "agreement_condition": (
-                    f"{'Agr' if a_enabled else 'NoAgr'} -> "
-                    f"{'Agr' if b_enabled else 'NoAgr'}"
-                ),
+        for grammar_id, item in grammar_iter:
+            grammar = item["grammar"]
+            agreement_metadata = grammar.get("agreement_metadata", {})
+            a_enabled = bool(
+                agreement_metadata.get("a", {}).get("config", {}).get("enabled", False)
+            )
+            b_enabled = bool(
+                agreement_metadata.get("b", {}).get("config", {}).get("enabled", False)
+            )
+            grammar_rows.append(
+                {
+                    "grammar_name": grammar_id,
+                    "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
+                    "n_words": grammar.get("n_words"),
+                    "n_rules": grammar.get("n_rules"),
+                    "agreement_enabled_a": a_enabled,
+                    "agreement_enabled_b": b_enabled,
+                    "agreement_condition": (
+                        f"{'Agr' if a_enabled else 'NoAgr'} -> "
+                        f"{'Agr' if b_enabled else 'NoAgr'}"
+                    ),
+                }
+            )
+
+            wanted_id_set = {
+                str(sample_id) for sample_id in needed_sample_ids.get(grammar_id, [])
             }
-        )
-
-        wanted_ids = sorted(needed_sample_ids.get(grammar_id, []))
-        if not wanted_ids:
-            continue
-
-        max_sample_id = max(wanted_ids)
-        wanted_id_set = set(wanted_ids)
-        with open(data_dir / f"samples_{grammar_id}.jsonl", "rb") as handle:
-            for sample_idx in range(max_sample_id + 1):
-                prefix = read_jsonl_prefix_until(handle, b', "possible_right"')
-                if sample_idx > max_sample_id:
-                    break
-                if sample_idx not in wanted_id_set:
+            if not wanted_id_set:
+                continue
+            for sample in item.get("samples") or []:
+                row_id = sample_id(sample)
+                if row_id not in wanted_id_set:
                     continue
-                line = prefix.decode("utf-8")
                 sample_rows.append(
                     {
                         "grammar_name": grammar_id,
-                        "sample_id": str(sample_idx),
-                        "input_sentence": extract_json_field(
-                            line, '"left_phonetic": ', [', "right":']
-                        ),
-                        "output_sentence": extract_json_field(
-                            line,
-                            '"right_phonetic": ',
-                            [', "possible_right":', ', "left_tree":'],
-                        ),
+                        "sample_id": row_id,
+                        "input_sentence": sample.get("left_phonetic")
+                        or sample.get("left"),
+                        "output_sentence": sample.get("right_phonetic")
+                        or sample.get("right"),
                     }
                 )
+    elif data_source == "local":
+        with open(data_dir / "agreement_grammars.txt") as handle:
+            grammar_ids = [line.strip() for line in handle if line.strip()]
+
+        for grammar_id in progress(
+            grammar_ids, desc=f"{data_dir.name}: agreement grammars", leave=False
+        ):
+            with open(data_dir / f"grammar_{grammar_id}.json") as handle:
+                grammar = json.load(handle)
+
+            agreement_metadata = grammar.get("agreement_metadata", {})
+            a_enabled = bool(
+                agreement_metadata.get("a", {}).get("config", {}).get("enabled", False)
+            )
+            b_enabled = bool(
+                agreement_metadata.get("b", {}).get("config", {}).get("enabled", False)
+            )
+            grammar_rows.append(
+                {
+                    "grammar_name": grammar_id,
+                    "target_vocab_tokens": sorted(side_vocab_tokens(grammar.get("b"))),
+                    "n_words": grammar.get("n_words"),
+                    "n_rules": grammar.get("n_rules"),
+                    "agreement_enabled_a": a_enabled,
+                    "agreement_enabled_b": b_enabled,
+                    "agreement_condition": (
+                        f"{'Agr' if a_enabled else 'NoAgr'} -> "
+                        f"{'Agr' if b_enabled else 'NoAgr'}"
+                    ),
+                }
+            )
+
+            wanted_ids = sorted(needed_sample_ids.get(grammar_id, []))
+            if not wanted_ids:
+                continue
+
+            max_sample_id = max(wanted_ids)
+            wanted_id_set = set(wanted_ids)
+            with open(data_dir / f"samples_{grammar_id}.jsonl", "rb") as handle:
+                for sample_idx in range(max_sample_id + 1):
+                    prefix = read_jsonl_prefix_until(handle, b', "possible_right"')
+                    if sample_idx > max_sample_id:
+                        break
+                    if sample_idx not in wanted_id_set:
+                        continue
+                    line = prefix.decode("utf-8")
+                    sample_rows.append(
+                        {
+                            "grammar_name": grammar_id,
+                            "sample_id": str(sample_idx),
+                            "input_sentence": extract_json_field(
+                                line, '"left_phonetic": ', [', "right":']
+                            ),
+                            "output_sentence": extract_json_field(
+                                line,
+                                '"right_phonetic": ',
+                                [', "possible_right":', ', "left_tree":'],
+                            ),
+                        }
+                    )
+    else:
+        raise ValueError("data_source must be one of: local, hf")
 
     samples_df = pd.DataFrame(sample_rows)
     grammars_df = pd.DataFrame(grammar_rows)
@@ -1038,11 +1241,20 @@ def enrich(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_dataset() -> pd.DataFrame:
+def build_dataset(
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> pd.DataFrame:
     parts = []
     for spec in progress(STANDARD_EXPERIMENTS, desc="standard experiments"):
-        parts.append(load_standard_experiment(spec))
-    parts.append(load_agreement_experiment())
+        parts.append(
+            load_standard_experiment(
+                spec, data_source=data_source, hf_repo_id=hf_repo_id
+            )
+        )
+    parts.append(
+        load_agreement_experiment(data_source=data_source, hf_repo_id=hf_repo_id)
+    )
     return enrich(pd.concat(parts, ignore_index=True, sort=False))
 
 
@@ -1199,10 +1411,16 @@ def write_outputs(df: pd.DataFrame, out_dir: Path) -> None:
         json.dump(examples, handle, indent=2, ensure_ascii=False)
 
 
-def main(out_dir: str = str(OUTPUT_DIR)) -> None:
-    df = build_dataset()
+def main(
+    out_dir: str = str(OUTPUT_DIR),
+    data_source: str = DEFAULT_DATA_SOURCE,
+    hf_repo_id: str | None = None,
+) -> None:
+    df = build_dataset(data_source=data_source, hf_repo_id=hf_repo_id)
     write_outputs(df, Path(out_dir))
     print(f"Wrote analysis outputs to {out_dir}")
+    if data_source == "hf":
+        print(f"Loaded reference data from {resolve_hf_dataset_repo(hf_repo_id)}")
     print(df.groupby(["dataset", "exp", "fuzzy_model"]).size())
 
 

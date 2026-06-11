@@ -32,6 +32,7 @@ class BackwardCompatTest(unittest.TestCase):
         params = CFGParams.from_dict(old_dict)
         self.assertFalse(params.agreement_enabled)
         self.assertEqual(["verb"], params.verb_lemmas)
+        self.assertEqual("uniform", params.lexical_frequency_profile)
 
     def test_agreement_disabled_grammar_still_samples(self):
         params = SCFGParams(a=CFGParams(rng_seed=3), b=CFGParams(rng_seed=4))

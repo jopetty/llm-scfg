@@ -6,8 +6,8 @@ if [[ $# -lt 1 ]]; then
 Usage: scripts/submit_vllm_eval.sh <input-path> [sbatch args...]
 
 Examples:
-  scripts/submit_vllm_eval.sh batches/wordorder_large_exp
-  scripts/submit_vllm_eval.sh batches/wordorder_large_exp --export=MODEL_NAME=google/gemma-3-12b-it,TP_SIZE=1
+  scripts/submit_vllm_eval.sh batches/wordorder_exp
+  scripts/submit_vllm_eval.sh batches/wordorder_exp --export=MODEL_NAME=google/gemma-3-12b-it,TP_SIZE=1
 EOF
   exit 1
 fi

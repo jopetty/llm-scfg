@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 import re
 import secrets
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from itertools import product
 from typing import Any
@@ -202,6 +203,9 @@ class CFGParams:
     space_alpha: float = 0.5
     space_beta: float = 3.0
     syllable_max: int = 4
+    lexical_frequency_profile: str = "zipf_length"
+    lexical_frequency_exponent: float = 1.0
+    lexical_frequency_length_unit: str = "chars"
 
     def to_dict(self) -> dict[str, Any]:
         param_dict = asdict(self)
@@ -227,6 +231,9 @@ class CFGParams:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "CFGParams":
         clean = dict(data)
+        clean.setdefault("lexical_frequency_profile", "uniform")
+        clean.setdefault("lexical_frequency_exponent", 1.0)
+        clean.setdefault("lexical_frequency_length_unit", "chars")
         if "agreement_axes" in clean:
             clean["agreement_axes"] = tuple(clean["agreement_axes"])
         clean["verb_paradigms"] = clean.get("verb_paradigms")
@@ -308,6 +315,7 @@ class CFGParams:
             return list(val)
 
         self.rng = random.Random(self.rng_seed)
+        self.np_rng = np.random.default_rng(self.rng_seed)
 
         if self.orthography == "latin":
             self.consonants = LATIN_CONSONANTS
@@ -334,6 +342,16 @@ class CFGParams:
 
         if self.syllable_structure is None:
             self.syllable_structure = self.rng.choice(SYLLABLE_STRUCTURES)
+        if self.lexical_frequency_profile not in {"uniform", "zipf_length"}:
+            raise ValueError(
+                "lexical_frequency_profile must be one of "
+                "{'uniform', 'zipf_length'}; got "
+                f"{self.lexical_frequency_profile!r}"
+            )
+        if self.lexical_frequency_exponent <= 0:
+            raise ValueError("lexical_frequency_exponent must be positive")
+        if self.lexical_frequency_length_unit != "chars":
+            raise ValueError("Only lexical_frequency_length_unit='chars' is supported")
 
         self.verb_lemmas = _resolve(self.verbs)
         self.noun_lemmas = _resolve(self.nouns)
@@ -445,20 +463,20 @@ class CFGParams:
 
     def _sample_string(self) -> str:
         def _zero_truncated_poisson(rate: float) -> int:
-            u: float = np.random.uniform(np.exp(-rate), 1)
+            u: float = float(self.np_rng.uniform(np.exp(-rate), 1))
             t: float = -np.log(u)
-            return 1 + np.random.poisson(rate - t)
+            return 1 + int(self.np_rng.poisson(rate - t))
 
         def _beta_binomial(n: int, alpha: float, beta: float) -> int:
-            p: float = np.random.beta(alpha, beta)
-            return np.random.binomial(n, p)
+            p: float = float(self.np_rng.beta(alpha, beta))
+            return int(self.np_rng.binomial(n, p))
 
         def _interleave_spaces(syllables: list[str], n_spaces: int) -> str:
             if n_spaces <= 0:
                 return "".join(syllables)
             positions: list[int] = list(range(1, len(syllables)))
             chosen_positions: set[int] = set(
-                random.sample(positions, min(n_spaces, len(positions)))
+                self.rng.sample(positions, min(n_spaces, len(positions)))
             )
             result_parts: list[str] = []
             for i, syllable in enumerate(syllables):
@@ -734,6 +752,21 @@ class SCFGParams:
             },
         }
 
+    @property
+    def lexical_frequency_metadata(self) -> dict[str, Any]:
+        return {
+            "a": {
+                "profile": self.a.lexical_frequency_profile,
+                "exponent": self.a.lexical_frequency_exponent,
+                "length_unit": self.a.lexical_frequency_length_unit,
+            },
+            "b": {
+                "profile": self.b.lexical_frequency_profile,
+                "exponent": self.b.lexical_frequency_exponent,
+                "length_unit": self.b.lexical_frequency_length_unit,
+            },
+        }
+
     def to_dict(self) -> dict[str, Any]:
         builder = RuleBuilder(self)
         rules = builder.build_rules()
@@ -750,6 +783,7 @@ class SCFGParams:
             "n_rules": len(rules),
             "n_words": len(lexicon),
             "agreement_metadata": self.agreement_metadata,
+            "lexical_frequency_metadata": self.lexical_frequency_metadata,
         }
 
     @classmethod
@@ -780,8 +814,30 @@ class Derivation:
     depth: int
     features: FeatureBundle = field(default_factory=FeatureBundle)
     trace: str = ""
-    possible_right_full: tuple[str, ...] = field(default_factory=tuple)
-    possible_right_phonetic: tuple[str, ...] = field(default_factory=tuple)
+    # Acceptable target realizations as aligned (full, phonetic) pairs. Keeping
+    # the two surface forms paired (rather than as two independently de-duped
+    # tuples) guarantees that index i of ``possible_right_full`` and
+    # ``possible_right_phonetic`` always describe the same answer.
+    possible_right_pairs: tuple[tuple[str, str], ...] = field(default_factory=tuple)
+    # Agreement bookkeeping. For a constituent on the subject spine (a number
+    # ambiguous noun and the material around it) ``agr_*_by_number`` map each
+    # source-consistent number to that constituent's target realization, so the
+    # enclosing clause can tie the subject to its agreeing verb. They are
+    # ``None``/empty for constituents that do not vary with the clause number.
+    agr_numbers: tuple[str, ...] = ()
+    agr_full_by_number: dict[str, str] | None = None
+    agr_phonetic_by_number: dict[str, str] | None = None
+    # ``(verb_index, person, gender)`` for the clause verb, used to re-realize
+    # it under each candidate subject number.
+    verb_agr: tuple[int, str | None, str | None] | None = None
+
+    @property
+    def possible_right_full(self) -> tuple[str, ...]:
+        return tuple(full for full, _ in self.possible_right_pairs)
+
+    @property
+    def possible_right_phonetic(self) -> tuple[str, ...]:
+        return tuple(phonetic for _, phonetic in self.possible_right_pairs)
 
 
 class SCFG:
@@ -853,6 +909,54 @@ class SCFG:
             raise ValueError(f"No aligned {label} entries are available")
         return rng.randrange(count)
 
+    def _lexical_frequency_active(self) -> bool:
+        return (
+            self.params.a.lexical_frequency_profile == "zipf_length"
+            or self.params.b.lexical_frequency_profile == "zipf_length"
+        )
+
+    def _lexical_frequency_exponent(self) -> float:
+        return max(
+            self.params.a.lexical_frequency_exponent,
+            self.params.b.lexical_frequency_exponent,
+        )
+
+    def _surface_length(self, surface: str) -> int:
+        clean = surface.strip("'")
+        if clean.startswith("∅"):
+            return 0
+        return len(clean.replace(" ", ""))
+
+    def _weighted_index_from_surfaces(
+        self,
+        rng: random.Random,
+        left_items: list[str],
+        right_items: list[str],
+        label: str,
+    ) -> int:
+        count = min(len(left_items), len(right_items))
+        if count <= 0:
+            raise ValueError(f"No aligned {label} entries are available")
+        if not self._lexical_frequency_active():
+            return rng.randrange(count)
+
+        pair_lengths = [
+            (
+                self._surface_length(left_items[index])
+                + self._surface_length(right_items[index])
+            )
+            / 2
+            for index in range(count)
+        ]
+        ranked_indices = sorted(
+            range(count), key=lambda index: (pair_lengths[index], index)
+        )
+        weights_by_index = [0.0] * count
+        exponent = self._lexical_frequency_exponent()
+        for rank, index in enumerate(ranked_indices, start=1):
+            weights_by_index[index] = 1.0 / (rank**exponent)
+        return rng.choices(range(count), weights=weights_by_index, k=1)[0]
+
     def _choose_aligned_simple(
         self,
         rng: random.Random,
@@ -860,13 +964,27 @@ class SCFG:
         right_items: list[str],
         label: str,
     ) -> tuple[str, str]:
-        index = self._choose_aligned_index(
-            rng, len(left_items), len(right_items), label
-        )
+        index = self._weighted_index_from_surfaces(rng, left_items, right_items, label)
         return left_items[index], right_items[index]
 
     def _dedupe_preserve_order(self, values: list[str]) -> tuple[str, ...]:
         return tuple(dict.fromkeys(values))
+
+    def _dedupe_pairs(
+        self, pairs: Iterable[tuple[str, str]]
+    ) -> tuple[tuple[str, str], ...]:
+        return tuple(dict.fromkeys(pairs))
+
+    def _combine_pairs(self, children: list[Derivation]) -> tuple[tuple[str, str], ...]:
+        """Independent product of children's acceptable (full, phonetic) pairs."""
+        options: list[tuple[str, str]] = []
+        for combo in product(
+            *(child.possible_right_pairs or (("", ""),) for child in children)
+        ):
+            full = " ".join(part for part, _ in combo if part).strip()
+            phonetic = " ".join(part for _, part in combo if part).strip()
+            options.append((full, phonetic))
+        return self._dedupe_pairs(options)
 
     def _possible_pronoun_right_surfaces(
         self, index: int, left_surface: str
@@ -1021,10 +1139,18 @@ class SCFG:
     def _choose_aligned_pronoun(
         self, rng: random.Random
     ) -> tuple[str, str, FeatureBundle]:
-        index = self._choose_aligned_index(
+        left_surfaces = [
+            self._pronoun_entry(self.params.a, index)[0]
+            for index in range(self._pronoun_count(self.params.a))
+        ]
+        right_surfaces = [
+            self._pronoun_entry(self.params.b, index)[0]
+            for index in range(self._pronoun_count(self.params.b))
+        ]
+        index = self._weighted_index_from_surfaces(
             rng,
-            self._pronoun_count(self.params.a),
-            self._pronoun_count(self.params.b),
+            left_surfaces,
+            right_surfaces,
             "pronoun",
         )
         left_surface, left_features = self._pronoun_entry(self.params.a, index)
@@ -1039,10 +1165,18 @@ class SCFG:
     def _choose_aligned_propn(
         self, rng: random.Random
     ) -> tuple[str, str, FeatureBundle]:
-        index = self._choose_aligned_index(
+        left_surfaces = [
+            self._propn_entry(self.params.a, index)[0]
+            for index in range(self._propn_count(self.params.a))
+        ]
+        right_surfaces = [
+            self._propn_entry(self.params.b, index)[0]
+            for index in range(self._propn_count(self.params.b))
+        ]
+        index = self._weighted_index_from_surfaces(
             rng,
-            self._propn_count(self.params.a),
-            self._propn_count(self.params.b),
+            left_surfaces,
+            right_surfaces,
             "proper noun",
         )
         left_surface, left_features = self._propn_entry(self.params.a, index)
@@ -1064,10 +1198,18 @@ class SCFG:
         number: str | None = None,
     ) -> tuple[str, str, FeatureBundle]:
         chosen_number = number or rng.choice(("sg", "pl"))
-        index = self._choose_aligned_index(
+        left_surfaces = [
+            self._noun_entry(self.params.a, index, chosen_number)[0]
+            for index in range(self._noun_count(self.params.a))
+        ]
+        right_surfaces = [
+            self._noun_entry(self.params.b, index, chosen_number)[0]
+            for index in range(self._noun_count(self.params.b))
+        ]
+        index = self._weighted_index_from_surfaces(
             rng,
-            self._noun_count(self.params.a),
-            self._noun_count(self.params.b),
+            left_surfaces,
+            right_surfaces,
             "noun",
         )
         left_surface, left_features = self._noun_entry(
@@ -1115,10 +1257,18 @@ class SCFG:
             number=target.number or "sg",
             gender=resolved_gender,
         )
-        index = self._choose_aligned_index(
+        left_surfaces = [
+            self._verb_entry(self.params.a, index, resolved)[0]
+            for index in range(self._verb_count(self.params.a))
+        ]
+        right_surfaces = [
+            self._verb_entry(self.params.b, index, resolved)[0]
+            for index in range(self._verb_count(self.params.b))
+        ]
+        index = self._weighted_index_from_surfaces(
             rng,
-            self._verb_count(self.params.a),
-            self._verb_count(self.params.b),
+            left_surfaces,
+            right_surfaces,
             "verb",
         )
         left_surface, left_features = self._verb_entry(self.params.a, index, resolved)
@@ -1223,6 +1373,29 @@ class SCFG:
             "depth": result["depth"],
         }
 
+    def _symbol_sequence_surface(self, sequence: tuple[str, ...]) -> str:
+        return " ".join(symbol.strip("'") for symbol in sequence)
+
+    def _is_lexical_rule(self, rule: Rule) -> bool:
+        left_symbols, right_symbols = rule
+        return not any(
+            symbol in self.rules_dict for symbol in left_symbols + right_symbols
+        )
+
+    def _choose_rule(self, rng: random.Random, rules: list[Rule]) -> Rule:
+        if not rules:
+            raise ValueError("Cannot choose from an empty rule list")
+        if not self._lexical_frequency_active() or not all(
+            self._is_lexical_rule(rule) for rule in rules
+        ):
+            return rng.choice(rules)
+        left_surfaces = [self._symbol_sequence_surface(rule[0]) for rule in rules]
+        right_surfaces = [self._symbol_sequence_surface(rule[1]) for rule in rules]
+        index = self._weighted_index_from_surfaces(
+            rng, left_surfaces, right_surfaces, "lexical rule"
+        )
+        return rules[index]
+
     def _sample_recursive(
         self,
         symbol: str,
@@ -1268,7 +1441,7 @@ class SCFG:
                     "depth": current_depth,
                 }
 
-        chosen_left_prod, chosen_right_prod = rng.choice(possible_rules)
+        chosen_left_prod, chosen_right_prod = self._choose_rule(rng, possible_rules)
         sub_derivations: dict[str, dict[str, Any]] = {}
         unique_non_terminals: list[str] = []
         seen: set[str] = set()
@@ -1328,17 +1501,17 @@ class SCFG:
         features: FeatureBundle | None = None,
         trace: str = "",
         possible_right_surfaces: tuple[str, ...] | None = None,
+        agr_full_by_number: dict[str, str] | None = None,
+        agr_phonetic_by_number: dict[str, str] | None = None,
+        verb_agr: tuple[int, str | None, str | None] | None = None,
     ) -> Derivation:
         left_phonetic = "" if left_surface.startswith("∅") else left_surface
         right_phonetic = "" if right_surface.startswith("∅") else right_surface
         if possible_right_surfaces is None:
             possible_right_surfaces = (right_surface,)
-        possible_right_phonetic = tuple(
-            surface
-            for surface in (
-                "" if candidate.startswith("∅") else candidate
-                for candidate in possible_right_surfaces
-            )
+        possible_right_pairs = self._dedupe_pairs(
+            (candidate, "" if candidate.startswith("∅") else candidate)
+            for candidate in possible_right_surfaces
         )
         return Derivation(
             left_full=left_surface,
@@ -1350,8 +1523,11 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
-            possible_right_full=possible_right_surfaces,
-            possible_right_phonetic=possible_right_phonetic,
+            possible_right_pairs=possible_right_pairs,
+            agr_numbers=tuple(agr_full_by_number) if agr_full_by_number else (),
+            agr_full_by_number=agr_full_by_number,
+            agr_phonetic_by_number=agr_phonetic_by_number,
+            verb_agr=verb_agr,
         )
 
     def _combine_derivations(
@@ -1385,25 +1561,14 @@ class SCFG:
         )
         left_tree = f"({symbol} {left_tree_children})"
         right_tree = f"({symbol} {right_tree_children})"
-        possible_right_full = self._dedupe_preserve_order(
-            [
-                " ".join(part for part in parts if part).strip()
-                for parts in product(
-                    *(child.possible_right_full or ("",) for child in right_children)
-                )
-            ]
+        possible_right_pairs = self._combine_pairs(right_children)
+        agr_numbers, agr_full_by_number, agr_phonetic_by_number = (
+            self._combine_agreement(right_children)
         )
-        possible_right_phonetic = self._dedupe_preserve_order(
-            [
-                " ".join(part for part in parts if part).strip()
-                for parts in product(
-                    *(
-                        child.possible_right_phonetic or ("",)
-                        for child in right_children
-                    )
-                )
-            ]
-        )
+        verb_children = [
+            child for child in right_children if child.verb_agr is not None
+        ]
+        verb_agr = verb_children[0].verb_agr if len(verb_children) == 1 else None
         return Derivation(
             left_full=left_full,
             left_phonetic=left_phonetic,
@@ -1414,9 +1579,128 @@ class SCFG:
             depth=depth,
             features=features or FeatureBundle(),
             trace=trace,
-            possible_right_full=possible_right_full,
-            possible_right_phonetic=possible_right_phonetic,
+            possible_right_pairs=possible_right_pairs,
+            agr_numbers=agr_numbers,
+            agr_full_by_number=agr_full_by_number,
+            agr_phonetic_by_number=agr_phonetic_by_number,
+            verb_agr=verb_agr,
         )
+
+    def _combine_agreement(
+        self, right_children: list[Derivation]
+    ) -> tuple[tuple[str, ...], dict[str, str] | None, dict[str, str] | None]:
+        """Propagate a single subject-spine constituent's per-number variants.
+
+        Only one child on the subject spine carries number variants (the head
+        noun); the surrounding determiners/adjectives are number invariant. The
+        parent's variant for each number concatenates the head's per-number form
+        with the invariant siblings' realizations.
+        """
+        agr_children = [child for child in right_children if child.agr_numbers]
+        if len(agr_children) != 1:
+            return (), None, None
+        numbers = agr_children[0].agr_numbers
+        full_by_number: dict[str, str] = {}
+        phonetic_by_number: dict[str, str] = {}
+        for number in numbers:
+            full_parts: list[str] = []
+            phonetic_parts: list[str] = []
+            for child in right_children:
+                if child.agr_full_by_number is not None:
+                    full_parts.append(child.agr_full_by_number.get(number, ""))
+                    phonetic_parts.append(
+                        (child.agr_phonetic_by_number or {}).get(number, "")
+                    )
+                else:
+                    full_parts.append(child.right_full)
+                    phonetic_parts.append(child.right_phonetic)
+            full_by_number[number] = " ".join(p for p in full_parts if p).strip()
+            phonetic_by_number[number] = " ".join(
+                p for p in phonetic_parts if p
+            ).strip()
+        return numbers, full_by_number, phonetic_by_number
+
+    def _subject_number_variants(
+        self, subject: Derivation
+    ) -> tuple[tuple[str, ...], dict[str, str], dict[str, str]]:
+        """Candidate numbers for a subject and its target realization per number.
+
+        A number-ambiguous noun subject carries explicit per-number variants;
+        any other subject (pronoun, proper noun, pro-drop) has a single, fixed
+        number.
+        """
+        if subject.agr_numbers and subject.agr_full_by_number is not None:
+            return (
+                subject.agr_numbers,
+                subject.agr_full_by_number,
+                subject.agr_phonetic_by_number or {},
+            )
+        number = subject.features.number or "sg"
+        return (
+            (number,),
+            {number: subject.right_full},
+            {number: subject.right_phonetic},
+        )
+
+    def _apply_clause_agreement(
+        self,
+        clause: Derivation,
+        subject: Derivation,
+        t: Derivation,
+        verb: Derivation,
+        obj: Derivation,
+    ) -> Derivation:
+        """Restrict a clause's acceptable answers to agreement-consistent ones.
+
+        The generic child product treats the subject noun and its verb as
+        independent, which both credits agreement violations and explodes
+        combinatorially. Here the verb is re-realized to agree with each
+        candidate subject number, while the object — its own agreement domain —
+        keeps its independent ambiguity.
+        """
+        if verb.verb_agr is None:
+            return clause
+        verb_index, person, gender = verb.verb_agr
+        numbers, subject_full, subject_phonetic = self._subject_number_variants(subject)
+        b = self.params.b
+        vp_order = ["verb", "obj"] if b.head_initial else ["obj", "verb"]
+        tbar_order = (["t"] + vp_order) if b.head_initial else (vp_order + ["t"])
+        clause_order = (
+            (["subject"] + tbar_order) if b.spec_initial else (tbar_order + ["subject"])
+        )
+        object_pairs = obj.possible_right_pairs or (
+            (obj.right_full, obj.right_phonetic),
+        )
+        options: list[tuple[str, str]] = []
+        for number in numbers:
+            verb_full = self._verb_entry(
+                b,
+                verb_index,
+                FeatureBundle(person=person, number=number, gender=gender),
+            )[0]
+            verb_phonetic = "" if verb_full.startswith("∅") else verb_full
+            subj_full = subject_full.get(number, subject.right_full)
+            subj_phonetic = subject_phonetic.get(number, subject.right_phonetic)
+            for obj_full, obj_phonetic in object_pairs:
+                parts = {
+                    "subject": (subj_full, subj_phonetic),
+                    "t": (t.right_full, t.right_phonetic),
+                    "verb": (verb_full, verb_phonetic),
+                    "obj": (obj_full, obj_phonetic),
+                }
+                full = " ".join(
+                    parts[tag][0] for tag in clause_order if parts[tag][0]
+                ).strip()
+                phonetic = " ".join(
+                    parts[tag][1] for tag in clause_order if parts[tag][1]
+                ).strip()
+                options.append((full, phonetic))
+        clause.possible_right_pairs = self._dedupe_pairs(options)
+        clause.agr_numbers = ()
+        clause.agr_full_by_number = None
+        clause.agr_phonetic_by_number = None
+        clause.verb_agr = None
+        return clause
 
     def _order_head_comp(
         self, head: Derivation, comp: Derivation, head_initial: bool
@@ -1487,13 +1771,29 @@ class SCFG:
                 right_t,
                 current_depth,
             )
-            vp = self._sample_agreement_recursive(
-                "VP",
+            # The verb and object are sampled here (rather than inside a separate
+            # ``VP`` recursion) so the clause can re-realize the verb in
+            # agreement with each candidate subject number while leaving the
+            # object's independent number ambiguity untouched.
+            verb = self._sample_agreement_recursive(
+                "V",
                 rng,
                 current_depth,
                 min_depth,
                 max_depth,
                 inherited_features=subject.features,
+            )
+            obj = self._sample_agreement_recursive(
+                "OBJ_PHRASE", rng, current_depth, min_depth, max_depth
+            )
+            left_vp = self._order_head_comp(verb, obj, self.params.a.head_initial)
+            right_vp = self._order_head_comp(verb, obj, self.params.b.head_initial)
+            vp = self._combine_derivations(
+                "VP",
+                left_vp,
+                right_vp,
+                features=subject.features,
+                trace=verb.trace,
             )
             left_tbar = self._order_head_comp(t, vp, self.params.a.head_initial)
             right_tbar = self._order_head_comp(t, vp, self.params.b.head_initial)
@@ -1503,13 +1803,14 @@ class SCFG:
             right_children = self._order_spec_head(
                 subject, right_tbar, self.params.b.spec_initial
             )
-            return self._combine_derivations(
+            clause = self._combine_derivations(
                 "TP",
                 left_children,
                 right_children,
                 features=subject.features,
                 trace=f"subj={subject.features.key()}",
             )
+            return self._apply_clause_agreement(clause, subject, t, verb, obj)
 
         if symbol == "NP_SUBJ":
             choices = ["PRON", "DP"]
@@ -1527,10 +1828,16 @@ class SCFG:
                     trace="pro",
                 )
             if choice == "PRON":
-                pron_index = self._choose_aligned_index(
+                pron_index = self._weighted_index_from_surfaces(
                     rng,
-                    self._pronoun_count(self.params.a),
-                    self._pronoun_count(self.params.b),
+                    [
+                        self._pronoun_entry(self.params.a, index)[0]
+                        for index in range(self._pronoun_count(self.params.a))
+                    ],
+                    [
+                        self._pronoun_entry(self.params.b, index)[0]
+                        for index in range(self._pronoun_count(self.params.b))
+                    ],
                     "pronoun",
                 )
                 left_surface, left_features = self._pronoun_entry(
@@ -1557,10 +1864,16 @@ class SCFG:
                     or (right_surface,),
                 )
             if choice == "PROPN":
-                propn_index = self._choose_aligned_index(
+                propn_index = self._weighted_index_from_surfaces(
                     rng,
-                    self._propn_count(self.params.a),
-                    self._propn_count(self.params.b),
+                    [
+                        self._propn_entry(self.params.a, index)[0]
+                        for index in range(self._propn_count(self.params.a))
+                    ],
+                    [
+                        self._propn_entry(self.params.b, index)[0]
+                        for index in range(self._propn_count(self.params.b))
+                    ],
                     "proper noun",
                 )
                 left_surface, left_features = self._propn_entry(
@@ -1634,10 +1947,16 @@ class SCFG:
                 number=target.number or "sg",
                 gender=resolved_gender,
             )
-            verb_index = self._choose_aligned_index(
+            verb_index = self._weighted_index_from_surfaces(
                 rng,
-                self._verb_count(self.params.a),
-                self._verb_count(self.params.b),
+                [
+                    self._verb_entry(self.params.a, index, resolved)[0]
+                    for index in range(self._verb_count(self.params.a))
+                ],
+                [
+                    self._verb_entry(self.params.b, index, resolved)[0]
+                    for index in range(self._verb_count(self.params.b))
+                ],
                 "verb",
             )
             left_surface, left_features = self._verb_entry(
@@ -1651,6 +1970,12 @@ class SCFG:
                 or left_features
                 or right_features
             )
+            # The verb's acceptable target forms are not independent: the verb
+            # must agree with its subject. So rather than enumerating every
+            # source-collapsed bundle here (which over-generates agreement
+            # violations and explodes combinatorially), the leaf only carries
+            # the realized form, and the enclosing clause (``TP``) re-realizes
+            # the verb under each candidate subject number via ``verb_agr``.
             return self._terminal_derivation(
                 "V",
                 left_surface,
@@ -1658,10 +1983,7 @@ class SCFG:
                 current_depth,
                 features=features,
                 trace=f"verb={features.key()}",
-                possible_right_surfaces=self._possible_verb_right_surfaces(
-                    verb_index, left_surface
-                )
-                or (right_surface,),
+                verb_agr=(verb_index, resolved.person, resolved.gender),
             )
 
         if symbol == "OBJ_PHRASE":
@@ -1671,17 +1993,30 @@ class SCFG:
                 choice = "DP"
             else:
                 choice = rng.choice(["DP", "CP_embed"])
-            return self._sample_agreement_recursive(
+            obj = self._sample_agreement_recursive(
                 choice, rng, current_depth, min_depth, max_depth
             )
+            # An object is its own agreement domain: its number ambiguity is
+            # already captured in ``possible_right`` and must not be tied to the
+            # matrix subject. Drop any subject-spine variants that propagated up.
+            obj.agr_numbers = ()
+            obj.agr_full_by_number = None
+            obj.agr_phonetic_by_number = None
+            return obj
 
         if symbol == "DP":
             use_propn = rng.random() < 0.25
             if use_propn:
-                propn_index = self._choose_aligned_index(
+                propn_index = self._weighted_index_from_surfaces(
                     rng,
-                    self._propn_count(self.params.a),
-                    self._propn_count(self.params.b),
+                    [
+                        self._propn_entry(self.params.a, index)[0]
+                        for index in range(self._propn_count(self.params.a))
+                    ],
+                    [
+                        self._propn_entry(self.params.b, index)[0]
+                        for index in range(self._propn_count(self.params.b))
+                    ],
                     "proper noun",
                 )
                 left_surface, left_features = self._propn_entry(
@@ -1787,10 +2122,16 @@ class SCFG:
 
         if symbol == "N_HEAD":
             if rng.random() < 0.25:
-                propn_index = self._choose_aligned_index(
+                propn_index = self._weighted_index_from_surfaces(
                     rng,
-                    self._propn_count(self.params.a),
-                    self._propn_count(self.params.b),
+                    [
+                        self._propn_entry(self.params.a, index)[0]
+                        for index in range(self._propn_count(self.params.a))
+                    ],
+                    [
+                        self._propn_entry(self.params.b, index)[0]
+                        for index in range(self._propn_count(self.params.b))
+                    ],
                     "proper noun",
                 )
                 left_surface, left_features = self._propn_entry(
@@ -1816,10 +2157,16 @@ class SCFG:
                 )
             target_number = inherited_features.number if inherited_features else None
             chosen_number = target_number or rng.choice(("sg", "pl"))
-            noun_index = self._choose_aligned_index(
+            noun_index = self._weighted_index_from_surfaces(
                 rng,
-                self._noun_count(self.params.a),
-                self._noun_count(self.params.b),
+                [
+                    self._noun_entry(self.params.a, index, chosen_number)[0]
+                    for index in range(self._noun_count(self.params.a))
+                ],
+                [
+                    self._noun_entry(self.params.b, index, chosen_number)[0]
+                    for index in range(self._noun_count(self.params.b))
+                ],
                 "noun",
             )
             left_surface, left_features = self._noun_entry(
@@ -1833,6 +2180,23 @@ class SCFG:
                 or left_features
                 or right_features
             )
+            # Per-number target forms for the numbers the source form is
+            # consistent with. When the source marks number this collapses to a
+            # single entry; when it does not, both sg/pl are candidates and the
+            # enclosing clause uses these to keep subject and verb in agreement.
+            noun_full_by_number: dict[str, str] = {}
+            noun_phonetic_by_number: dict[str, str] = {}
+            for number in ("sg", "pl"):
+                if (
+                    self._noun_entry(self.params.a, noun_index, number)[0]
+                    != left_surface
+                ):
+                    continue
+                target_form = self._noun_entry(self.params.b, noun_index, number)[0]
+                noun_full_by_number[number] = target_form
+                noun_phonetic_by_number[number] = (
+                    "" if target_form.startswith("∅") else target_form
+                )
             return self._terminal_derivation(
                 "N",
                 left_surface,
@@ -1844,6 +2208,8 @@ class SCFG:
                     noun_index, left_surface
                 )
                 or (right_surface,),
+                agr_full_by_number=noun_full_by_number or None,
+                agr_phonetic_by_number=noun_phonetic_by_number or None,
             )
 
         if symbol == "AdjP":
@@ -2494,9 +2860,7 @@ class RuleBuilder:
 
     def build_compact_prompt_grammar(self, sample: str) -> str:
         if not self.is_sync:
-            # TODO: `RuleBuilder` does not define `as_cfg`; this nonsync path is likely
-            # broken at runtime and should be replaced with the intended CFG string.
-            return self.as_cfg  # ty: ignore[unresolved-attribute]
+            return "\n".join(self.build_rules() + self.build_lexicon())
         return "\n".join(
             self.build_rules()
             + self.build_compact_prompt_lexicon(sample)

@@ -1,13 +1,61 @@
 import random
 import unittest
+from collections import Counter
 from typing import Any, cast
 from unittest.mock import patch
 
 from scfg.agreement import FeatureBundle
-from scfg.scfg import SCFG, CFGParams, SCFGParams
+from scfg.scfg import SCFG, CFGParams, RuleBuilder, SCFGParams
 
 
 class SCFGGenerationTest(unittest.TestCase):
+    def test_cfg_params_rng_seed_controls_direct_lexicon_generation(self):
+        first = CFGParams(
+            rng_seed=123,
+            verbs=5,
+            nouns=5,
+            propns=5,
+            prons=3,
+            adjs=3,
+            det_def=2,
+            det_indef=2,
+            comps=2,
+        )
+        second = CFGParams(
+            rng_seed=123,
+            verbs=5,
+            nouns=5,
+            propns=5,
+            prons=3,
+            adjs=3,
+            det_def=2,
+            det_indef=2,
+            comps=2,
+        )
+
+        self.assertEqual(first.verb_lex, second.verb_lex)
+        self.assertEqual(first.noun_lex, second.noun_lex)
+        self.assertEqual(first.propn_lex, second.propn_lex)
+        self.assertEqual(first.pron_lex, second.pron_lex)
+
+    def test_compact_prompt_grammar_supports_plain_cfg_params(self):
+        params = CFGParams(
+            verbs=1,
+            nouns=1,
+            propns=1,
+            prons=1,
+            adjs=1,
+            det_def=1,
+            det_indef=1,
+            comps=1,
+            rng_seed=13,
+        )
+
+        grammar = RuleBuilder(params).build_compact_prompt_grammar("unused")
+
+        self.assertIn("S -> CP_matrix", grammar)
+        self.assertIn("V -> '", grammar)
+
     def test_cfg_round_trip_preserves_agreement_metadata(self):
         params = CFGParams(
             agreement_enabled=True,
@@ -33,6 +81,97 @@ class SCFGGenerationTest(unittest.TestCase):
         self.assertEqual(params.verb_paradigms, cloned.verb_paradigms)
         self.assertEqual(params.noun_paradigms, cloned.noun_paradigms)
         self.assertEqual(params.pronoun_paradigms, cloned.pronoun_paradigms)
+        self.assertEqual("zipf_length", cloned.lexical_frequency_profile)
+
+    def test_lexical_frequency_metadata_is_written(self):
+        params = SCFGParams(
+            a=CFGParams(verbs=1, nouns=1, propns=1, prons=1, adjs=1, comps=1),
+            b=CFGParams(verbs=1, nouns=1, propns=1, prons=1, adjs=1, comps=1),
+        )
+
+        payload = params.to_dict()
+
+        self.assertEqual(
+            "zipf_length",
+            payload["lexical_frequency_metadata"]["a"]["profile"],
+        )
+        self.assertEqual(1.0, payload["lexical_frequency_metadata"]["a"]["exponent"])
+
+    def test_zipf_length_weighting_favors_shorter_aligned_pairs(self):
+        params = SCFGParams(
+            a=CFGParams(
+                verbs=["a", "bbbb", "cccccc"],
+                nouns=1,
+                propns=1,
+                prons=1,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+            ),
+            b=CFGParams(
+                verbs=["x", "yyyy", "zzzzzz"],
+                nouns=1,
+                propns=1,
+                prons=1,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+            ),
+        )
+        scfg = SCFG(params)
+        rng = random.Random(0)
+
+        draws = Counter(
+            scfg._weighted_index_from_surfaces(
+                rng,
+                params.a.verb_lex,
+                params.b.verb_lex,
+                "verb",
+            )
+            for _ in range(1000)
+        )
+
+        self.assertGreater(draws[0], draws[1])
+        self.assertGreater(draws[1], draws[2])
+
+    def test_uniform_frequency_profile_preserves_uniform_choice(self):
+        params = SCFGParams(
+            a=CFGParams(
+                verbs=["a", "bbbb"],
+                nouns=1,
+                propns=1,
+                prons=1,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+                lexical_frequency_profile="uniform",
+            ),
+            b=CFGParams(
+                verbs=["x", "yyyy"],
+                nouns=1,
+                propns=1,
+                prons=1,
+                adjs=1,
+                det_def=1,
+                det_indef=1,
+                comps=1,
+                lexical_frequency_profile="uniform",
+            ),
+        )
+        scfg = SCFG(params)
+
+        self.assertEqual(
+            1,
+            scfg._weighted_index_from_surfaces(
+                random.Random(0),
+                params.a.verb_lex,
+                params.b.verb_lex,
+                "verb",
+            ),
+        )
 
     def test_sample_morpheme_falls_back_when_optional_template_is_empty(self):
         params = CFGParams(
