@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # Example:
-#   sbatch --export=ALL,MODEL_NAME=google/gemma-3-12b-it,INPUT_PATH=batches/wordorder_large_exp scripts/slurm_vllm_eval.sbatch
+#   sbatch --export=ALL,MODEL_NAME=google/gemma-3-12b-it,INPUT_PATH=batches/wordorder_exp scripts/slurm_vllm_eval.sbatch
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 

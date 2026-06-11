@@ -34,18 +34,18 @@ class ErrorAnalysisTest(unittest.TestCase):
             error_analysis.matches_target_orthography("אָב", "hebrew_unpointed")
         )
 
-    def test_infer_target_orthography_distinguishes_large_hebrew_variants(self):
+    def test_infer_target_orthography_distinguishes_hebrew_variants(self):
         self.assertEqual(
             "hebrew",
-            error_analysis.infer_target_orthography("אָב", "orthography_large_exp"),
+            error_analysis.infer_target_orthography("אָב", "orthography_exp"),
         )
         self.assertEqual(
             "hebrew_unpointed",
-            error_analysis.infer_target_orthography("אב", "orthography_large_exp"),
+            error_analysis.infer_target_orthography("אב", "orthography_exp"),
         )
         self.assertEqual(
             "yiddish",
-            error_analysis.infer_target_orthography("אָב", "orthography_exp"),
+            error_analysis.infer_target_orthography("אָב", "size_exp"),
         )
 
     def test_classify_failure_flags_wrong_script_for_plain_latin_diacritics(self):

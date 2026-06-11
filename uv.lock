@@ -3835,15 +3835,18 @@ name = "scfg"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "datasets" },
     { name = "evaluate" },
     { name = "fire" },
     { name = "google-genai" },
+    { name = "huggingface-hub" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
     { name = "nbstripout" },
     { name = "nltk" },
     { name = "openai" },
     { name = "pandas" },
+    { name = "pyarrow" },
     { name = "pyrootutils" },
     { name = "python-dotenv" },
     { name = "ruff" },
@@ -3870,15 +3873,18 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "datasets", specifier = ">=4.2.0" },
     { name = "evaluate", specifier = ">=0.4.6" },
     { name = "fire", specifier = ">=0.7.0" },
     { name = "google-genai", specifier = ">=1.43.0" },
+    { name = "huggingface-hub", specifier = ">=0.35.3" },
     { name = "ipykernel", specifier = ">=6.30.0" },
     { name = "ipywidgets", specifier = ">=8.1.7" },
     { name = "nbstripout", specifier = ">=0.8.1" },
     { name = "nltk", specifier = ">=3.9.2" },
     { name = "openai", specifier = ">=1.98.0" },
     { name = "pandas", specifier = ">=2.3.1" },
+    { name = "pyarrow", specifier = ">=21.0.0" },
     { name = "pyrootutils", specifier = ">=1.0.4" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "ruff", specifier = ">=0.12.7" },

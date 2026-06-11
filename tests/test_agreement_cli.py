@@ -111,7 +111,11 @@ class AgreementCliTest(unittest.TestCase):
                 with open(exp_dir / "agreement_grammars.txt", "w") as handle:
                     handle.write(f"{grammar_name}\n")
 
-                main.generate_experiment_batchfile(exp="agreement", model="gpt-5-nano")
+                main.generate_experiment_batchfile(
+                    exp="agreement",
+                    model="gpt-5-nano",
+                    data_source="local",
+                )
 
                 out_files = list((batch_dir / "agreement_exp").glob("*.jsonl"))
                 self.assertEqual(1, len(out_files))

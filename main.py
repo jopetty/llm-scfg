@@ -36,6 +36,7 @@ PROJECT_ROOT = path = pyrootutils.find_root(
 )
 DATA_DIR = PROJECT_ROOT / "data"
 BATCH_DIR = PROJECT_ROOT / "batches"
+DEFAULT_HF_DATASET_REPO = "jowenpetty/scfg"
 
 load_dotenv(PROJECT_ROOT / ".env")
 
@@ -83,6 +84,185 @@ def _load_first_sample(exp_dir: Path, grammar_name: str) -> dict[str, Any]:
 def _load_jsonl(path: Path) -> list[dict[str, Any]]:
     with open(path) as handle:
         return [json.loads(line) for line in handle]
+
+
+def _resolve_hf_token() -> str | None:
+    return os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_HUB_TOKEN")
+
+
+def _resolve_hf_dataset_repo(hf_repo_id: str | None = None) -> str:
+    return hf_repo_id or os.getenv("LLM_SCFG_HF_REPO_ID") or DEFAULT_HF_DATASET_REPO
+
+
+def _experiment_config_name(exp: str) -> str:
+    return exp if exp.endswith("_exp") else f"{exp}_exp"
+
+
+def _strip_raw_json(row: dict[str, Any]) -> dict[str, Any]:
+    raw_json = row.get("raw_json")
+    if isinstance(raw_json, str) and raw_json:
+        return cast(dict[str, Any], json.loads(raw_json))
+    return row
+
+
+@lru_cache(maxsize=32)
+def _load_hf_split(
+    repo_id: str,
+    config_name: str,
+    split: str,
+) -> tuple[dict[str, Any], ...]:
+    try:
+        import pyarrow.parquet as pq
+        from huggingface_hub import hf_hub_download
+    except ImportError as exc:
+        raise ImportError(
+            "Loading experiment data from Hugging Face requires pyarrow and "
+            "huggingface-hub. "
+            "Run `uv sync` to install the project dependencies."
+        ) from exc
+
+    token = _resolve_hf_token()
+    path = hf_hub_download(
+        repo_id=repo_id,
+        repo_type="dataset",
+        filename=f"{config_name}/{split}.parquet",
+        token=token,
+    )
+    table = pq.read_table(path)
+    rows = [_strip_raw_json(cast(dict[str, Any], row)) for row in table.to_pylist()]
+    rows.sort(
+        key=lambda row: (
+            str(row.get("grammar_name") or row.get("name")),
+            int(row.get("row_index") or 0),
+        )
+    )
+    return tuple(rows)
+
+
+def _load_hf_experiment_data(
+    *,
+    exp: str,
+    hf_repo_id: str | None,
+) -> dict[str, dict[str, Any]]:
+    repo_id = _resolve_hf_dataset_repo(hf_repo_id)
+    config_name = _experiment_config_name(exp)
+    log.info("Loading %s from Hugging Face dataset %s", config_name, repo_id)
+
+    grammar_rows = _load_hf_split(repo_id, config_name, "grammars")
+    sample_rows = _load_hf_split(repo_id, config_name, "samples")
+    shot_rows = _load_hf_split(repo_id, config_name, "shots")
+
+    grammars: dict[str, dict[str, Any]] = {}
+    samples_by_grammar: dict[str, list[dict[str, Any]]] = {}
+    shots_by_grammar: dict[str, list[dict[str, Any]]] = {}
+
+    for grammar in grammar_rows:
+        name = str(grammar.get("name") or "")
+        if name:
+            grammars[name] = dict(grammar)
+    for sample in sample_rows:
+        grammar_name = str(sample.get("grammar_name") or "")
+        if grammar_name:
+            samples_by_grammar.setdefault(grammar_name, []).append(dict(sample))
+    for shot in shot_rows:
+        grammar_name = str(shot.get("grammar_name") or "")
+        if grammar_name:
+            shots_by_grammar.setdefault(grammar_name, []).append(dict(shot))
+
+    grammar_names = [name for name in grammars if name in samples_by_grammar]
+    if not grammar_names:
+        raise ValueError(
+            f"No HF samples found for experiment {config_name} in {repo_id}"
+        )
+
+    return {
+        name: {
+            "grammar": grammars[name],
+            "samples": samples_by_grammar[name],
+            "shots": shots_by_grammar.get(name),
+        }
+        for name in grammar_names
+    }
+
+
+def _load_local_experiment_data(exp: str) -> dict[str, dict[str, Any]]:
+    exp_dir = DATA_DIR / _experiment_config_name(exp)
+    grammar_list_filepath = exp_dir / f"{exp}_grammars.txt"
+
+    grammar_names: list[str] = []
+    with open(grammar_list_filepath, "r") as handle:
+        for line in handle:
+            if grammar_name := line.strip():
+                grammar_names.append(grammar_name)
+
+    experiment_data: dict[str, dict[str, Any]] = {}
+    for grammar_name in grammar_names:
+        samples = _load_jsonl(exp_dir / f"samples_{grammar_name}.jsonl")
+        shots_path = exp_dir / f"shots_{grammar_name}.jsonl"
+        shots = _load_jsonl(shots_path) if shots_path.exists() else None
+        with open(exp_dir / f"grammar_{grammar_name}.json", "r") as handle:
+            grammar = json.load(handle)
+        experiment_data[grammar_name] = {
+            "grammar": grammar,
+            "samples": samples,
+            "shots": shots,
+        }
+    return experiment_data
+
+
+def _load_experiment_data(
+    *,
+    exp: str,
+    data_source: str,
+    hf_repo_id: str | None,
+) -> dict[str, dict[str, Any]]:
+    normalized_source = data_source.lower()
+    exp_dir = DATA_DIR / _experiment_config_name(exp)
+    local_index = exp_dir / f"{exp}_grammars.txt"
+    if normalized_source == "auto":
+        normalized_source = "local" if local_index.exists() else "hf"
+    if normalized_source == "local":
+        return _load_local_experiment_data(exp)
+    if normalized_source == "hf":
+        return _load_hf_experiment_data(exp=exp, hf_repo_id=hf_repo_id)
+    raise ValueError("data_source must be one of: auto, local, hf")
+
+
+def _load_single_grammar_data(
+    *,
+    grammar_name: str,
+    exp: str | None,
+    data_source: str,
+    hf_repo_id: str | None,
+) -> dict[str, Any]:
+    normalized_source = data_source.lower()
+    grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
+    samples_path = DATA_DIR / f"samples_{grammar_name}.jsonl"
+    if normalized_source == "auto":
+        normalized_source = (
+            "local" if grammar_path.exists() and samples_path.exists() else "hf"
+        )
+
+    if normalized_source == "local":
+        samples = _load_jsonl(samples_path)
+        shots_path = DATA_DIR / f"shots_{grammar_name}.jsonl"
+        shots = _load_jsonl(shots_path) if shots_path.exists() else None
+        with open(grammar_path, "r") as handle:
+            grammar = json.load(handle)
+        return {"grammar": grammar, "samples": samples, "shots": shots}
+
+    if normalized_source == "hf":
+        if exp is None:
+            raise ValueError("exp is required when gen_batchfile loads from HF")
+        experiment_data = _load_hf_experiment_data(exp=exp, hf_repo_id=hf_repo_id)
+        if grammar_name not in experiment_data:
+            raise ValueError(
+                f"Grammar {grammar_name} not found in HF experiment "
+                f"{_experiment_config_name(exp)}"
+            )
+        return experiment_data[grammar_name]
+
+    raise ValueError("data_source must be one of: auto, local, hf")
 
 
 def _orthography_label(orthography: str) -> str:
@@ -516,6 +696,14 @@ def sample_metadata(
     grammar: dict[str, object],
     k_shots: int,
 ) -> dict[str, str]:
+    lexical_frequency = grammar.get("lexical_frequency_metadata")
+    source_frequency: object = {}
+    if isinstance(lexical_frequency, dict):
+        frequency_metadata = cast(dict[str, object], lexical_frequency)
+        source_frequency = frequency_metadata.get("a", {})
+    if not isinstance(source_frequency, dict):
+        source_frequency = {}
+    source_frequency_metadata = cast(dict[str, object], source_frequency)
     return {
         "grammar_name": grammar_name,
         "sample_id": sample_id,
@@ -526,7 +714,21 @@ def sample_metadata(
         "n_rules": str(grammar.get("n_rules", "")),
         "prompt_tokens": str(row.get("prompt_tokens", "")),
         "k_shots": str(k_shots),
+        "lexical_frequency_profile": str(source_frequency_metadata.get("profile", "")),
+        "lexical_frequency_exponent": str(
+            source_frequency_metadata.get("exponent", "")
+        ),
+        "lexical_frequency_length_unit": str(
+            source_frequency_metadata.get("length_unit", "")
+        ),
     }
+
+
+def prompt_agreement_metadata(grammar: dict[str, object]) -> dict | None:
+    agreement_metadata = grammar.get("agreement_metadata")
+    if isinstance(agreement_metadata, dict):
+        return agreement_metadata
+    return None
 
 
 def shot_examples_from_samples(
@@ -572,31 +774,6 @@ def load_shot_samples(
 
 
 def create_orthography_data(
-    grammar_sizes: list[int] = [7500, 10000],
-    max_depth: int = 5,
-    n_grammars_per_size: int = 1,
-    n_sentences_per_depth: int = 10,
-    target_orthographies: list[str] = ["latin", "cyrillic", "hebrew"],
-):
-    """
-    Generates grammars which vary the target orthography.
-    """
-    _create_orthography_dataset(
-        exp_name="orthography",
-        title="Orthography Experiment Data",
-        overview=(
-            "This dataset varies only the target-side writing system while keeping the "
-            "source orthography and the syntactic settings fixed."
-        ),
-        grammar_sizes=grammar_sizes,
-        target_orthographies=target_orthographies,
-        max_depth=max_depth,
-        n_grammars_per_size=n_grammars_per_size,
-        n_sentences_per_depth=n_sentences_per_depth,
-    )
-
-
-def create_orthography_large_data(
     grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
     max_depth: int = 5,
     n_grammars_per_size: int = 2,
@@ -610,12 +787,12 @@ def create_orthography_large_data(
     ],
 ):
     """
-    Generates a larger orthography dataset with more grammar sizes and scripts.
+    Generates the paper-facing orthography dataset.
     """
 
     _create_orthography_dataset(
-        exp_name="orthography_large",
-        title="Large Orthography Experiment Data",
+        exp_name="orthography",
+        title="Orthography Experiment Data",
         overview=(
             "This dataset expands the orthography experiment with a larger "
             "grammar-size "
@@ -630,35 +807,6 @@ def create_orthography_large_data(
 
 
 def create_wordorder_data(
-    grammar_sizes: list[int] = [7500, 10000],
-    max_depth: int = 5,
-    n_grammars_per_size: int = 1,
-    n_sentences_per_depth: int = 20,
-    target_head_spec_params: list[tuple[bool, bool]] = [
-        (True, True),
-        (False, True),
-        (False, False),
-    ],
-):
-    """
-    Generates grammars which systematically vary word order parameters.
-    """
-    _create_wordorder_dataset(
-        exp_name="wordorder",
-        title="Word Order Experiment Data",
-        overview=(
-            "This dataset varies target-side head directionality and specifier order "
-            "while keeping the orthography fixed."
-        ),
-        grammar_sizes=grammar_sizes,
-        target_head_spec_params=target_head_spec_params,
-        max_depth=max_depth,
-        n_grammars_per_size=n_grammars_per_size,
-        n_sentences_per_depth=n_sentences_per_depth,
-    )
-
-
-def create_wordorder_large_data(
     grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
     max_depth: int = 5,
     n_grammars_per_size: int = 2,
@@ -670,12 +818,12 @@ def create_wordorder_large_data(
     ],
 ):
     """
-    Generates a larger word-order dataset with a broader grammar-size grid.
+    Generates the paper-facing word-order dataset.
     """
 
     _create_wordorder_dataset(
-        exp_name="wordorder_large",
-        title="Large Word Order Experiment Data",
+        exp_name="wordorder",
+        title="Word Order Experiment Data",
         overview=(
             "This dataset expands the word-order experiment with more grammar sizes "
             "and more grammar replicates per condition."
@@ -1114,6 +1262,9 @@ def create_grammar(
     latent_gender_b: bool = False,
     realize_gender_a: bool = False,
     realize_gender_b: bool = False,
+    lexical_frequency_profile: str = "zipf_length",
+    lexical_frequency_exponent: float = 1.0,
+    lexical_frequency_length_unit: str = "chars",
 ) -> str:
     set_all_seeds(rng_seed)
 
@@ -1135,6 +1286,9 @@ def create_grammar(
         agreement_enabled=agreement_enabled_a,
         latent_gender=latent_gender_a,
         realize_gender=realize_gender_a,
+        lexical_frequency_profile=lexical_frequency_profile,
+        lexical_frequency_exponent=lexical_frequency_exponent,
+        lexical_frequency_length_unit=lexical_frequency_length_unit,
     )
     b_params = CFGParams(
         rng_seed=rng_seed + 1,
@@ -1154,6 +1308,9 @@ def create_grammar(
         agreement_enabled=agreement_enabled_b,
         latent_gender=latent_gender_b,
         realize_gender=realize_gender_b,
+        lexical_frequency_profile=lexical_frequency_profile,
+        lexical_frequency_exponent=lexical_frequency_exponent,
+        lexical_frequency_length_unit=lexical_frequency_length_unit,
     )
     params = SCFGParams(a=a_params, b=b_params)
 
@@ -1224,23 +1381,27 @@ def generate_samples(
 
 def generate_batchfile(
     grammar_name: str,
+    exp: str | None = None,
     prompt_type: str = "basic",
     model: str = "o4-mini",
     max_completion_tokens: int | None = None,
     n: int = 1,
     k_shots: int | list[int] = 0,
+    data_source: str = "hf",
+    hf_repo_id: str | None = None,
 ):
-    samples = _load_jsonl(DATA_DIR / f"samples_{grammar_name}.jsonl")
-    shot_samples, has_dedicated_shots = load_shot_samples(
-        grammar_dir=DATA_DIR,
+    data = _load_single_grammar_data(
         grammar_name=grammar_name,
-        fallback_samples=samples,
+        exp=exp,
+        data_source=data_source,
+        hf_repo_id=hf_repo_id,
     )
-
-    grammar_path = DATA_DIR / f"grammar_{grammar_name}.json"
-    with open(grammar_path, "r") as f:
-        grammar = json.load(f)
-    agreement_metadata = grammar.get("agreement_metadata")
+    samples = cast(list[dict[str, Any]], data["samples"])
+    dedicated_shots = cast(list[dict[str, Any]] | None, data.get("shots"))
+    shot_samples = dedicated_shots or samples
+    has_dedicated_shots = dedicated_shots is not None
+    grammar = cast(dict[str, object], data["grammar"])
+    agreement_metadata = prompt_agreement_metadata(grammar)
 
     prompt_func = basic_prompt
     k_values = normalize_k_shots(k_shots)
@@ -1320,37 +1481,38 @@ def generate_experiment_batchfile(
     n: int = 1,
     max_filesize_mb: int = 200,
     k_shots: int | list[int] = 0,
+    data_source: str = "auto",
+    hf_repo_id: str | None = None,
 ):
     """
     Generates a single batchfile for multiple grammars.
     """
-    exp_dir = DATA_DIR / (exp + "_exp")
     exp_batch_dir = BATCH_DIR / (exp + "_exp")
-    grammar_list_fname = exp + "_grammars.txt"
-    grammar_list_filepath = exp_dir / grammar_list_fname
 
     exp_batch_dir.mkdir(parents=True, exist_ok=True)
 
-    grammar_names: list[str] = []
-    with open(grammar_list_filepath, "r") as handle:
-        for line in handle:
-            if grammar_name := line.strip():
-                grammar_names.append(grammar_name)
-
     k_values = normalize_k_shots(k_shots)
     all_samples = []
-    for grammar_name in grammar_names:
-        samples = _load_jsonl(exp_dir / f"samples_{grammar_name}.jsonl")
-        shot_samples, has_dedicated_shots = load_shot_samples(
-            grammar_dir=exp_dir,
-            grammar_name=grammar_name,
-            fallback_samples=samples,
-        )
+    experiment_data = _load_experiment_data(
+        exp=exp,
+        data_source=data_source,
+        hf_repo_id=hf_repo_id,
+    )
+    for grammar_name, data in experiment_data.items():
+        samples = cast(list[dict[str, Any]], data["samples"])
+        dedicated_shots = cast(list[dict[str, Any]] | None, data.get("shots"))
+        shot_samples = dedicated_shots or samples
+        has_dedicated_shots = dedicated_shots is not None
+        grammar = cast(dict[str, object], data["grammar"])
+        agreement_metadata = prompt_agreement_metadata(grammar)
 
-        grammar_path = exp_dir / f"grammar_{grammar_name}.json"
-        with open(grammar_path, "r") as handle:
-            grammar = json.load(handle)
-        agreement_metadata = grammar.get("agreement_metadata")
+        log.info(
+            "Building prompts for %s/%s with %s samples and %s dedicated shots",
+            exp,
+            grammar_name,
+            len(samples),
+            len(dedicated_shots or []),
+        )
 
         for k in k_values:
             df = pd.DataFrame(samples)
@@ -1487,9 +1649,7 @@ if __name__ == "__main__":
             "exp_complexity": create_complexity_data,
             "exp_large_complexity": create_large_complexity_data,
             "exp_wordorder": create_wordorder_data,
-            "exp_wordorder_large": create_wordorder_large_data,
             "exp_orthography": create_orthography_data,
-            "exp_orthography_large": create_orthography_large_data,
             "exp_agreement": create_agreement_data,
             "exp_fewshot": create_fewshot_data,
             "exp_size": create_size_data,

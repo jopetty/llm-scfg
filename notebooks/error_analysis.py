@@ -62,15 +62,15 @@ STANDARD_EXPERIMENTS = (
     ),
     ExperimentSpec(
         exp="wordorder",
-        dataset="wordorder_large_exp",
-        batch_dir=BATCH_DIR / "wordorder_large_exp",
-        data_dir=DATA_DIR / "wordorder_large_exp",
+        dataset="wordorder_exp",
+        batch_dir=BATCH_DIR / "wordorder_exp",
+        data_dir=DATA_DIR / "wordorder_exp",
     ),
     ExperimentSpec(
         exp="orthography",
-        dataset="orthography_large_exp",
-        batch_dir=BATCH_DIR / "orthography_large_exp",
-        data_dir=DATA_DIR / "orthography_large_exp",
+        dataset="orthography_exp",
+        batch_dir=BATCH_DIR / "orthography_exp",
+        data_dir=DATA_DIR / "orthography_exp",
     ),
 )
 
@@ -388,7 +388,7 @@ def infer_target_orthography(sample_word: str, dataset: str) -> str:
     if CYRILLIC_RE.search(sample_word):
         return "cyrillic"
     if HEBREW_RE.search(sample_word):
-        if dataset == "orthography_large_exp":
+        if dataset == "orthography_exp":
             return (
                 "hebrew"
                 if HEBREW_DIACRITIC_RE.search(sample_word)

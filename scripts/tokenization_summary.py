@@ -484,7 +484,7 @@ def parse_args() -> argparse.Namespace:
         "--experiments",
         nargs="*",
         default=None,
-        help="Optional experiment names, e.g. size wordorder_large.",
+        help="Optional experiment names, e.g. size wordorder.",
     )
     parser.add_argument(
         "--models",

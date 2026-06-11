@@ -212,7 +212,8 @@ __marimo__/
 # Ignore batch job files
 batches/
 
-data/old
+# Generated experiment artifacts live on Hugging Face.
+data/
 
 # Omitted multi-GB agreement sample artifacts
 data/agreement_exp/samples_0ad6acf1ac3b4965.jsonl

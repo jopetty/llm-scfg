@@ -578,13 +578,11 @@ def load_size_results() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def load_wordorder_results() -> tuple[pd.DataFrame, pd.DataFrame]:
-    data_exp_dir = DATA_DIR / "wordorder_large_exp"
-    exp_dir = BATCHES_DIR / "wordorder_large_exp"
+    data_exp_dir = DATA_DIR / "wordorder_exp"
+    exp_dir = BATCHES_DIR / "wordorder_exp"
     grammar_ids = [
         line.strip()
-        for line in (data_exp_dir / "wordorder_large_grammars.txt")
-        .read_text()
-        .splitlines()
+        for line in (data_exp_dir / "wordorder_grammars.txt").read_text().splitlines()
         if line.strip()
     ]
 
@@ -843,14 +841,12 @@ def load_agreement_results() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def load_orthography_results() -> tuple[pd.DataFrame, pd.DataFrame]:
-    exp_data_dir = DATA_DIR / "orthography_large_exp"
-    exp_batch_dir = BATCHES_DIR / "orthography_large_exp"
+    exp_data_dir = DATA_DIR / "orthography_exp"
+    exp_batch_dir = BATCHES_DIR / "orthography_exp"
 
     grammar_ids = [
         line.strip()
-        for line in (exp_data_dir / "orthography_large_grammars.txt")
-        .read_text()
-        .splitlines()
+        for line in (exp_data_dir / "orthography_grammars.txt").read_text().splitlines()
         if line.strip()
     ]
 
@@ -991,10 +987,10 @@ def main() -> None:
     )
 
     wordorder_size_df, wordorder_length_df = load_or_compute_cached_pair(
-        "wordorder_large_values", load_wordorder_results, force=args.force
+        "wordorder_values", load_wordorder_results, force=args.force
     )
     write_output(
-        "results_tables_wordorder_large.tex",
+        "results_tables_wordorder.tex",
         build_condition_tables(
             df=wordorder_size_df,
             condition_col="target_word_order",
@@ -1053,10 +1049,10 @@ def main() -> None:
     )
 
     orthography_size_df, orthography_length_df = load_or_compute_cached_pair(
-        "orthography_large_values", load_orthography_results, force=args.force
+        "orthography_values", load_orthography_results, force=args.force
     )
     write_output(
-        "results_tables_orthography_large.tex",
+        "results_tables_orthography.tex",
         build_condition_tables(
             df=orthography_size_df,
             condition_col="target_orthography",
