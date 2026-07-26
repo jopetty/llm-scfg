@@ -1,3 +1,4 @@
 [submodule "paper"]
 	path = paper
 	url = https://github.com/jopetty/telicpaper.git
+	branch = main
