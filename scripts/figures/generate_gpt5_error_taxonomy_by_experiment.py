@@ -17,11 +17,10 @@ import seaborn as sns
 from matplotlib.gridspec import GridSpec
 
 PROJECT_ROOT = pyrootutils.find_root(indicator=".project-root")
-NOTEBOOKS_DIR = PROJECT_ROOT / "notebooks"
-if str(NOTEBOOKS_DIR) not in sys.path:
-    sys.path.insert(0, str(NOTEBOOKS_DIR))
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-import aesthetics as aes  # noqa: E402
+from notebooks import aesthetics as aes  # noqa: E402
 
 # Figure configuration. Change these values to write a variant without editing
 # the plotting or data-preparation code below.
@@ -76,14 +75,11 @@ EXPERIMENT_LABELS = {
 
 def family_share(df: pd.DataFrame) -> pd.DataFrame:
     """Return each error family's share among wrong answers per experiment."""
-    counts = (
-        df.groupby(["exp", "error_family"], observed=False)
-        .size()
-        .rename("count")
-        .reset_index()
+    counts = df.groupby(["exp", "error_family"], as_index=False, observed=False).agg(
+        count=("error_family", "size")
     )
-    totals = (
-        df.groupby("exp", observed=False).size().rename("total").reset_index()
+    totals = df.groupby("exp", as_index=False, observed=False).agg(
+        total=("error_family", "size")
     )
     shares = counts.merge(totals, on="exp", how="left")
     shares["share"] = shares["count"] / shares["total"]
@@ -141,9 +137,7 @@ def load_plot_data() -> tuple[pd.DataFrame, list[str], list[str]]:
             | rows["dataset"].eq(ORTHOGRAPHY_DATASET)
         )
     ].copy()
-    rows["exp"] = pd.Categorical(
-        rows["exp"], categories=EXPERIMENT_ORDER, ordered=True
-    )
+    rows["exp"] = pd.Categorical(rows["exp"], categories=EXPERIMENT_ORDER, ordered=True)
     wrong_tags = rows.loc[
         rows["fuzzy_model"].astype(str).eq(MODEL) & ~rows["exact_match"]
     ].copy()
@@ -174,9 +168,7 @@ def load_plot_data() -> tuple[pd.DataFrame, list[str], list[str]]:
 def make_figure() -> plt.Figure:
     """Create the error-taxonomy panel figure."""
     plot_data, present_families, experiment_panels = load_plot_data()
-    figure = plt.figure(
-        figsize=(aes.COLM_PAPER_WIDTH_IN, aes.FIG_HEIGHT_SINGLE_ROW_IN)
-    )
+    figure = plt.figure(figsize=(aes.COLM_PAPER_WIDTH_IN, aes.FIG_HEIGHT_SINGLE_ROW_IN))
     grid = GridSpec(1, 4, figure=figure, wspace=0.12)
     axes = [figure.add_subplot(grid[0, 0])]
     for panel_idx in range(1, 4):
