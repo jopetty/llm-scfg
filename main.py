@@ -11,7 +11,6 @@ from hashlib import blake2b
 from typing import Any, Dict, Union, cast
 
 import fire
-import numpy as np
 import pandas as pd
 import pyrootutils
 import tiktoken
@@ -41,6 +40,8 @@ DEFAULT_HF_DATASET_REPO = "jowenpetty/scfg"
 load_dotenv(PROJECT_ROOT / ".env")
 
 GPT_MESSAGE_TOKEN_LIMIT = 272_000
+DEFAULT_BATCH_FILE_SIZE_MIB = 200
+DEFAULT_BATCH_FILE_SIZE_BYTES = DEFAULT_BATCH_FILE_SIZE_MIB * 1024 * 1024
 DEFAULT_LARGE_GRAMMAR_SIZES = [25, 50, 100, 1_000, 5_000, 7_500, 10_000]
 FEWSHOT_K_VALUES = [0, 1, 2, 4, 8, 16]
 
@@ -581,7 +582,8 @@ def estimate_prompt_tokens(prompt: str, model: str) -> int:
     try:
         encoder = tiktoken.encoding_for_model(model)
     except KeyError:
-        encoder = tiktoken.get_encoding("cl100k_base")
+        encoding_name = "o200k_base" if normalized.startswith("gpt-") else "cl100k_base"
+        encoder = tiktoken.get_encoding(encoding_name)
     return len(encoder.encode(prompt))
 
 
@@ -610,6 +612,8 @@ def gemma_tokenizer(model: str):
 
 def model_input_token_limit(model: str) -> int | None:
     normalized = model.lower()
+    if normalized.startswith("gpt-"):
+        return GPT_MESSAGE_TOKEN_LIMIT
     if "gemma-3-270m" in normalized or "gemma-3-1b" in normalized:
         return 32_000
     if any(size in normalized for size in ["gemma-3-4b", "gemma-3-12b", "gemma-3-27b"]):
@@ -655,7 +659,7 @@ def warn_for_large_prompts(
     grammar_name: str,
     threshold: int = GPT_MESSAGE_TOKEN_LIMIT,
 ) -> None:
-    if not model.startswith("gpt") or "prompt" not in df:
+    if df.empty or not model.startswith("gpt") or "prompt" not in df:
         return
     df = add_prompt_token_estimates(df, model)
     token_estimates = pd.to_numeric(df["prompt_tokens"], errors="coerce")
@@ -837,7 +841,7 @@ def create_wordorder_data(
 
 
 def create_fewshot_data(
-    grammar_sizes: list[int] = [25, 50, 100, 1000],
+    grammar_sizes: list[int] = DEFAULT_LARGE_GRAMMAR_SIZES,
     max_depth: int = 5,
     n_grammars_per_size: int = 2,
     n_sentences_per_depth: int = 20,
@@ -1473,13 +1477,56 @@ def generate_batchfile(
             f.write(f"{j}\n")
 
 
+def batch_row_size_bytes(serialized_request: str) -> int:
+    """Return a conservative final JSONL size for one batch request.
+
+    Experiment batch files append a six-character hash to each custom ID before
+    writing.  Reserving ``-xxxxxx\n`` keeps the packing calculation valid before
+    a file-specific hash has been generated.
+    """
+
+    return len((serialized_request + "-xxxxxx\n").encode("utf-8"))
+
+
+def partition_batch_rows_by_size(
+    rows: pd.DataFrame,
+    *,
+    max_file_size_bytes: int,
+) -> list[pd.DataFrame]:
+    """Greedily pack serialized requests into files below a byte limit."""
+
+    if max_file_size_bytes <= 0:
+        raise ValueError("max_file_size_bytes must be positive")
+
+    partitions: list[pd.DataFrame] = []
+    current_positions: list[int] = []
+    current_size = 0
+    for position, serialized_request in enumerate(rows["json"]):
+        row_size = batch_row_size_bytes(str(serialized_request))
+        if row_size > max_file_size_bytes:
+            raise ValueError(
+                "One batch request exceeds the file-size limit: "
+                f"{row_size:,} bytes > {max_file_size_bytes:,} bytes"
+            )
+        if current_positions and current_size + row_size > max_file_size_bytes:
+            partitions.append(rows.iloc[current_positions].copy())
+            current_positions = []
+            current_size = 0
+        current_positions.append(position)
+        current_size += row_size
+
+    if current_positions:
+        partitions.append(rows.iloc[current_positions].copy())
+    return partitions
+
+
 def generate_experiment_batchfile(
     exp: str,
     prompt_type: str = "basic",
     model: str = "gpt-5-nano",
     max_completion_tokens: int | None = None,
     n: int = 1,
-    max_filesize_mb: int = 200,
+    max_filesize_mb: float = DEFAULT_BATCH_FILE_SIZE_MIB,
     k_shots: int | list[int] = 0,
     data_source: str = "auto",
     hf_repo_id: str | None = None,
@@ -1568,15 +1615,12 @@ def generate_experiment_batchfile(
         raise ValueError(f"No samples found for experiment {exp}")
     all_df = pd.concat(all_samples, ignore_index=True)
 
-    # if the all_df["json"] column entries as strings exceed max_filesize_mb,
-    # split into multiple files
-    total_size_bytes = (
-        all_df["json"].apply(lambda x: len((x + "-aaaaaa\n").encode("utf-8"))).sum()
+    max_file_size_bytes = int(max_filesize_mb * 1024 * 1024)
+    partitioned_dfs = partition_batch_rows_by_size(
+        all_df,
+        max_file_size_bytes=max_file_size_bytes,
     )
-
-    total_size_mb = total_size_bytes / (1024 * 1024) * 1.05
-    num_files = max(1, int(total_size_mb // max_filesize_mb) + 1)
-    partitioned_dfs = list(np.array_split(all_df, num_files))
+    num_files = len(partitioned_dfs)
 
     model_pathsafe_name: str = model.replace("/", "_")
     prompt_label = "" if prompt_type == "basic" else f"_{prompt_type}"
@@ -1616,6 +1660,12 @@ def generate_experiment_batchfile(
         with open(fpath, "w") as f:
             for j in part_df["json"]:
                 f.write(f"{j}\n")
+        written_size = fpath.stat().st_size
+        if written_size > max_file_size_bytes:
+            raise RuntimeError(
+                f"Batch file {fpath} exceeds the {max_file_size_bytes:,}-byte limit: "
+                f"{written_size:,} bytes"
+            )
 
 
 def demo():

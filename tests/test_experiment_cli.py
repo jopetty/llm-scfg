@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import pandas as pd
+
 import main
 from scfg.scfg import CFGParams
 
@@ -25,6 +27,65 @@ class ExperimentCliTest(unittest.TestCase):
             tokenize=True,
             add_generation_prompt=True,
         )
+
+    def test_model_input_token_limit_covers_gpt_models(self):
+        self.assertEqual(
+            main.GPT_MESSAGE_TOKEN_LIMIT,
+            main.model_input_token_limit("gpt-5.6-sol"),
+        )
+
+    def test_drop_rows_over_model_context_filters_gpt_prompts(self):
+        df = pd.DataFrame(
+            {
+                "prompt": ["short", "too long"],
+                "prompt_tokens": [10, 11],
+            }
+        )
+
+        with mock.patch.object(main, "GPT_MESSAGE_TOKEN_LIMIT", 10):
+            filtered = main.drop_rows_over_model_context(
+                df, model="gpt-5.6-sol", grammar_name="grammar"
+            )
+
+        self.assertEqual(["short"], filtered["prompt"].tolist())
+
+    def test_warn_for_large_prompts_allows_empty_frame(self):
+        empty_df = pd.DataFrame(
+            {
+                "prompt": pd.Series(dtype="object"),
+                "prompt_tokens": pd.Series(dtype="int64"),
+            }
+        )
+
+        main.warn_for_large_prompts(
+            empty_df, model="gpt-5.6-luna", grammar_name="grammar"
+        )
+
+    def test_partition_batch_rows_by_size_respects_byte_limit(self):
+        rows = pd.DataFrame({"json": ["a" * 10, "b" * 20, "c" * 10]})
+        max_file_size_bytes = 50
+
+        partitions = main.partition_batch_rows_by_size(
+            rows,
+            max_file_size_bytes=max_file_size_bytes,
+        )
+
+        self.assertEqual(
+            [["a" * 10, "b" * 20], ["c" * 10]],
+            [partition["json"].tolist() for partition in partitions],
+        )
+        for partition in partitions:
+            self.assertLessEqual(
+                sum(main.batch_row_size_bytes(row) for row in partition["json"]),
+                max_file_size_bytes,
+            )
+
+    def test_partition_batch_rows_by_size_rejects_oversize_request(self):
+        with self.assertRaisesRegex(ValueError, "exceeds the file-size limit"):
+            main.partition_batch_rows_by_size(
+                pd.DataFrame({"json": ["a" * 100]}),
+                max_file_size_bytes=100,
+            )
 
     def test_generate_experiment_batchfile_drops_rows_over_gemma_context(self):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -189,7 +189,28 @@ class AgreementCliTest(unittest.TestCase):
                 self.assertIn(sample["left_phonetic"], compact_prompt)
                 self.assertIn(" -> <", compact_prompt)
                 self.assertIn("1.sg=<'", compact_prompt)
-                self.assertNotIn("[1.sg] -> <", compact_prompt)
+                self.assertNotIn("V1[1.sg] -> <", compact_prompt)
+
+                compact_grammar = main.prompt_grammar_str(
+                    grammar, sample["left_phonetic"], prompt_type="compact"
+                )
+                self.assertEqual(
+                    compact_grammar,
+                    main.prompt_grammar_str(grammar, "", prompt_type="compact"),
+                )
+                for category in (
+                    "verbs",
+                    "nouns",
+                    "propns",
+                    "prons",
+                    "adjs",
+                    "det_def",
+                    "det_indef",
+                    "tenses",
+                    "comps",
+                ):
+                    for lexical_item in grammar["a"][category]:
+                        self.assertIn(lexical_item, compact_grammar)
             finally:
                 main.DATA_DIR = original_data_dir
 
