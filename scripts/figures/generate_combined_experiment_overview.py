@@ -491,9 +491,13 @@ def configure_fewshot_plot(
             "Expected exactly one model in few-shot results; found " + ", ".join(models)
         )
     config["display_name"] = f"Few-shot ({models[0]})"
+    shot_counts = sorted(
+        int(k)
+        for k in pd.to_numeric(panels["size"]["k_shots"], errors="raise").unique()
+    )
     config["palette"] = {
         f"{k} shot" if k == 1 else f"{k} shots": color
-        for k, color in shot_palette(sorted(panels["size"]["k_shots"].unique())).items()
+        for k, color in shot_palette(shot_counts).items()
     }
 
 
