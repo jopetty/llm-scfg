@@ -667,6 +667,10 @@ def summarize_panel(
     x_column = str(config[f"{panel_name}_x"])
     hue_column = str(config["hue"])
     group_columns = [x_column, hue_column]
+    if config["slug"] == "size" and "fuzzy_model" in panel.columns:
+        # The size hue uses display names, so retain the original model ID for
+        # the palette and stable legend ordering after a CSV round trip.
+        group_columns.append("fuzzy_model")
     if "k_shots" in panel.columns:
         group_columns.append("k_shots")
     summary = (
@@ -675,7 +679,7 @@ def summarize_panel(
         .reset_index()
     )
     # These rows identify the model in titles/palettes without retaining examples.
-    if "fuzzy_model" in panel.columns:
+    if "fuzzy_model" in panel.columns and "fuzzy_model" not in group_columns:
         model_names = sorted(panel["fuzzy_model"].dropna().astype(str).unique())
         summary["fuzzy_model"] = ", ".join(model_names)
     return summary.assign(experiment=config["slug"], panel=panel_name)
