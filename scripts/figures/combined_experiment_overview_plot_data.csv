@@ -1,0 +1,210 @@
+grammar_size_bin,model_display_name,fuzzy_model,match_value,experiment,panel,input_length_bin,target_word_order,agreement_condition,target_orthography,shot_label,k_shots
+55.9995,gpt-5.6-luna,gpt-5.6-luna,0.7145833333333333,size,size,,,,,,
+55.9995,gpt-5.6-sol,gpt-5.6-sol,0.9875,size,size,,,,,,
+55.9995,gpt-5.6-terra,gpt-5.6-terra,0.8166666666666667,size,size,,,,,,
+86.0,gpt-5.6-luna,gpt-5.6-luna,0.5333333333333333,size,size,,,,,,
+86.0,gpt-5.6-sol,gpt-5.6-sol,0.7416666666666667,size,size,,,,,,
+86.0,gpt-5.6-terra,gpt-5.6-terra,0.6541666666666667,size,size,,,,,,
+2066.0,gpt-5.6-luna,gpt-5.6-luna,0.3645833333333333,size,size,,,,,,
+2066.0,gpt-5.6-sol,gpt-5.6-sol,0.5020833333333333,size,size,,,,,,
+2066.0,gpt-5.6-terra,gpt-5.6-terra,0.475,size,size,,,,,,
+5026.0,gpt-5.6-luna,gpt-5.6-luna,0.11666666666666667,size,size,,,,,,
+5026.0,gpt-5.6-sol,gpt-5.6-sol,0.16666666666666666,size,size,,,,,,
+5026.0,gpt-5.6-terra,gpt-5.6-terra,0.15,size,size,,,,,,
+7026.0,gpt-5.6-luna,gpt-5.6-luna,0.0875,size,size,,,,,,
+7026.0,gpt-5.6-sol,gpt-5.6-sol,0.125,size,size,,,,,,
+7026.0,gpt-5.6-terra,gpt-5.6-terra,0.1,size,size,,,,,,
+,gpt-5.6-luna,gpt-5.6-luna,0.5616797900262467,size,length,5.9995,,,,,
+,gpt-5.6-sol,gpt-5.6-sol,0.6430446194225722,size,length,5.9995,,,,,
+,gpt-5.6-terra,gpt-5.6-terra,0.6167979002624672,size,length,5.9995,,,,,
+,gpt-5.6-luna,gpt-5.6-luna,0.5120274914089347,size,length,10.3,,,,,
+,gpt-5.6-sol,gpt-5.6-sol,0.5876288659793815,size,length,10.3,,,,,
+,gpt-5.6-terra,gpt-5.6-terra,0.5120274914089347,size,length,10.3,,,,,
+,gpt-5.6-luna,gpt-5.6-luna,0.3915343915343915,size,length,14.8,,,,,
+,gpt-5.6-sol,gpt-5.6-sol,0.5714285714285714,size,length,14.8,,,,,
+,gpt-5.6-terra,gpt-5.6-terra,0.47619047619047616,size,length,14.8,,,,,
+,gpt-5.6-luna,gpt-5.6-luna,0.3085399449035813,size,length,19.5,,,,,
+,gpt-5.6-sol,gpt-5.6-sol,0.5261707988980716,size,length,19.5,,,,,
+,gpt-5.6-terra,gpt-5.6-terra,0.4380165289256198,size,length,19.5,,,,,
+,gpt-5.6-luna,gpt-5.6-luna,0.2696629213483146,size,length,27.0,,,,,
+,gpt-5.6-sol,gpt-5.6-sol,0.5243445692883895,size,length,27.0,,,,,
+,gpt-5.6-terra,gpt-5.6-terra,0.42696629213483145,size,length,27.0,,,,,
+55.9995,,gpt-5.6-sol,0.98125,wordorder,size,,OVS,,,,
+55.9995,,gpt-5.6-sol,0.9895833333333334,wordorder,size,,SOV,,,,
+55.9995,,gpt-5.6-sol,0.96875,wordorder,size,,SVO,,,,
+86.0,,gpt-5.6-sol,1.0,wordorder,size,,OVS,,,,
+86.0,,gpt-5.6-sol,0.9791666666666666,wordorder,size,,SOV,,,,
+86.0,,gpt-5.6-sol,0.9958333333333333,wordorder,size,,SVO,,,,
+2066.0,,gpt-5.6-sol,0.5041666666666667,wordorder,size,,OVS,,,,
+2066.0,,gpt-5.6-sol,0.425,wordorder,size,,SOV,,,,
+2066.0,,gpt-5.6-sol,0.4270833333333333,wordorder,size,,SVO,,,,
+5026.0,,gpt-5.6-sol,0.19583333333333333,wordorder,size,,OVS,,,,
+5026.0,,gpt-5.6-sol,0.17916666666666667,wordorder,size,,SOV,,,,
+5026.0,,gpt-5.6-sol,0.1875,wordorder,size,,SVO,,,,
+7026.0,,gpt-5.6-sol,0.15833333333333333,wordorder,size,,OVS,,,,
+7026.0,,gpt-5.6-sol,0.10416666666666667,wordorder,size,,SOV,,,,
+7026.0,,gpt-5.6-sol,0.10416666666666667,wordorder,size,,SVO,,,,
+,,gpt-5.6-sol,0.7357512953367875,wordorder,length,5.9995,OVS,,,,
+,,gpt-5.6-sol,0.6613756613756614,wordorder,length,5.9995,SOV,,,,
+,,gpt-5.6-sol,0.6490765171503958,wordorder,length,5.9995,SVO,,,,
+,,gpt-5.6-sol,0.6091549295774648,wordorder,length,10.0,OVS,,,,
+,,gpt-5.6-sol,0.6241830065359477,wordorder,length,10.0,SOV,,,,
+,,gpt-5.6-sol,0.6111111111111112,wordorder,length,10.0,SVO,,,,
+,,gpt-5.6-sol,0.5953002610966057,wordorder,length,14.5,OVS,,,,
+,,gpt-5.6-sol,0.5510204081632653,wordorder,length,14.5,SOV,,,,
+,,gpt-5.6-sol,0.5377906976744186,wordorder,length,14.5,SVO,,,,
+,,gpt-5.6-sol,0.5518207282913166,wordorder,length,19.5,OVS,,,,
+,,gpt-5.6-sol,0.5225464190981433,wordorder,length,19.5,SOV,,,,
+,,gpt-5.6-sol,0.5218579234972678,wordorder,length,19.5,SVO,,,,
+,,gpt-5.6-sol,0.5777777777777777,wordorder,length,30.5,OVS,,,,
+,,gpt-5.6-sol,0.5615942028985508,wordorder,length,30.5,SOV,,,,
+,,gpt-5.6-sol,0.5973597359735974,wordorder,length,30.5,SVO,,,,
+37.4995,,gpt-5.6-luna,0.9458333333333333,agreement,size,,,Agr → Agr,,,
+37.4995,,gpt-5.6-luna,0.9375,agreement,size,,,Agr → NoAgr,,,
+37.4995,,gpt-5.6-luna,0.48541666666666666,agreement,size,,,NoAgr → Agr,,,
+37.4995,,gpt-5.6-luna,0.95,agreement,size,,,NoAgr → NoAgr,,,
+75.0,,gpt-5.6-luna,0.8625,agreement,size,,,Agr → Agr,,,
+75.0,,gpt-5.6-luna,0.9625,agreement,size,,,Agr → NoAgr,,,
+75.0,,gpt-5.6-luna,0.5125,agreement,size,,,NoAgr → Agr,,,
+75.0,,gpt-5.6-luna,0.8666666666666667,agreement,size,,,NoAgr → NoAgr,,,
+550.0,,gpt-5.6-luna,0.8166666666666667,agreement,size,,,Agr → Agr,,,
+550.0,,gpt-5.6-luna,0.8208333333333333,agreement,size,,,Agr → NoAgr,,,
+550.0,,gpt-5.6-luna,0.44166666666666665,agreement,size,,,NoAgr → Agr,,,
+550.0,,gpt-5.6-luna,0.8041666666666667,agreement,size,,,NoAgr → NoAgr,,,
+3000.0,,gpt-5.6-luna,0.7,agreement,size,,,Agr → Agr,,,
+3000.0,,gpt-5.6-luna,0.7375,agreement,size,,,Agr → NoAgr,,,
+3000.0,,gpt-5.6-luna,0.3958333333333333,agreement,size,,,NoAgr → Agr,,,
+3000.0,,gpt-5.6-luna,0.6166666666666667,agreement,size,,,NoAgr → NoAgr,,,
+6250.0,,gpt-5.6-luna,0.6125,agreement,size,,,Agr → NoAgr,,,
+6250.0,,gpt-5.6-luna,0.36666666666666664,agreement,size,,,NoAgr → Agr,,,
+6250.0,,gpt-5.6-luna,0.6208333333333333,agreement,size,,,NoAgr → NoAgr,,,
+,,gpt-5.6-luna,0.93125,agreement,length,5.4995,,Agr → Agr,,,
+,,gpt-5.6-luna,0.8975741239892183,agreement,length,5.4995,,Agr → NoAgr,,,
+,,gpt-5.6-luna,0.6177285318559557,agreement,length,5.4995,,NoAgr → Agr,,,
+,,gpt-5.6-luna,0.8910256410256411,agreement,length,5.4995,,NoAgr → NoAgr,,,
+,,gpt-5.6-luna,0.8657407407407407,agreement,length,10.0,,Agr → Agr,,,
+,,gpt-5.6-luna,0.849802371541502,agreement,length,10.0,,Agr → NoAgr,,,
+,,gpt-5.6-luna,0.5407407407407407,agreement,length,10.0,,NoAgr → Agr,,,
+,,gpt-5.6-luna,0.8299595141700404,agreement,length,10.0,,NoAgr → NoAgr,,,
+,,gpt-5.6-luna,0.8564356435643564,agreement,length,14.0,,Agr → Agr,,,
+,,gpt-5.6-luna,0.82,agreement,length,14.0,,Agr → NoAgr,,,
+,,gpt-5.6-luna,0.43014705882352944,agreement,length,14.0,,NoAgr → Agr,,,
+,,gpt-5.6-luna,0.8353413654618473,agreement,length,14.0,,NoAgr → NoAgr,,,
+,,gpt-5.6-luna,0.7884615384615384,agreement,length,18.5,,Agr → Agr,,,
+,,gpt-5.6-luna,0.8069620253164557,agreement,length,18.5,,Agr → NoAgr,,,
+,,gpt-5.6-luna,0.36477987421383645,agreement,length,18.5,,NoAgr → Agr,,,
+,,gpt-5.6-luna,0.71875,agreement,length,18.5,,NoAgr → NoAgr,,,
+,,gpt-5.6-luna,0.801980198019802,agreement,length,29.5,,Agr → Agr,,,
+,,gpt-5.6-luna,0.776,agreement,length,29.5,,Agr → NoAgr,,,
+,,gpt-5.6-luna,0.1963470319634703,agreement,length,29.5,,NoAgr → Agr,,,
+,,gpt-5.6-luna,0.7467948717948718,agreement,length,29.5,,NoAgr → NoAgr,,,
+55.9995,,gpt-5.6-luna,0.94375,orthography,size,,,,Latin → Cyrillic,,
+55.9995,,gpt-5.6-luna,0.81875,orthography,size,,,,Latin → Hebrew,,
+55.9995,,gpt-5.6-luna,0.0,orthography,size,,,,Latin → Hebrew (pointed),,
+55.9995,,gpt-5.6-luna,0.9604166666666667,orthography,size,,,,Latin → Latin,,
+55.9995,,gpt-5.6-luna,0.88125,orthography,size,,,,Latin → Latin (diacritics),,
+86.0,,gpt-5.6-luna,0.9541666666666667,orthography,size,,,,Latin → Cyrillic,,
+86.0,,gpt-5.6-luna,0.9625,orthography,size,,,,Latin → Hebrew,,
+86.0,,gpt-5.6-luna,0.0,orthography,size,,,,Latin → Hebrew (pointed),,
+86.0,,gpt-5.6-luna,0.9375,orthography,size,,,,Latin → Latin,,
+86.0,,gpt-5.6-luna,0.9583333333333334,orthography,size,,,,Latin → Latin (diacritics),,
+2066.0,,gpt-5.6-luna,0.3625,orthography,size,,,,Latin → Cyrillic,,
+2066.0,,gpt-5.6-luna,0.45416666666666666,orthography,size,,,,Latin → Hebrew,,
+2066.0,,gpt-5.6-luna,0.004166666666666667,orthography,size,,,,Latin → Hebrew (pointed),,
+2066.0,,gpt-5.6-luna,0.49166666666666664,orthography,size,,,,Latin → Latin,,
+2066.0,,gpt-5.6-luna,0.33541666666666664,orthography,size,,,,Latin → Latin (diacritics),,
+5026.0,,gpt-5.6-luna,0.125,orthography,size,,,,Latin → Cyrillic,,
+5026.0,,gpt-5.6-luna,0.1375,orthography,size,,,,Latin → Hebrew,,
+5026.0,,gpt-5.6-luna,0.0,orthography,size,,,,Latin → Hebrew (pointed),,
+5026.0,,gpt-5.6-luna,0.1625,orthography,size,,,,Latin → Latin,,
+5026.0,,gpt-5.6-luna,0.075,orthography,size,,,,Latin → Latin (diacritics),,
+7026.0,,gpt-5.6-luna,0.0625,orthography,size,,,,Latin → Cyrillic,,
+7026.0,,gpt-5.6-luna,0.1,orthography,size,,,,Latin → Hebrew,,
+7026.0,,gpt-5.6-luna,0.0,orthography,size,,,,Latin → Hebrew (pointed),,
+7026.0,,gpt-5.6-luna,0.09166666666666666,orthography,size,,,,Latin → Latin,,
+7026.0,,gpt-5.6-luna,0.13333333333333333,orthography,size,,,,Latin → Latin (diacritics),,
+,,gpt-5.6-luna,0.6629526462395543,orthography,length,5.9995,,,Latin → Cyrillic,,
+,,gpt-5.6-luna,0.6890756302521008,orthography,length,5.9995,,,Latin → Hebrew,,
+,,gpt-5.6-luna,0.00546448087431694,orthography,length,5.9995,,,Latin → Hebrew (pointed),,
+,,gpt-5.6-luna,0.6925287356321839,orthography,length,5.9995,,,Latin → Latin,,
+,,gpt-5.6-luna,0.6603260869565217,orthography,length,5.9995,,,Latin → Latin (diacritics),,
+,,gpt-5.6-luna,0.553763440860215,orthography,length,10.5,,,Latin → Cyrillic,,
+,,gpt-5.6-luna,0.5667655786350149,orthography,length,10.5,,,Latin → Hebrew,,
+,,gpt-5.6-luna,0.0,orthography,length,10.5,,,Latin → Hebrew (pointed),,
+,,gpt-5.6-luna,0.5795454545454546,orthography,length,10.5,,,Latin → Latin,,
+,,gpt-5.6-luna,0.5039370078740157,orthography,length,10.5,,,Latin → Latin (diacritics),,
+,,gpt-5.6-luna,0.5035971223021583,orthography,length,15.0,,,Latin → Cyrillic,,
+,,gpt-5.6-luna,0.49480968858131485,orthography,length,15.0,,,Latin → Hebrew,,
+,,gpt-5.6-luna,0.0,orthography,length,15.0,,,Latin → Hebrew (pointed),,
+,,gpt-5.6-luna,0.5880281690140845,orthography,length,15.0,,,Latin → Latin,,
+,,gpt-5.6-luna,0.5095541401273885,orthography,length,15.0,,,Latin → Latin (diacritics),,
+,,gpt-5.6-luna,0.4755043227665706,orthography,length,19.5,,,Latin → Cyrillic,,
+,,gpt-5.6-luna,0.4418604651162791,orthography,length,19.5,,,Latin → Hebrew,,
+,,gpt-5.6-luna,0.0,orthography,length,19.5,,,Latin → Hebrew (pointed),,
+,,gpt-5.6-luna,0.5222222222222223,orthography,length,19.5,,,Latin → Latin,,
+,,gpt-5.6-luna,0.44668587896253603,orthography,length,19.5,,,Latin → Latin (diacritics),,
+,,gpt-5.6-luna,0.4691358024691358,orthography,length,32.0,,,Latin → Cyrillic,,
+,,gpt-5.6-luna,0.4730878186968839,orthography,length,32.0,,,Latin → Hebrew,,
+,,gpt-5.6-luna,0.0,orthography,length,32.0,,,Latin → Hebrew (pointed),,
+,,gpt-5.6-luna,0.5446428571428571,orthography,length,32.0,,,Latin → Latin,,
+,,gpt-5.6-luna,0.4222222222222222,orthography,length,32.0,,,Latin → Latin (diacritics),,
+55.9995,,gpt-5.6-luna,0.7597222222222222,fewshot,size,,,,,0 shots,0.0
+55.9995,,gpt-5.6-luna,0.7810185185185186,fewshot,size,,,,,1 shot,1.0
+55.9995,,gpt-5.6-luna,0.861574074074074,fewshot,size,,,,,16 shots,16.0
+55.9995,,gpt-5.6-luna,0.7805555555555556,fewshot,size,,,,,2 shots,2.0
+55.9995,,gpt-5.6-luna,0.7828703703703703,fewshot,size,,,,,4 shots,4.0
+55.9995,,gpt-5.6-luna,0.8305555555555556,fewshot,size,,,,,8 shots,8.0
+86.0,,gpt-5.6-luna,0.725,fewshot,size,,,,,0 shots,0.0
+86.0,,gpt-5.6-luna,0.7243055555555555,fewshot,size,,,,,1 shot,1.0
+86.0,,gpt-5.6-luna,0.83125,fewshot,size,,,,,16 shots,16.0
+86.0,,gpt-5.6-luna,0.7680555555555556,fewshot,size,,,,,2 shots,2.0
+86.0,,gpt-5.6-luna,0.7743055555555556,fewshot,size,,,,,4 shots,4.0
+86.0,,gpt-5.6-luna,0.7909722222222222,fewshot,size,,,,,8 shots,8.0
+466.0,,gpt-5.6-luna,0.6423611111111112,fewshot,size,,,,,0 shots,0.0
+466.0,,gpt-5.6-luna,0.6493055555555556,fewshot,size,,,,,1 shot,1.0
+466.0,,gpt-5.6-luna,0.7173611111111111,fewshot,size,,,,,16 shots,16.0
+466.0,,gpt-5.6-luna,0.65625,fewshot,size,,,,,2 shots,2.0
+466.0,,gpt-5.6-luna,0.6701388888888888,fewshot,size,,,,,4 shots,4.0
+466.0,,gpt-5.6-luna,0.6881944444444444,fewshot,size,,,,,8 shots,8.0
+2427.0,,gpt-5.6-luna,0.4041666666666667,fewshot,size,,,,,0 shots,0.0
+2427.0,,gpt-5.6-luna,0.40208333333333335,fewshot,size,,,,,1 shot,1.0
+2427.0,,gpt-5.6-luna,0.45555555555555555,fewshot,size,,,,,16 shots,16.0
+2427.0,,gpt-5.6-luna,0.4076388888888889,fewshot,size,,,,,2 shots,2.0
+2427.0,,gpt-5.6-luna,0.4083333333333333,fewshot,size,,,,,4 shots,4.0
+2427.0,,gpt-5.6-luna,0.43194444444444446,fewshot,size,,,,,8 shots,8.0
+6028.0,,gpt-5.6-luna,0.10902777777777778,fewshot,size,,,,,0 shots,0.0
+6028.0,,gpt-5.6-luna,0.11597222222222223,fewshot,size,,,,,1 shot,1.0
+6028.0,,gpt-5.6-luna,0.1486111111111111,fewshot,size,,,,,16 shots,16.0
+6028.0,,gpt-5.6-luna,0.12152777777777778,fewshot,size,,,,,2 shots,2.0
+6028.0,,gpt-5.6-luna,0.12152777777777778,fewshot,size,,,,,4 shots,4.0
+6028.0,,gpt-5.6-luna,0.12430555555555556,fewshot,size,,,,,8 shots,8.0
+,,gpt-5.6-luna,0.7026558891454965,fewshot,length,5.9995,,,,0 shots,0.0
+,,gpt-5.6-luna,0.7228637413394919,fewshot,length,5.9995,,,,1 shot,1.0
+,,gpt-5.6-luna,0.7621247113163973,fewshot,length,5.9995,,,,16 shots,16.0
+,,gpt-5.6-luna,0.7396073903002309,fewshot,length,5.9995,,,,2 shots,2.0
+,,gpt-5.6-luna,0.73094688221709,fewshot,length,5.9995,,,,4 shots,4.0
+,,gpt-5.6-luna,0.7476905311778291,fewshot,length,5.9995,,,,8 shots,8.0
+,,gpt-5.6-luna,0.5827814569536424,fewshot,length,10.5,,,,0 shots,0.0
+,,gpt-5.6-luna,0.6014449127031909,fewshot,length,10.5,,,,1 shot,1.0
+,,gpt-5.6-luna,0.6568332329921734,fewshot,length,10.5,,,,16 shots,16.0
+,,gpt-5.6-luna,0.5942203491872367,fewshot,length,10.5,,,,2 shots,2.0
+,,gpt-5.6-luna,0.6195063214930765,fewshot,length,10.5,,,,4 shots,4.0
+,,gpt-5.6-luna,0.6303431667670079,fewshot,length,10.5,,,,8 shots,8.0
+,,gpt-5.6-luna,0.5192727272727272,fewshot,length,15.0,,,,0 shots,0.0
+,,gpt-5.6-luna,0.5258181818181819,fewshot,length,15.0,,,,1 shot,1.0
+,,gpt-5.6-luna,0.6087272727272727,fewshot,length,15.0,,,,16 shots,16.0
+,,gpt-5.6-luna,0.536,fewshot,length,15.0,,,,2 shots,2.0
+,,gpt-5.6-luna,0.5389090909090909,fewshot,length,15.0,,,,4 shots,4.0
+,,gpt-5.6-luna,0.5636363636363636,fewshot,length,15.0,,,,8 shots,8.0
+,,gpt-5.6-luna,0.46039309112567006,fewshot,length,19.5,,,,0 shots,0.0
+,,gpt-5.6-luna,0.46337105419892793,fewshot,length,19.5,,,,1 shot,1.0
+,,gpt-5.6-luna,0.535437760571769,fewshot,length,19.5,,,,16 shots,16.0
+,,gpt-5.6-luna,0.4776652769505658,fewshot,length,19.5,,,,2 shots,2.0
+,,gpt-5.6-luna,0.4806432400238237,fewshot,length,19.5,,,,4 shots,4.0
+,,gpt-5.6-luna,0.5116140559857058,fewshot,length,19.5,,,,8 shots,8.0
+,,gpt-5.6-luna,0.4596062457569586,fewshot,length,30.5,,,,0 shots,0.0
+,,gpt-5.6-luna,0.44738628649015616,fewshot,length,30.5,,,,1 shot,1.0
+,,gpt-5.6-luna,0.5526137135098439,fewshot,length,30.5,,,,16 shots,16.0
+,,gpt-5.6-luna,0.4697895451459606,fewshot,length,30.5,,,,2 shots,2.0
+,,gpt-5.6-luna,0.46911065852002715,fewshot,length,30.5,,,,4 shots,4.0
+,,gpt-5.6-luna,0.5084860828241684,fewshot,length,30.5,,,,8 shots,8.0

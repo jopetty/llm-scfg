@@ -32,16 +32,17 @@ EXPERIMENT_ORDER = ["size", "wordorder", "agreement", "orthography"]
 WORD_ORDER_DATASET = "wordorder_exp"
 ORTHOGRAPHY_DATASET = "orthography_exp"
 
+FIGURE_HEIGHT_FIXED_IN = 0.65
+FIGURE_HEIGHT_PER_CATEGORY_IN = 0.12
+
 FAMILY_ORDER = [
     "word_order_error",
     "omission",
     "extra_words",
     "recall_error",
     "source_vocab_error",
-    "english_vocab",
     "hallucinated_vocab",
     "orthography_error",
-    "mixed_other",
 ]
 FAMILY_PALETTE = {
     "word_order_error": "#5B8FF9",
@@ -75,10 +76,10 @@ EXPERIMENT_LABELS = {
 
 def family_share(df: pd.DataFrame) -> pd.DataFrame:
     """Return each error family's share among wrong answers per experiment."""
-    counts = df.groupby(["exp", "error_family"], as_index=False, observed=False).agg(
+    counts = df.groupby(["exp", "error_family"], as_index=False, observed=True).agg(
         count=("error_family", "size")
     )
-    totals = df.groupby("exp", as_index=False, observed=False).agg(
+    totals = df.groupby("exp", as_index=False, observed=True).agg(
         total=("error_family", "size")
     )
     shares = counts.merge(totals, on="exp", how="left")
@@ -105,7 +106,7 @@ def load_plot_data() -> tuple[pd.DataFrame, list[str], list[str]]:
             "`uv run python notebooks/error_analysis.py` first."
         )
 
-    rows = pd.read_csv(ROWS_PATH)
+    rows = pd.read_csv(ROWS_PATH, low_memory=False)
     required_columns = {"exp", "fuzzy_model", "exact_match", "failure_tags_str"}
     missing_columns = required_columns - set(rows.columns)
     if missing_columns:
@@ -154,6 +155,7 @@ def load_plot_data() -> tuple[pd.DataFrame, list[str], list[str]]:
     if not present_families:
         raise ValueError(f"No non-exact error tags found for model {MODEL!r}.")
 
+    plot_data = plot_data.loc[plot_data["error_family"].isin(present_families)].copy()
     plot_data["error_family"] = pd.Categorical(
         plot_data["error_family"], categories=present_families, ordered=True
     )
@@ -168,7 +170,10 @@ def load_plot_data() -> tuple[pd.DataFrame, list[str], list[str]]:
 def make_figure() -> plt.Figure:
     """Create the error-taxonomy panel figure."""
     plot_data, present_families, experiment_panels = load_plot_data()
-    figure = plt.figure(figsize=(aes.COLM_PAPER_WIDTH_IN, aes.FIG_HEIGHT_SINGLE_ROW_IN))
+    figure_height_in = (
+        FIGURE_HEIGHT_FIXED_IN + len(present_families) * FIGURE_HEIGHT_PER_CATEGORY_IN
+    )
+    figure = plt.figure(figsize=(aes.COLM_PAPER_WIDTH_IN, figure_height_in))
     grid = GridSpec(1, 4, figure=figure, wspace=0.12)
     axes = [figure.add_subplot(grid[0, 0])]
     for panel_idx in range(1, 4):

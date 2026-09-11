@@ -2591,6 +2591,7 @@ class RuleBuilder:
         params = self.sync_params
         lines: list[str] = []
         lines += self._lex("DET", (params.a.det_def_lex, params.b.det_def_lex))
+        lines += self._lex("DET", (params.a.det_indef_lex, params.b.det_indef_lex))
         lines += self._lex("T", (params.a.tense_lex, params.b.tense_lex))
         lines += self._display_verb_paradigms()
         lines += self._display_noun_paradigms()
@@ -2602,17 +2603,6 @@ class RuleBuilder:
         if params.a.pro_drop or params.b.pro_drop:
             lines.append("PRO -> <'∅', '∅'>")
         return lines
-
-    def _source_surface(self, surface: str) -> str:
-        return "" if surface.startswith("∅") else surface
-
-    def _surface_in_sample(self, surface: str, sample: str) -> bool:
-        source_surface = self._source_surface(surface).strip()
-        if not source_surface:
-            return False
-        haystack = f" {sample.strip()} "
-        needle = f" {source_surface} "
-        return needle in haystack
 
     def _compact_paradigm_line(
         self,
@@ -2632,16 +2622,13 @@ class RuleBuilder:
         pos: str,
         left_items: list[str],
         right_items: list[str],
-        sample: str,
-        always_include: bool = False,
     ) -> list[str]:
-        lines: list[str] = []
-        for left_item, right_item in zip(left_items, right_items):
-            if always_include or self._surface_in_sample(left_item, sample):
-                lines.append(f"{pos} -> <'{left_item}', '{right_item}'>")
-        return lines
+        return [
+            f"{pos} -> <'{left_item}', '{right_item}'>"
+            for left_item, right_item in zip(left_items, right_items)
+        ]
 
-    def _compact_verb_entries(self, sample: str) -> list[str]:
+    def _compact_verb_entries(self) -> list[str]:
         params = self.sync_params
         count = min(
             len(params.a.verb_paradigms)
@@ -2675,7 +2662,6 @@ class RuleBuilder:
                 else params.b.verb_lex[index]
             )
             candidate_forms = []
-            matches_sample = False
             for bundle in bundles:
                 left_key = bundle.key(params.a.latent_axes)
                 right_key = bundle.key(params.b.latent_axes)
@@ -2691,18 +2677,14 @@ class RuleBuilder:
                 )
                 label = self._feature_label(bundle)
                 candidate_forms.append((label, left_surface, right_surface))
-                matches_sample = matches_sample or self._surface_in_sample(
-                    left_surface, sample
+            lines.append(
+                self._compact_paradigm_line(
+                    f"V{index + 1}", left_lemma, right_lemma, candidate_forms
                 )
-            if matches_sample:
-                lines.append(
-                    self._compact_paradigm_line(
-                        f"V{index + 1}", left_lemma, right_lemma, candidate_forms
-                    )
-                )
+            )
         return lines
 
-    def _compact_noun_entries(self, sample: str) -> list[str]:
+    def _compact_noun_entries(self) -> list[str]:
         params = self.sync_params
         count = min(
             len(params.a.noun_paradigms)
@@ -2731,7 +2713,6 @@ class RuleBuilder:
                 else params.b.noun_lex[index]
             )
             candidate_forms = []
-            matches_sample = False
             for label, key in (("sg", "number=sg"), ("pl", "number=pl")):
                 left_surface = (
                     left_entry["forms"][key]
@@ -2744,18 +2725,14 @@ class RuleBuilder:
                     else params.b.noun_lex[index]
                 )
                 candidate_forms.append((label, left_surface, right_surface))
-                matches_sample = matches_sample or self._surface_in_sample(
-                    left_surface, sample
+            lines.append(
+                self._compact_paradigm_line(
+                    f"N{index + 1}", left_lemma, right_lemma, candidate_forms
                 )
-            if matches_sample:
-                lines.append(
-                    self._compact_paradigm_line(
-                        f"N{index + 1}", left_lemma, right_lemma, candidate_forms
-                    )
-                )
+            )
         return lines
 
-    def _compact_propn_entries(self, sample: str) -> list[str]:
+    def _compact_propn_entries(self) -> list[str]:
         params = self.sync_params
         count = min(
             len(params.a.propn_paradigms)
@@ -2783,24 +2760,23 @@ class RuleBuilder:
                 if right_entry is not None
                 else params.b.propn_lex[index]
             )
-            if self._surface_in_sample(left_surface, sample):
-                feature_source = (
-                    left_entry
-                    or right_entry
-                    or {"features": FeatureBundle(person="3", number="sg")}
-                )
-                label = self._feature_label(feature_source["features"])
-                lines.append(
-                    f"PROPN{index + 1}[{label}] -> "
-                    f"<'{left_surface}', '{right_surface}'>"
-                )
+            feature_source = (
+                left_entry
+                or right_entry
+                or {"features": FeatureBundle(person="3", number="sg")}
+            )
+            label = self._feature_label(feature_source["features"])
+            lines.append(
+                f"PROPN{index + 1}[{label}] -> "
+                f"<'{left_surface}', '{right_surface}'>"
+            )
         return lines
 
-    def _compact_pronoun_entries(self, sample: str) -> list[str]:
+    def _compact_pronoun_entries(self) -> list[str]:
         params = self.sync_params
         if not (params.a.agreement_enabled or params.b.agreement_enabled):
             left_items, right_items = self._paired_pronoun_forms()
-            return self._compact_simple_entries("PRON", left_items, right_items, sample)
+            return self._compact_simple_entries("PRON", left_items, right_items)
         lines: list[str] = []
         bundle_source = params.a if params.a.pronoun_paradigms else params.b
         count = min(
@@ -2823,47 +2799,41 @@ class RuleBuilder:
                 if params.b.pronoun_paradigms
                 else params.b.pron_lex[index]
             )
-            if self._surface_in_sample(left_form, sample):
-                label = self._feature_label(bundles[index])
-                lines.append(f"PRON[{label}] -> <'{left_form}', '{right_form}'>")
+            label = self._feature_label(bundles[index])
+            lines.append(f"PRON[{label}] -> <'{left_form}', '{right_form}'>")
         return lines
 
-    def build_compact_prompt_lexicon(self, sample: str) -> list[str]:
+    def build_compact_prompt_lexicon(self) -> list[str]:
         if not self.is_sync:
             return self.build_lexicon()
         params = self.sync_params
         lines: list[str] = []
         lines += self._compact_simple_entries(
-            "DET", params.a.det_def_lex, params.b.det_def_lex, sample
+            "DET", params.a.det_def_lex, params.b.det_def_lex
         )
         lines += self._compact_simple_entries(
-            "T",
-            params.a.tense_lex,
-            params.b.tense_lex,
-            sample,
-            always_include=True,
-        )
-        lines += self._compact_verb_entries(sample)
-        lines += self._compact_noun_entries(sample)
-        lines += self._compact_propn_entries(sample)
-        lines += self._compact_pronoun_entries(sample)
-        lines += self._compact_simple_entries(
-            "ADJ", params.a.adj_lex, params.b.adj_lex, sample
+            "DET", params.a.det_indef_lex, params.b.det_indef_lex
         )
         lines += self._compact_simple_entries(
-            "C", params.a.comp_lex, params.b.comp_lex, sample
+            "T", params.a.tense_lex, params.b.tense_lex
         )
+        lines += self._compact_verb_entries()
+        lines += self._compact_noun_entries()
+        lines += self._compact_propn_entries()
+        lines += self._compact_pronoun_entries()
+        lines += self._compact_simple_entries("ADJ", params.a.adj_lex, params.b.adj_lex)
+        lines += self._compact_simple_entries("C", params.a.comp_lex, params.b.comp_lex)
         lines.append("CNULL -> <'∅', '∅'>")
         if params.a.pro_drop or params.b.pro_drop:
             lines.append("PRO -> <'∅', '∅'>")
         return lines
 
-    def build_compact_prompt_grammar(self, sample: str) -> str:
+    def build_compact_prompt_grammar(self, _sample: str) -> str:
         if not self.is_sync:
             return "\n".join(self.build_rules() + self.build_lexicon())
         return "\n".join(
             self.build_rules()
-            + self.build_compact_prompt_lexicon(sample)
+            + self.build_compact_prompt_lexicon()
             + self.build_agreement_summary()
         )
 
@@ -2945,6 +2915,7 @@ class RuleBuilder:
         if self.is_sync:
             params = self.sync_params
             rules += self._lex("DET", (params.a.det_def_lex, params.b.det_def_lex))
+            rules += self._lex("DET", (params.a.det_indef_lex, params.b.det_indef_lex))
             rules += self._lex("T", (params.a.tense_lex, params.b.tense_lex))
             rules += self._lex("V", self._paired_verb_forms())
             rules += self._lex("N", self._paired_noun_forms())
@@ -2959,6 +2930,7 @@ class RuleBuilder:
 
         params = self.cfg_params
         rules += self._lex("DET", params.det_def_lex)
+        rules += self._lex("DET", params.det_indef_lex)
         rules += self._lex("T", params.tense_lex)
         rules += self._lex("V", params.verb_lex)
         rules += self._lex("N", params.noun_lex)
