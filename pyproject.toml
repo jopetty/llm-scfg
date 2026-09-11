@@ -29,6 +29,7 @@ dependencies = [
     "pyarrow>=21.0.0",
     "datasets>=4.2.0",
     "huggingface-hub>=0.35.3",
+    "google-cloud-storage>=3.14.1",
 ]
 
 [dependency-groups]

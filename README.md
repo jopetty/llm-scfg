@@ -175,6 +175,37 @@ uv run python open_weights.py run_batch_dir \
 ADC project; `--gcp_location` defaults to `global`. Lower `--concurrency` if
 you see HTTP 429 responses from quota limits.
 
+### Batch (asynchronous, discounted) Gemini runs
+
+[gemini_batch.py](/Users/jacksonpetty/Development/llm-scfg/gemini_batch.py)
+submits the same `inputs_*.jsonl` files to Vertex AI Batch Prediction, the
+analogue of the OpenAI Batch API: roughly half the online price, no rate
+limits to tune, and results within about a day. It needs a GCS bucket in the
+project (default `gs://<project>-llm-scfg`, override with `--gcs_bucket` or
+`GEMINI_BATCH_BUCKET`) and uses `gcloud storage` for transfers.
+
+```bash
+# Submit one file (or every inputs_*.jsonl in a directory with submit_dir).
+uv run python gemini_batch.py submit \
+  --input_file=batches/complexity_exp/inputs_complexity_gemini-3.8-flash_part1_of_1_3d89fd.jsonl
+
+# Later: check on it, then download and convert.
+uv run python gemini_batch.py status batches/complexity_exp
+uv run python gemini_batch.py collect batches/complexity_exp
+
+# Or block until done and collect in one go.
+uv run python gemini_batch.py wait batches/complexity_exp
+```
+
+`submit` writes a `*_gemini_batch.json` manifest next to the input recording
+the job name and GCS paths; `status`/`collect`/`wait` accept either a manifest
+or a directory of them. `collect` writes the usual sibling `*_output.jsonl`
+with records in the same OpenAI-like shape as `open_weights.py` (input order
+preserved; anything Vertex failed on becomes a non-200 record), so the
+analysis code does not distinguish batch from online runs. The model is taken
+from the batch file unless `--model` overrides it; the newest Gemini models
+are only served from the `global` location, which is the default.
+
 ## Previewing a grammar
 
 Use the preview script when you want to inspect the grammar display and a few sample pairs without running a whole experiment.
