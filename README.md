@@ -144,6 +144,37 @@ uv run python open_weights.py run_batch_file \
 
 This writes a sibling `*_output.jsonl` file in the same OpenAI-like shape that the notebook analysis already consumes.
 
+### Running batch files on Gemini via Google Cloud (Vertex AI)
+
+The same runner can target Gemini through Vertex AI's OpenAI-compatible
+endpoint, authenticated with Application Default Credentials (API keys are
+disallowed by the NYU org policy). One-time setup:
+
+```bash
+gcloud auth login
+gcloud auth application-default login
+gcloud config set project <project-id>
+gcloud auth application-default set-quota-project <project-id>
+```
+
+Then run a file or directory with `--auth=gcp`. Model names in the batch file
+are automatically prefixed with `google/` (e.g. `gemini-2.5-flash` becomes
+`google/gemini-2.5-flash`); the access token is refreshed automatically for
+long runs.
+
+```bash
+uv run python open_weights.py run_batch_dir \
+  --batch_dir=batches/complexity \
+  --input_glob='inputs_*gemini-2.5-flash.jsonl' \
+  --auth=gcp \
+  --gcp_project=<project-id> \
+  --concurrency=16
+```
+
+`--gcp_project` defaults to `GOOGLE_CLOUD_PROJECT` (settable in `.env`) or the
+ADC project; `--gcp_location` defaults to `global`. Lower `--concurrency` if
+you see HTTP 429 responses from quota limits.
+
 ## Previewing a grammar
 
 Use the preview script when you want to inspect the grammar display and a few sample pairs without running a whole experiment.

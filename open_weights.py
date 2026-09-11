@@ -4,8 +4,10 @@ import importlib
 import json
 import logging
 import os
+import threading
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -47,6 +49,72 @@ class ProgressState:
 
 def pathsafe_model_name(model: str) -> str:
     return model.replace("/", "_").replace(":", "_")
+
+
+GCP_SCOPES = ("https://www.googleapis.com/auth/cloud-platform",)
+GCP_MODEL_PREFIX = "google/"
+
+
+class GoogleADCTokenProvider:
+    """Supply a Google Application Default Credentials access token on demand.
+
+    Vertex AI's OpenAI-compatible endpoint accepts an OAuth access token where
+    OpenAI expects an API key. Tokens expire hourly, so this is passed to the
+    OpenAI client as a callable ``api_key`` and refreshes lazily.
+    """
+
+    def __init__(self) -> None:
+        import google.auth
+        from google.auth.transport.requests import Request
+
+        self._credentials, self.project = google.auth.default(scopes=GCP_SCOPES)
+        self._request = Request()
+        self._lock = threading.Lock()
+
+    def token(self) -> str:
+        with self._lock:
+            if not self._credentials.valid:
+                self._credentials.refresh(self._request)
+            return str(self._credentials.token)
+
+    async def __call__(self) -> str:
+        # ``AsyncOpenAI`` expects an awaitable api_key provider. Refreshing
+        # happens roughly once an hour, so blocking briefly is acceptable.
+        return self.token()
+
+
+def vertex_openai_base_url(project: str, location: str = "global") -> str:
+    host = (
+        "aiplatform.googleapis.com"
+        if location == "global"
+        else f"{location}-aiplatform.googleapis.com"
+    )
+    return (
+        f"https://{host}/v1/projects/{project}/locations/{location}/endpoints/openapi"
+    )
+
+
+def resolve_gcp_settings(
+    *,
+    base_url: str | None,
+    gcp_project: str | None,
+    gcp_location: str | None,
+) -> tuple[str, GoogleADCTokenProvider]:
+    auth = GoogleADCTokenProvider()
+    project = (
+        gcp_project
+        or os.getenv("GOOGLE_CLOUD_PROJECT")
+        or os.getenv("GCLOUD_PROJECT")
+        or auth.project
+    )
+    if not project:
+        raise ValueError(
+            "No GCP project found; pass --gcp_project or set GOOGLE_CLOUD_PROJECT"
+        )
+    location = gcp_location or os.getenv("GOOGLE_CLOUD_LOCATION") or "global"
+    resolved_base_url = base_url or vertex_openai_base_url(project, location)
+    log.info("Using Vertex AI project=%s location=%s", project, location)
+    return resolved_base_url, auth
 
 
 def env_flag(name: str, default: bool = False) -> bool:
@@ -173,10 +241,15 @@ def normalize_chat_body(
     body: dict[str, Any],
     *,
     model_override: str | None = None,
+    model_prefix: str | None = None,
 ) -> dict[str, Any]:
     normalized = dict(body)
     if model_override:
         normalized["model"] = model_override
+    model = normalized.get("model")
+    if model_prefix and isinstance(model, str) and "/" not in model:
+        # Vertex AI addresses Gemini as e.g. ``google/gemini-2.5-flash``.
+        normalized["model"] = f"{model_prefix}{model}"
     if "max_completion_tokens" in normalized and "max_tokens" not in normalized:
         normalized["max_tokens"] = normalized.pop("max_completion_tokens")
     else:
@@ -251,12 +324,17 @@ async def invoke_request(
     request: BatchRequest,
     *,
     model_override: str | None,
+    model_prefix: str | None,
     max_retries: int,
     retry_backoff_seconds: float,
     semaphore: asyncio.Semaphore,
     progress: ProgressState,
 ) -> dict[str, Any]:
-    request_body = normalize_chat_body(request.body, model_override=model_override)
+    request_body = normalize_chat_body(
+        request.body,
+        model_override=model_override,
+        model_prefix=model_prefix,
+    )
     model_name = request_body.get("model")
 
     async with semaphore:
@@ -289,8 +367,9 @@ async def run_batch_requests(
     requests: list[BatchRequest],
     *,
     base_url: str,
-    api_key: str,
+    api_key: str | Callable[[], Awaitable[str]],
     model_override: str | None,
+    model_prefix: str | None,
     concurrency: int,
     max_retries: int,
     retry_backoff_seconds: float,
@@ -313,6 +392,7 @@ async def run_batch_requests(
             client,
             request,
             model_override=model_override,
+            model_prefix=model_prefix,
             max_retries=max_retries,
             retry_backoff_seconds=retry_backoff_seconds,
             semaphore=semaphore,
@@ -357,9 +437,12 @@ def run_batch_file(
     input_file: str,
     output_file: str | None = None,
     output_dir: str | None = None,
-    base_url: str = "http://127.0.0.1:8000/v1",
+    base_url: str | None = None,
     api_key: str | None = None,
     api_key_env: str = "OPENAI_API_KEY",
+    auth: str = "api_key",
+    gcp_project: str | None = None,
+    gcp_location: str | None = None,
     model_override: str | None = None,
     concurrency: int = 32,
     max_retries: int = 3,
@@ -392,7 +475,21 @@ def run_batch_file(
         )
 
     resolved_output.parent.mkdir(parents=True, exist_ok=True)
-    resolved_api_key = api_key or os.getenv(api_key_env) or "EMPTY"
+    resolved_api_key: str | Callable[[], Awaitable[str]]
+    model_prefix: str | None = None
+    if auth == "gcp":
+        # Vertex AI OpenAI-compatible endpoint, authenticated with ADC.
+        base_url, resolved_api_key = resolve_gcp_settings(
+            base_url=base_url,
+            gcp_project=gcp_project,
+            gcp_location=gcp_location,
+        )
+        model_prefix = GCP_MODEL_PREFIX
+    elif auth == "api_key":
+        base_url = base_url or "http://127.0.0.1:8000/v1"
+        resolved_api_key = api_key or os.getenv(api_key_env) or "EMPTY"
+    else:
+        raise ValueError(f"Unknown auth={auth!r}; expected 'api_key' or 'gcp'")
     progress = ProgressState(total_requests=len(requests))
     started_at = time.time()
     wandb_run = maybe_init_wandb_run(
@@ -416,6 +513,7 @@ def run_batch_file(
                 base_url=base_url,
                 api_key=resolved_api_key,
                 model_override=model_override,
+                model_prefix=model_prefix,
                 concurrency=concurrency,
                 max_retries=max_retries,
                 retry_backoff_seconds=retry_backoff_seconds,
@@ -458,9 +556,12 @@ def run_batch_dir(
     batch_dir: str,
     input_glob: str = "inputs_*.jsonl",
     output_dir: str | None = None,
-    base_url: str = "http://127.0.0.1:8000/v1",
+    base_url: str | None = None,
     api_key: str | None = None,
     api_key_env: str = "OPENAI_API_KEY",
+    auth: str = "api_key",
+    gcp_project: str | None = None,
+    gcp_location: str | None = None,
     model_override: str | None = None,
     concurrency: int = 32,
     max_retries: int = 3,
@@ -490,6 +591,9 @@ def run_batch_dir(
                 base_url=base_url,
                 api_key=api_key,
                 api_key_env=api_key_env,
+                auth=auth,
+                gcp_project=gcp_project,
+                gcp_location=gcp_location,
                 model_override=model_override,
                 concurrency=concurrency,
                 max_retries=max_retries,
