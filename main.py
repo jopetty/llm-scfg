@@ -16,7 +16,7 @@ import pyrootutils
 import tiktoken
 from dotenv import load_dotenv
 
-from scfg.prompt import ChatCompletionResponse, basic_prompt
+from scfg.prompt import ChatCompletionResponse, basic_prompt, examples_only_prompt
 from scfg.scfg import SCFG, CFGParams, RuleBuilder, SCFGParams
 from scfg.utils import get_logger, set_all_seeds
 
@@ -555,7 +555,45 @@ def prompt_grammar_str(
     if prompt_type == "compact":
         params = SCFGParams.from_dict(grammar)
         return RuleBuilder(params).build_compact_prompt_grammar(sample)
+    if prompt_type == "examples_only":
+        # The examples-only ablation shows the model no grammar at all; the
+        # prompt builder ignores this string.
+        return ""
     raise ValueError(f"Unknown prompt type: {prompt_type}")
+
+
+def select_prompt_func(prompt_type: str):
+    """Return the prompt builder for ``prompt_type``."""
+
+    if prompt_type == "examples_only":
+        return examples_only_prompt
+    return basic_prompt
+
+
+def validate_k_shots_for_prompt_type(
+    k_values: list[int], prompt_type: str
+) -> list[int]:
+    """Drop the degenerate k=0 cell from the examples-only ablation.
+
+    With no grammar *and* no examples the prompt carries no information about
+    the target language whatsoever, so the condition is not meaningful.
+    """
+
+    if prompt_type != "examples_only":
+        return k_values
+    filtered = [k for k in k_values if k > 0]
+    if not filtered:
+        raise ValueError(
+            "prompt_type='examples_only' requires at least one k_shots > 0; "
+            "with k=0 the prompt would contain neither a grammar nor any "
+            "examples."
+        )
+    if filtered != k_values:
+        log.warning(
+            "Dropping k=0 from the examples-only ablation; evaluating k=%s",
+            filtered,
+        )
+    return filtered
 
 
 def normalize_k_shots(k_shots: int | list[int] | tuple[int, ...]) -> list[int]:
@@ -1407,8 +1445,8 @@ def generate_batchfile(
     grammar = cast(dict[str, object], data["grammar"])
     agreement_metadata = prompt_agreement_metadata(grammar)
 
-    prompt_func = basic_prompt
-    k_values = normalize_k_shots(k_shots)
+    prompt_func = select_prompt_func(prompt_type)
+    k_values = validate_k_shots_for_prompt_type(normalize_k_shots(k_shots), prompt_type)
     all_samples = []
 
     for k in k_values:
@@ -1538,7 +1576,7 @@ def generate_experiment_batchfile(
 
     exp_batch_dir.mkdir(parents=True, exist_ok=True)
 
-    k_values = normalize_k_shots(k_shots)
+    k_values = validate_k_shots_for_prompt_type(normalize_k_shots(k_shots), prompt_type)
     all_samples = []
     experiment_data = _load_experiment_data(
         exp=exp,
@@ -1563,7 +1601,7 @@ def generate_experiment_batchfile(
 
         for k in k_values:
             df = pd.DataFrame(samples)
-            prompt_func = basic_prompt
+            prompt_func = select_prompt_func(prompt_type)
             df["prompt"] = df.apply(
                 lambda row: prompt_func(
                     grammar_str=prompt_grammar_str(

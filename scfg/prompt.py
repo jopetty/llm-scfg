@@ -115,3 +115,67 @@ def basic_prompt(
     )
 
     return prompt
+
+
+def examples_only_prompt(
+    grammar_str: str,
+    sample: str,
+    agreement_metadata: dict | None = None,
+    few_shot_examples: list[dict[str, str]] | None = None,
+):
+    """Build an examples-only ("grammar ablation") prompt.
+
+    This is the null condition for the few-shot experiment: the model sees the
+    same parallel example sentences as in the few-shot condition, but no
+    grammar at all. Comparing it against the grammar-only and
+    grammar-plus-examples conditions isolates how much of the model's accuracy
+    comes from interpreting the grammatical description rather than from
+    generalizing over the exemplars.
+
+    ``grammar_str`` and ``agreement_metadata`` are accepted so that this is a
+    drop-in replacement for :func:`basic_prompt` in the batch builders, but
+    both are deliberately ignored: nothing about the grammar, including its
+    notation and the agreement annotations that describe it, may leak into
+    this prompt.
+    """
+
+    if not few_shot_examples:
+        raise ValueError(
+            "examples_only_prompt requires at least one few-shot example; "
+            "with k=0 the prompt would contain no information about the "
+            "target language at all."
+        )
+
+    example_lines = [
+        (
+            f"    {index}. Source: `{example['input']}`\n"
+            f"       Target: `{example['output']}`"
+        )
+        for index, example in enumerate(few_shot_examples, start=1)
+    ]
+
+    prompt: str = (
+        "You will be presented with a set of example translations between two "
+        "languages, along with a new sentence in the source language. Your "
+        "task is to use the example translations to translate the new "
+        "sentence from the source language into the target language.\n\n"
+        "    The two languages may differ in their word order, in the way "
+        "they mark grammatical information on words, and in their "
+        "vocabularies. You must infer whatever you need about the target "
+        "language from the examples alone.\n\n"
+        "    You may use any reasoning strategy you like to solve this task, "
+        "including identifying correspondences between words in the example "
+        "pairs, inferring the word order of the target language, and then "
+        "applying what you have inferred to the input sentence. Feel free to "
+        "write down intermediate steps in your reasoning.\n\n"
+        "    You will be evaluated based on the string accuracy of the output "
+        "sentence, which you should format like the following: `Final answer: "
+        "<output sentence>`. If you do not end your response with this "
+        "format, you will be marked as incorrect.\n\n"
+        "    Here are the example translations:\n" + "\n".join(example_lines) + "\n\n"
+        f"    Here is the input sentence: `{sample}`.\n\n"
+        "    Remember to end your response with the format `Final answer: "
+        "<output sentence>`."
+    )
+
+    return prompt
