@@ -245,6 +245,82 @@ def collect(target: str) -> list[str]:
     return written
 
 
+def collect_ids(
+    batch_ids: str | list[str],
+    out_dir: str = "batches/fewshot_exp",
+) -> list[str]:
+    """Download results for batches submitted outside this tool.
+
+    Use this for jobs created by hand in the OpenAI dashboard, where there is
+    no local manifest. Results land in ``out_dir`` as
+    ``batch_<id>_output.jsonl``, the filename the analysis notebooks expect,
+    so dashboard-submitted runs are indistinguishable downstream from ones
+    submitted with :func:`submit`.
+    """
+
+    ids = [batch_ids] if isinstance(batch_ids, str) else list(batch_ids)
+    directory = Path(out_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    client = openai_client()
+    written: list[str] = []
+    for batch_id in ids:
+        batch = client.batches.retrieve(batch_id)
+        if batch.status != "completed":
+            log.warning("%s is %s, not completed; skipping", batch_id, batch.status)
+            continue
+        if not batch.output_file_id:
+            log.warning("%s completed with no output file", batch_id)
+            continue
+
+        out_path = directory / f"batch_{batch.id.removeprefix('batch_')}_output.jsonl"
+        content = client.files.content(batch.output_file_id).text
+        with open(out_path, "w") as handle:
+            handle.write(content if content.endswith("\n") else content + "\n")
+        log.info("Wrote %s", out_path)
+        written.append(str(out_path))
+
+        if batch.error_file_id:
+            err_path = out_path.with_name(f"{out_path.stem}_errors.jsonl")
+            err = client.files.content(batch.error_file_id).text
+            with open(err_path, "w") as handle:
+                handle.write(err if err.endswith("\n") else err + "\n")
+            log.warning("Batch reported errors; wrote %s", err_path)
+    return written
+
+
+def list_batches(limit: int = 20) -> list[dict[str, Any]]:
+    """List recent batches on the account, newest first.
+
+    Convenience for finding the ids of jobs submitted in the dashboard so
+    they can be passed to :func:`collect_ids`.
+    """
+
+    client = openai_client()
+    rows: list[dict[str, Any]] = []
+    for batch in client.batches.list(limit=limit).data:
+        counts = getattr(batch, "request_counts", None)
+        row = {
+            "id": batch.id,
+            "status": batch.status,
+            "total": getattr(counts, "total", None),
+            "completed": getattr(counts, "completed", None),
+            "failed": getattr(counts, "failed", None),
+            "source_file": (batch.metadata or {}).get("source_file"),
+        }
+        rows.append(row)
+        log.info(
+            "%s  %-10s  %s/%s done, %s failed  %s",
+            row["id"],
+            row["status"],
+            row["completed"],
+            row["total"],
+            row["failed"],
+            row["source_file"] or "",
+        )
+    return rows
+
+
 def wait(
     target: str,
     poll_seconds: float = 120.0,
@@ -285,6 +361,8 @@ if __name__ == "__main__":
             "submit_dir": submit_dir,
             "status": status,
             "collect": collect,
+            "collect_ids": collect_ids,
+            "list_batches": list_batches,
             "wait": wait,
             "cancel": cancel,
         }
