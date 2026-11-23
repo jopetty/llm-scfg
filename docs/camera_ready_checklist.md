@@ -146,17 +146,53 @@ modulo the size limits."* The claim currently appears in four places — abstrac
 
 ### 2.5 Citation updates 🔴
 To NVoD: *"We will update citations and add discussion of Pei et al."*
-- `tanzer-2023-benchmark` → published version (ICLR 2024). Currently `@MISC`/arXiv.
-- `aycock-2024-llms` → published version. Currently `@MISC`/arXiv. **Verify the venue** before
-  changing.
+
+All titles verified against the publisher or arXiv record (2026-11-23). Add these five to
+Paperpile and re-export:
+
+| `\TODO` in `main.tex` | Full reference |
+|---|---|
+| l.245 Zhou et al. 2025 | Yikai Zhou, Jingyang Jiang & Haitao Liu, "Language Universals in Sentence Length: Comparing Sentence Length Distributions of 10 Languages," *Cognitive Science* 49(9), e70115, 2025. DOI `10.1111/cogs.70115` |
+| l.245 Sigurd et al. 2004 | Bengt Sigurd, Mats Eeg-Olofsson & Joost van de Weijer, "Word length, sentence length and frequency: Zipf's law revisited," *Studia Linguistica* 58(1), 37–52, 2004 |
+| l.255 Skirgård et al. 2023 | Hedvig Skirgård et al., "Grambank reveals the importance of genealogical constraints on linguistic diversity and highlights the impact of language loss," *Science Advances* 9(16), 2023. DOI `10.1126/sciadv.adg6175` |
+| l.330 Jelassi et al. 2024 | Samy Jelassi, David Brandfonbrener, Sham Kakade & Eran Malach, "Repeat After Me: Transformers are Better than State Space Models at Copying," ICML 2024 (PMLR 235). arXiv:2402.01032 |
+| l.334 Pei et al. 2026 | Renhao Pei, Yihong Liu, Sampo Pyysalo, Hinrich Schütze & Shaoxiong Ji, "Reasoning over Grammar: Can Synthetic Linguistic Reasoning Traces Enhance Low-Resource Machine Translation?" **EMNLP 2026 Findings**. arXiv:2606.03782 (v1 2 Jun 2026, v2 29 Aug 2026) |
+
+Note that Pei et al. now has a venue — cite EMNLP 2026 Findings, not the bare preprint.
+
+Version swaps, both verified:
+- `tanzer-2023-benchmark` → "A Benchmark for Learning to Translate a New Language from One Grammar
+  Book," **ICLR 2024** (arXiv:2309.16575). Confirmed.
+- `aycock-2024-llms` → "Can LLMs Really Learn to Translate a Low-Resource Language from One Grammar
+  Book?" by Seth Aycock, David Stap, Di Wu, Christof Monz & Khalil Sima'an, **ICLR 2025**
+  (arXiv:2409.19151, posted Sept 2024). ⚠️ **The year changes 2024 → 2025**, so every in-text
+  "Aycock et al. (2024)" becomes "(2025)" — there are several, including in the abstract-adjacent
+  framing and §4.4. Decide whether to take the year change or keep citing the preprint.
 - `papineni-2001-bleu` → year `2001` → `2002`. The booktitle already says ACL '02; only the `year`
   field is wrong.
-- Add **Pei et al. (2026), arXiv:2606.03782** — reasoning traces from UD treebanks in place of
-  grammar books — with the discussion we promised: their approach plausibly beats pure ICL at
-  higher cost, since our exemplars are cheap but per-sample traces are not.
 
 ⚠️ **`paper/paperpile.bib` is Paperpile-generated.** Hand edits will be clobbered on the next
-sync. Make these four changes in Paperpile, then re-export.
+sync. Make these changes in Paperpile, then re-export.
+
+### 2.5a ⚠️ Our Pei et al. sentence mischaracterizes the paper
+
+`main.tex:334` currently reads: *"Recent work moves beyond pure in-context learning by, for
+instance, generating reasoning traces from treebanks in place of grammar books."*
+
+That is backwards. Pei et al. test their synthetic traces three ways — in-context learning,
+supervised fine-tuning, and reinforcement fine-tuning — and find the traces help **most as
+inference-time guidance in in-context learning**, with the training-data uses giving smaller and
+less consistent gains. Their contribution is a richer in-context signal, not a move away from ICL.
+Our follow-on sentence ("Such approaches plausibly outperform pure ICL, at a higher cost") rests
+on the same misreading.
+
+This matters because NVoD asked for this engagement specifically and will read it. Suggested
+reframing: they enrich the in-context signal by deriving step-by-step linguistic analyses from UD
+treebanks, dictionaries and rule banks rather than from a prose grammar, and report that this
+works better at inference time than as training data. The cost argument survives intact —
+per-sample traces are still more expensive than exemplars — and their bottleneck finding (that
+generating reliable linguistic analyses is itself the hard part) actually reinforces our
+large-grammar point.
 
 ### 2.6 Grambank contextualization 🟡
 To NVoD: *"We will contextualize our findings based on Grambank's paradigms and frequencies, and
