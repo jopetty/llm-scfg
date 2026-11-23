@@ -221,13 +221,15 @@ Note: the `sentence length`/`input length` split also appears in **figure axis l
 These are real review comments with no author commitment behind them. Listed so the choice is
 conscious.
 
-1. **Significance testing / effect sizes.** Raised independently by NVoD ("significance testing is
-   missing") and qmUX ("would strengthen the word-order null in particular"). We never answered
-   this. It is the strongest unanswered methodological point, and it bears on a **null result we
-   rely on** — the word-order finding. Cheap to add from data we already have.
-   **Recommendation: do it.**
-2. **Quantifying the "script tax."** NVoD asked for the statistical effect of changing script. Not
-   answered. Same analysis machinery as (1). Moderate value.
+1. **Significance testing / effect sizes.** ✅ **Done** — `scripts/significance_tests.py`,
+   written into §4.2 and new Appendix `sec:significance`. Word order is confirmed null with a
+   test matched to the design: randomization test *p* = 0.55, randomized-block ANOVA
+   *F*(2,33) = 0.71, *p* = 0.50, largest pairwise difference 3.5 pp, equivalence established at
+   ±9.1 pp. **The clustering correction mattered**: treating the 5,040 sentences as independent
+   returns *p* = 0.06, a near-threshold value that would have invited exactly the over-reading
+   the test was meant to prevent. See §7 below for two claims the same tests call into question.
+2. **Quantifying the "script tax."** Machinery now exists (same script, `--experiment
+   orthography`). ⚠️ Running it does *not* support the graded hierarchy §4.3 asserts — see §7.
 3. **Tokenization fertility.** We gave numbers in the rebuttal (our vocabularies: fertility 2–4;
    English: ~1.3) but never promised to put them in the paper. `scripts/tokenization_summary.py`
    already exists. One sentence in Limitations. **Recommendation: include** — it is a direct
@@ -266,3 +268,75 @@ not count. **Cut from the Discussion, not from Limitations.**
    (§2.6), Pei et al. (§2.5), copying literature (§2.9).
 5. Fold in examples-only results; scope the few-shot claim (§2.4) to match what the data shows.
 6. Significance tests (§4.1) and fertility note (§4.3) if time allows.
+
+---
+
+## 7. ⚠️ What the significance tests revealed — two claims to revisit
+
+`uv run python scripts/significance_tests.py` runs all three condition experiments. Word order
+came out exactly as the paper says. The other two did not, and both involve **ordering** claims
+rather than the headline effects, which hold up strongly.
+
+### 7.1 Orthography (§4.3): the graded hierarchy is not supported
+
+The paper says models "perform best at translating into Latin script, moderately worse at
+translating into Cyrillic, and worst at translating into Hebrew script," and that unpointed
+Hebrew sits "below that of Cyrillic and Latin scripts."
+
+Block-adjusted, with grammar as the unit of analysis (gpt-5.6-luna, 70 grammars):
+
+| condition | accuracy |
+|---|---:|
+| Latin | 58.51% |
+| Cyrillic | 53.63% |
+| Hebrew (unpointed) | 53.51% |
+| Latin + diacritics | 51.43% |
+| **Hebrew (pointed)** | **0.12%** |
+
+- **Pointed Hebrew is unambiguous**: −58.4 pp vs Latin, *p* < 0.0001. This finding is safe.
+- **Cyrillic vs unpointed Hebrew: +0.12 pp, *p* = 0.99.** These are indistinguishable, so
+  "moderately worse ... and worst" misdescribes them.
+- **Latin vs Cyrillic: −4.88 pp, *p* = 0.65**; Latin vs Hebrew: −5.00 pp, *p* = 0.65. Neither is
+  significant.
+- **Latin + diacritics is numerically the lowest of the four non-collapsed conditions**, which
+  cuts against "best at translating into Latin script."
+
+The interaction is significant here (*F* = 23.8), so the conservative error term applies and the
+intervals are wide (±20 pp). The honest reading: the script effect is carried **entirely by vowel
+pointing**, and the remaining differences are not resolvable at this sample size. The subsection
+title "Less familiar scripts make translation harder" is defensible only for pointing.
+
+**Suggested fix (prose only, no rerun):** keep the pointed-Hebrew result as the finding, and
+replace the graded ordering with a statement that the other three scripts are statistically
+indistinguishable. This *strengthens* the mechanism claim — it is specifically the unfamiliar
+diacritic sequences, not script novelty in general, that breaks translation.
+
+### 7.2 Agreement (§4.2): "neither language has agreement is easiest" is not supported
+
+The paper says "language pairs where neither language has overt agreement morphology on verbs are
+the easiest." Block-adjusted:
+
+| condition | accuracy | vs NoAgr → NoAgr |
+|---|---:|---|
+| Agr → Agr | 85.42% | +1.67 pp, *p* = 0.85 |
+| Agr → NoAgr | 83.47% | +3.33 pp, *p* = 0.66 |
+| NoAgr → NoAgr | 80.14% | — |
+| **NoAgr → Agr** | **44.79%** | **−35.4 pp, *p* < 0.0001** |
+
+NoAgr → NoAgr is in fact the *lowest* of the three non-collapsed conditions, though none of those
+three differ significantly. The real finding — that translating *into* a language with agreement
+from one without it is dramatically harder — is strongly supported. Note this experiment is
+unbalanced (Agr → Agr is missing one size block), so raw condition means are not comparable
+across conditions and the block-adjusted figures above should be used.
+
+**Suggested fix (prose only):** drop "are the easiest" and say that the three conditions not
+involving a NoAgr → Agr mapping are indistinguishable, while NoAgr → Agr is far harder.
+
+### 7.3 Note on method
+
+Intervals use the randomized-block ANOVA error term, pooling the interaction when it is not
+significant. Two earlier approaches were wrong and are recorded in the script's docstring: a
+cluster bootstrap within cells (two grammars per cell badly underestimates variance — it produced
+intervals excluding zero for differences the randomization test put at *p* = 0.35), and
+block-level differences only (valid but discards replication, widening the word-order bound from
+±6.8 to ±12.7 pp for no reason).
