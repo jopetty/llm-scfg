@@ -47,17 +47,21 @@ than by the exemplars.
 from above by a fact about the data, not by model ability. Computed exactly over all 42 fewshot
 grammars (no API calls needed):
 
-| k | mean source-word coverage | **sentences fully covered** = exact-match ceiling |
+| k | **sentences fully covered** = exact-match ceiling | measured accuracy |
 |---:|---:|---:|
-| 1 | 15.0% | **0.0%** |
-| 2 | — | **0.1%** |
-| 4 | 40.4% | **1.2%** |
-| 8 | — | **11.1%** |
-| 16 | 72.0% | **31.9%** |
+| 1 | **0.00%** | 0.00% |
+| 2 | **0.02%** | not yet run |
+| 4 | **0.97%** | 0.18% |
+| 8 | **8.81%** | not yet run |
+| 16 | **25.95%** | 7.30% |
+
+(Earlier drafts of this table quoted higher ceilings — 31.9% at k=16. That swept all 66 grammars
+on disk; the ablation ran the 42 named in `fewshot_grammars.txt`, which is the correct
+denominator. Figures above are the corrected ones.)
 
 A test sentence can only be exact-matched if *every* one of its source words appears somewhere in
 the k exemplars. At k=1 that is true for essentially no sentence; even at k=16 a perfect model
-tops out near 32%. So an examples-only run is guaranteed to lose to the grammar condition for
+tops out near 26%. So an examples-only run is guaranteed to lose to the grammar condition for
 reasons that have nothing to do with grammar interpretation.
 
 This does **not** invalidate the control — it is still the comparison NVoD asked for, and the
@@ -65,6 +69,13 @@ honest result. But reporting a bare "examples-only scores ~X%" invites exactly t
 objection the control was meant to answer. **Report the ceiling alongside the result**, and read
 accuracy relative to it. The coverage numbers are cheap and exact; they belong in the paper
 whatever we decide about further runs.
+
+**Result (k=1, 4, 16 run; k=2, 8 pending).** Accuracy is **exactly 0.00% on every item whose
+source vocabulary is not fully covered** — zero correct out of ~13,800 such items across all
+three conditions. The ceiling is not a loose bound, it is binding. Conditional on full coverage,
+examples-only reaches 18.4% (k=4, n=49) and 28.1% (k=16, n=1,308), against 47.06% for the grammar
+with no examples at all. The grammar is doing the work, and it keeps doing it even on the subset
+where the exemplars alone would suffice.
 
 It also reframes NVoD's retrieval request. Retrieval by character overlap (as in Tanzer) raises
 coverage by construction, which is presumably *why* they asked for it — a retrieved-exemplar
