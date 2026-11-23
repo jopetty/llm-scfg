@@ -228,8 +228,8 @@ conscious.
    ±9.1 pp. **The clustering correction mattered**: treating the 5,040 sentences as independent
    returns *p* = 0.06, a near-threshold value that would have invited exactly the over-reading
    the test was meant to prevent. See §7 below for two claims the same tests call into question.
-2. **Quantifying the "script tax."** Machinery now exists (same script, `--experiment
-   orthography`). ⚠️ Running it does *not* support the graded hierarchy §4.3 asserts — see §7.
+2. **Quantifying the "script tax."** ✅ **Done** — tested, and the result rewrote §4.3 rather
+   than decorating it; the full pairwise table is in Appendix `tab:significance-other`. See §7.1.
 3. **Tokenization fertility.** We gave numbers in the rebuttal (our vocabularies: fertility 2–4;
    English: ~1.3) but never promised to put them in the paper. `scripts/tokenization_summary.py`
    already exists. One sentence in Limitations. **Recommendation: include** — it is a direct
@@ -277,7 +277,7 @@ not count. **Cut from the Discussion, not from Limitations.**
 came out exactly as the paper says. The other two did not, and both involve **ordering** claims
 rather than the headline effects, which hold up strongly.
 
-### 7.1 Orthography (§4.3): the graded hierarchy is not supported
+### 7.1 Orthography (§4.3): the graded hierarchy is not supported — ✅ **revised**
 
 The paper says models "perform best at translating into Latin script, moderately worse at
 translating into Cyrillic, and worst at translating into Hebrew script," and that unpointed
@@ -306,12 +306,13 @@ intervals are wide (±20 pp). The honest reading: the script effect is carried *
 pointing**, and the remaining differences are not resolvable at this sample size. The subsection
 title "Less familiar scripts make translation harder" is defensible only for pointing.
 
-**Suggested fix (prose only, no rerun):** keep the pointed-Hebrew result as the finding, and
-replace the graded ordering with a statement that the other three scripts are statistically
-indistinguishable. This *strengthens* the mechanism claim — it is specifically the unfamiliar
-diacritic sequences, not script novelty in general, that breaks translation.
+**Done.** The subsection is retitled "Vowel pointing makes translation collapse", the graded
+ordering is replaced by the four-way null, and the observation that Latin-with-diacritics is the
+lowest of the four — despite not being a script change at all — is used to point at diacritic
+sequences rather than script novelty. Also propagated to intro finding 3 and the Discussion's
+"performance falls when the target script differs" sentence, which was the same claim.
 
-### 7.2 Agreement (§4.2): "neither language has agreement is easiest" is not supported
+### 7.2 Agreement (§4.2): "neither language has agreement is easiest" is not supported — ✅ **revised**
 
 The paper says "language pairs where neither language has overt agreement morphology on verbs are
 the easiest." Block-adjusted:
@@ -329,8 +330,9 @@ from one without it is dramatically harder — is strongly supported. Note this 
 unbalanced (Agr → Agr is missing one size block), so raw condition means are not comparable
 across conditions and the block-adjusted figures above should be used.
 
-**Suggested fix (prose only):** drop "are the easiest" and say that the three conditions not
-involving a NoAgr → Agr mapping are indistinguishable, while NoAgr → Agr is far harder.
+**Done.** "Are the easiest" is gone; the paragraph now reports the NoAgr → Agr deficit as
+block-adjusted (35.4 points, *p* < 0.0001) and states that the other three conditions are
+indistinguishable.
 
 ### 7.3 Note on method
 
