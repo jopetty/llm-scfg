@@ -174,7 +174,7 @@ Version swaps, both verified:
 ⚠️ **`paper/paperpile.bib` is Paperpile-generated.** Hand edits will be clobbered on the next
 sync. Make these changes in Paperpile, then re-export.
 
-### 2.5a ⚠️ Our Pei et al. sentence mischaracterizes the paper
+### 2.5a Our Pei et al. sentence mischaracterized the paper — ✅ **fixed**
 
 `main.tex:334` currently reads: *"Recent work moves beyond pure in-context learning by, for
 instance, generating reasoning traces from treebanks in place of grammar books."*
@@ -186,13 +186,16 @@ less consistent gains. Their contribution is a richer in-context signal, not a m
 Our follow-on sentence ("Such approaches plausibly outperform pure ICL, at a higher cost") rests
 on the same misreading.
 
-This matters because NVoD asked for this engagement specifically and will read it. Suggested
-reframing: they enrich the in-context signal by deriving step-by-step linguistic analyses from UD
-treebanks, dictionaries and rule banks rather than from a prose grammar, and report that this
-works better at inference time than as training data. The cost argument survives intact —
-per-sample traces are still more expensive than exemplars — and their bottleneck finding (that
-generating reliable linguistic analyses is itself the hard part) actually reinforces our
-large-grammar point.
+**Done.** The paragraph now presents Pei et al. as an instance of two of the three levers the
+preceding paragraph names — scaffolding that decomposes a derivation into steps, and targeted
+training — and reports that they found the two unequal, with the scaffolding working better. That
+is both accurate and a stronger connection than the original "moves beyond ICL" framing, since it
+makes their result evidence for our own recommendation rather than a contrast with it. Their
+bottleneck (generating reliable analyses at all) is presented as the complement of ours, and the
+cost asymmetry is kept. Costs about 15 words more than the incorrect version.
+
+All four `\TODO{}` citation placeholders are now gone from `main.tex`; the `\TODO` macro itself is
+unused and could be dropped from the preamble.
 
 ### 2.6 Grambank contextualization 🟡
 To NVoD: *"We will contextualize our findings based on Grambank's paradigms and frequencies, and
