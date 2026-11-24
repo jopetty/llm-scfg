@@ -100,9 +100,38 @@ Coverage is purely a pool-size question, and it scales with the lexicon:
 | 8,010 | 34.2% | 56.7% | 87.5% |
 
 `scripts/generate_highcoverage_pools.py` grows each pool until coverage
-reaches the target. Sampling dominates the cost (~98s per 2,000 sentences
+reaches the target. All 42 grammars reached 99.2-100% at `k`=16; the
+lowest was 99.2%. Pool sizes run from ~2,000 for the 30-item lexicons to
+48,031 for the largest, 998 MB in total (gitignored, like all of `data/`).
+
+Coverage of the resulting `highcov` batch files, against the shipped pool:
+
+| k | highcov | shipped 18-sentence pool |
+|---:|---:|---:|
+| 1 | 10.85% | 2.32% |
+| 2 | 42.90% | 14.72% |
+| 4 | 74.46% | 27.16% |
+| 8 | 98.77% | 28.21% |
+| 16 | 99.78% | 28.21% |
+
+By lexicon size, `k`=4 is where coverage still varies (100% at <=90 items,
+~50% at >=810), while `k`=8 and `k`=16 are near-saturated everywhere. So
+the `k`=8 vs `k`=16 contrast reruns the Result 3 comparison at ~99%
+coverage across the full size range, rather than on 1,422 items
+concentrated in the three smallest grammars.
+
+Prompts stay small: 1,516 tokens mean and 2,076 max at `k`=16, against a
+272,000-token limit, so no row is dropped and the evaluation targets stay
+matched to the other conditions. Sampling dominates the cost (~98s per 2,000 sentences
 at 8,010 items, against ~0.2s to score coverage), so grammars run in
 parallel across cores with per-grammar deterministic seeds.
+
+Verification of the built files: targets byte-identical to the random
+condition in all five cells, exactly `k` exemplars per prompt, and
+custom IDs disjoint across all three conditions (25,200 each, zero
+pairwise overlap). Leakage checks both came back zero -- no prompt shows
+the test item's own source sentence, and no prompt contains the gold
+target among its exemplar outputs.
 
 Two safeguards:
 
