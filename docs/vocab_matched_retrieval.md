@@ -143,11 +143,70 @@ Two safeguards:
 - **Duplication.** Pools are deduplicated by source string, so repeated
   low-depth samples do not consume prompt budget without adding vocabulary.
 
+## Result 5: removing the ceiling does not rescue examples-only translation
+
+With the large pools, `k`=16 covers **99.78%** of items — the vocabulary
+constraint is gone. Examples-only accuracy rises only from 7.30% to
+**13.59%**, against **47.06%** for the grammar with no examples at all.
+
+| condition | coverage | accuracy |
+|---|---:|---:|
+| grammar only (k=0) | n/a | 47.06% |
+| random exemplars, k=16 | 25.95% | 7.30% |
+| vocab-matched, 18-pool, k=16 | 28.21% | 7.66% |
+| vocab-matched, big pool, k=16 | 99.78% | 13.59% |
+| vocab-matched, big pool, k=4 | 74.46% | 5.97% |
+
+Coverage rose 3.8x and accuracy 1.9x, leaving examples-only 3.5x below the
+grammar. This answers the natural objection to the paper's claim — that
+examples-only looks weak only because the exemplars rarely contain the
+needed words. They now almost always do, and it still looks weak.
+
+Across every condition run, all 31,932 uncovered items remain at exactly
+zero correct.
+
+On the 1,308 items random `k`=16 also covers, retrieving from a 48k pool is
+**not** better than from the 18-sentence pool: 25.54% against 28.13%,
+difference −2.60 pp, 95% CI [−6.94, +1.25], p = 0.21. Consistent with
+Result 2.
+
+Note that `accuracy-given-covered` _falls_ as coverage rises — 28.13% at
+26% coverage, 13.62% at 99.78%. This is the selection effect Result 4
+predicted: the items a small pool happens to cover are the easy ones
+(short sentences in small grammars). It is why conditional accuracy must
+not be compared across cells with different coverage.
+
+## Result 6: the grammar's advantage holds at every grammar size
+
+Full coverage finally makes examples-only measurable at realistic lexicon
+sizes, where it previously had ~2% coverage and no usable measurement.
+
+| lexicon | G only | G+RE k=16 | VME k=16 | VME cov | gap | ratio |
+|---:|---:|---:|---:|---:|---:|---:|
+| 30 | 80.3% | 86.2% | 30.7% | 100.0% | 49.6 | 2.6x |
+| 50 | 73.9% | 85.7% | 18.9% | 100.0% | 55.0 | 3.9x |
+| 90 | 72.6% | 80.6% | 24.3% | 100.0% | 48.3 | 3.0x |
+| 810 | 56.8% | 64.9% | 11.8% | 99.9% | 45.0 | 4.8x |
+| 4,010 | 24.0% | 26.2% | 4.6% | 99.4% | 19.4 | 5.2x |
+| 6,010 | 14.0% | 17.2% | 3.3% | 99.6% | 10.7 | 4.2x |
+| 8,010 | 7.8% | 12.5% | 1.5% | 99.6% | 6.2 | 5.1x |
+
+The grammar beats fully-covering exemplars by 2.6–5.2x at every size, and
+the ratio if anything widens with grammar size. Examples-only accuracy
+decays with lexicon size just as the grammar conditions do, so the
+difficulty of large grammars is not reducible to vocabulary coverage
+either.
+
 ## Bearing on the paper
 
 These results strengthen the existing argument rather than complicating it.
-The paper says examples are a poor substitute for the grammar; the natural
-objection is that the exemplars were not *chosen well*. Choosing them as
-well as the pool allows changes nothing once coverage is held fixed. What
-bounds examples-only translation is vocabulary coverage, and within
-coverage, how many pairs the model sees — not how well targeted they are.
+The paper says examples are a poor substitute for the grammar. The natural
+objections were that the exemplars were not _chosen well_, and that
+examples-only was measured under a vocabulary ceiling making most items
+impossible. Both are now addressed. Choosing exemplars as well as the pool
+allows changes nothing once coverage is held fixed (Results 2, 5), and
+removing the ceiling almost entirely still leaves examples-only at 13.59%
+against the grammar's 47.06% (Result 5), at every grammar size (Result 6).
+
+What does matter within coverage is how many pairs the model sees
+(Result 3), not how well targeted they are.
