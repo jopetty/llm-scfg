@@ -77,11 +77,30 @@ from main import (  # noqa: E402
 )
 from scfg.prompt import ChatCompletionResponse, examples_only_prompt  # noqa: E402
 
+if str(Path(__file__).parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent))
+
+from generate_highcoverage_pools import (  # noqa: E402
+    build_postings,
+    read_jsonl,
+)
+from generate_highcoverage_pools import (  # noqa: E402
+    select_exemplars as select_from_postings,
+)
+
 log = logging.getLogger(__name__)
 
 EXPERIMENT = "fewshot"
-SELECTION_LABEL = "vocab_matched"
+EXP_DATA_DIR = PROJECT_ROOT / "data" / f"{EXPERIMENT}_exp"
 DEFAULT_K_VALUES = [1, 2, 4, 8, 16]
+
+# Pool prefix -> (metadata label, custom-id marker, filename label). The
+# 18-sentence pool the paper ships caps coverage at 28.21%; the large pools
+# from generate_highcoverage_pools.py lift it to ~100%.
+POOL_VARIANTS = {
+    "shots": ("vocab_matched", "vm", "vocabmatched"),
+    "bigshots": ("vocab_matched_highcov", "hc", "vocabmatched_highcov"),
+}
 
 
 def source_tokens(sample: dict[str, Any]) -> set[str]:
@@ -92,8 +111,13 @@ def source_tokens(sample: dict[str, Any]) -> set[str]:
     splitting of the phonetic source string.
     """
 
-    text = str(sample.get("left_phonetic") or sample.get("left") or "")
-    return set(text.split())
+    return set(source_tokens_str(sample).split())
+
+
+def source_tokens_str(sample: dict[str, Any]) -> str:
+    """Return the raw source-side string of one sample."""
+
+    return str(sample.get("left_phonetic") or sample.get("left") or "")
 
 
 def select_exemplars(
@@ -145,9 +169,11 @@ def build_requests(
     k_values: list[int],
     max_completion_tokens: int | None,
     n: int,
+    pool_prefix: str,
 ) -> dict[int, pd.DataFrame]:
     """Build one DataFrame of batch requests per ``k``."""
 
+    selection_label, _, _ = POOL_VARIANTS[pool_prefix]
     experiment_data = _load_experiment_data(
         exp=EXPERIMENT, data_source="local", hf_repo_id=None
     )
@@ -156,30 +182,31 @@ def build_requests(
 
     for grammar_name, data in experiment_data.items():
         samples = cast(list[dict[str, Any]], data["samples"])
-        shots = cast(list[dict[str, Any]] | None, data.get("shots"))
-        if not shots:
-            raise ValueError(
-                f"Grammar {grammar_name} has no dedicated shot pool; the "
-                "vocabulary-conditioned condition must draw exemplars from a "
-                "pool held out from the evaluated samples."
+        pool_path = EXP_DATA_DIR / f"{pool_prefix}_{grammar_name}.jsonl"
+        if not pool_path.exists():
+            raise FileNotFoundError(
+                f"No exemplar pool at {pool_path}. For the high-coverage "
+                "variant, run scripts/generate_highcoverage_pools.py first."
             )
-        shot_pool: list[dict[str, Any]] = shots
+        shot_pool: list[dict[str, Any]] = read_jsonl(pool_path)
+        if not shot_pool:
+            raise ValueError(f"Exemplar pool {pool_path} is empty")
         grammar = cast(dict[str, object], data["grammar"])
         agreement_metadata = prompt_agreement_metadata(grammar)
-        shot_vocabs = [source_tokens(shot) for shot in shot_pool]
+        postings = build_postings([source_tokens_str(s) for s in shot_pool])
 
         log.info(
             "Selecting exemplars for %s: %s samples, %s candidate shots",
             grammar_name,
             len(samples),
-            len(shots),
+            len(shot_pool),
         )
 
         for k in k_values:
             df = pd.DataFrame(samples)
 
             selections = [
-                select_exemplars(source_tokens(sample), shot_vocabs, k)
+                select_from_postings(source_tokens(sample), postings, k)
                 for sample in samples
             ]
             df["exemplar_indices"] = [indices for indices, _ in selections]
@@ -228,7 +255,7 @@ def build_requests(
                             grammar=grammar,
                             k_shots=k,
                         ),
-                        "exemplar_selection": SELECTION_LABEL,
+                        "exemplar_selection": selection_label,
                         "exemplar_indices": ",".join(
                             str(i) for i in row["exemplar_indices"]
                         ),
@@ -236,7 +263,10 @@ def build_requests(
                     },
                 ).to_openai_batched_json(
                     model=model,
-                    custom_id=(f"{grammar_name}-vm-k{k}-sample-{row.name}"),
+                    custom_id=(
+                        f"{grammar_name}-{POOL_VARIANTS[pool_prefix][1]}"
+                        f"-k{k}-sample-{row.name}"
+                    ),
                 ),
                 axis=1,
             )
@@ -257,6 +287,7 @@ def write_batch_files(
     all_df: pd.DataFrame,
     model: str,
     max_filesize_mb: float,
+    file_label: str,
 ) -> list[Path]:
     """Partition and write the batch files for one ``k``."""
 
@@ -290,7 +321,7 @@ def write_batch_files(
         )
 
         fname = (
-            f"inputs_{EXPERIMENT}_examples_only_vocabmatched_k{k}"
+            f"inputs_{EXPERIMENT}_examples_only_{file_label}_k{k}"
             f"_{model_pathsafe_name}_part{i + 1}_of_{num_files}_{fname_hash}.jsonl"
         )
         fpath = exp_batch_dir / fname
@@ -319,6 +350,16 @@ def main() -> None:
     parser.add_argument(
         "--max-filesize-mb", type=float, default=DEFAULT_BATCH_FILE_SIZE_MIB
     )
+    parser.add_argument(
+        "--pool-prefix",
+        choices=sorted(POOL_VARIANTS),
+        default="shots",
+        help=(
+            "Which held-out exemplar pool to retrieve from. 'shots' is the "
+            "18-sentence pool the paper ships, which caps coverage at 28.21%%; "
+            "'bigshots' is the large pool from generate_highcoverage_pools.py."
+        ),
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -335,10 +376,16 @@ def main() -> None:
         k_values=k_values,
         max_completion_tokens=args.max_completion_tokens,
         n=args.n,
+        pool_prefix=args.pool_prefix,
     )
+    file_label = POOL_VARIANTS[args.pool_prefix][2]
 
     print()
-    print(f"{'k':>3} {'requests':>9} {'covered':>8} {'coverage':>9}  files")
+    header = (
+        f"{'k':>3} {'requests':>9} {'covered':>8} {'coverage':>9} "
+        f"{'prompt tok (mean/max)':>23}  files"
+    )
+    print(header)
     for k in k_values:
         df = frames[k]
         paths = write_batch_files(
@@ -346,11 +393,14 @@ def main() -> None:
             all_df=df,
             model=args.model,
             max_filesize_mb=args.max_filesize_mb,
+            file_label=file_label,
         )
         covered = int(df["source_vocab_covered"].sum())
         pct = 100.0 * covered / len(df)
+        tok = df["prompt_tokens"] if "prompt_tokens" in df else None
+        tok_s = f"{tok.mean():,.0f} / {tok.max():,.0f}" if tok is not None else "n/a"
         names = ", ".join(p.name for p in paths)
-        print(f"{k:>3} {len(df):>9,} {covered:>8,} {pct:>8.2f}%  {names}")
+        print(f"{k:>3} {len(df):>9,} {covered:>8,} {pct:>8.2f}% {tok_s:>23}  {names}")
 
 
 if __name__ == "__main__":
