@@ -43,7 +43,10 @@ from generate_fewshot_accuracy import extract_answer, response_content  # noqa: 
 BATCH_DIR = PROJECT_ROOT / "batches" / "fewshot_exp"
 CACHE_DIR = PROJECT_ROOT / "notebooks" / "cache" / "vocab-matched"
 
-VOCAB_MATCHED_GLOB = "inputs_*_examples_only_vocabmatched_k*.jsonl"
+# Matches both pool variants: "..._vocabmatched_k8_..." (the shipped
+# 18-sentence pool) and "..._vocabmatched_highcov_k8_..." (large pools).
+# The random condition's "..._examples_only_k8_..." does not match.
+VOCAB_MATCHED_GLOB = "inputs_*_examples_only_vocabmatched*_k*.jsonl"
 RANDOM_GLOB = "inputs_*_examples_only_k*.jsonl"
 
 
