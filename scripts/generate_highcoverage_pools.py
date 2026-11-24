@@ -34,6 +34,11 @@ Duplication: random sampling repeats itself, especially at low depth in
 small grammars, and duplicate exemplars waste the prompt budget without
 adding vocabulary. Pools are deduplicated by source string.
 
+Sampling, not selection, is what costs: drawing 2,000 sentences from the
+8,010-item grammar takes ~98s while scoring coverage over them takes ~0.2s.
+Grammars are therefore processed in parallel across cores, each with its own
+deterministic seed so results do not depend on scheduling order.
+
 Example:
     uv run python scripts/generate_highcoverage_pools.py --target-coverage 0.99
 """
@@ -43,9 +48,11 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import random
 import sys
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
@@ -173,7 +180,7 @@ def grow_pool(
         gained = len(pool) - before
         sources = [source_of(s) for s in pool]
         coverage = coverage_at_k(targets, build_postings(sources), K_REFERENCE)
-        log.info(
+        log.debug(
             "  %s: pool=%d coverage@k=%d %.1f%%",
             grammar_name,
             len(pool),
@@ -200,12 +207,41 @@ def grow_pool(
     return pool, coverage
 
 
+def process_grammar(
+    name: str,
+    target_coverage: float,
+    block_size: int,
+    max_pool: int,
+) -> tuple[str, int, int, float]:
+    """Grow and write one grammar's pool. Runs in a worker process."""
+
+    grammar = json.loads((EXP_DIR / f"grammar_{name}.json").read_text())
+    n_words = int(grammar.get("n_words") or 0)
+    pool, coverage = grow_pool(
+        grammar_name=name,
+        target_coverage=target_coverage,
+        block_size=max(block_size, 2 * n_words),
+        max_pool=max(max_pool, 5 * n_words),
+    )
+    out = EXP_DIR / f"{POOL_PREFIX}_{name}.jsonl"
+    with out.open("w") as handle:
+        for sample in pool:
+            handle.write(json.dumps(sample, ensure_ascii=False) + "\n")
+    return name, n_words, len(pool), coverage
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-coverage", type=float, default=0.99)
     parser.add_argument("--block-size", type=int, default=2000)
     parser.add_argument("--max-pool", type=int, default=40000)
     parser.add_argument("--only", nargs="*", default=None)
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=max(1, (os.cpu_count() or 2) - 1),
+        help="Grammars to sample in parallel; sampling is the bottleneck.",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -218,22 +254,32 @@ def main() -> None:
     if args.only:
         names = [n for n in names if n in set(args.only)]
 
+    log.info("Sampling pools for %d grammars on %d workers", len(names), args.workers)
     report: list[tuple[str, int, int, float]] = []
-    for i, name in enumerate(names, start=1):
-        grammar = json.loads((EXP_DIR / f"grammar_{name}.json").read_text())
-        n_words = int(grammar.get("n_words") or 0)
-        log.info("[%d/%d] %s (%d lexical items)", i, len(names), name, n_words)
-        pool, coverage = grow_pool(
-            grammar_name=name,
-            target_coverage=args.target_coverage,
-            block_size=args.block_size,
-            max_pool=args.max_pool,
-        )
-        out = EXP_DIR / f"{POOL_PREFIX}_{name}.jsonl"
-        with out.open("w") as handle:
-            for sample in pool:
-                handle.write(json.dumps(sample, ensure_ascii=False) + "\n")
-        report.append((name, n_words, len(pool), coverage))
+    with ProcessPoolExecutor(max_workers=args.workers) as pool_exec:
+        futures = {
+            pool_exec.submit(
+                process_grammar,
+                name,
+                args.target_coverage,
+                args.block_size,
+                args.max_pool,
+            ): name
+            for name in names
+        }
+        for done, future in enumerate(as_completed(futures), start=1):
+            name, n_words, size, coverage = future.result()
+            report.append((name, n_words, size, coverage))
+            log.info(
+                "[%d/%d] %s (%d items): pool=%d coverage@16 %.1f%%",
+                done,
+                len(names),
+                name,
+                n_words,
+                size,
+                100 * coverage,
+            )
+    report.sort(key=lambda r: (r[1], r[0]))
 
     print()
     print(f"{'grammar':>18} {'lexicon':>8} {'pool':>7} {'coverage@16':>12}")
