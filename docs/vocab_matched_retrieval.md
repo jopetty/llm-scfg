@@ -210,3 +210,29 @@ against the grammar's 47.06% (Result 5), at every grammar size (Result 6).
 
 What does matter within coverage is how many pairs the model sees
 (Result 3), not how well targeted they are.
+
+## Result 7: the exemplar-count effect survives at near-full coverage
+
+The last two high-coverage batches (k=1, k=8) complete the VME column:
+
+| k | accuracy | coverage |
+| --- | --- | --- |
+| 1 | 1.13% | 10.85% |
+| 2 | 3.37% | 42.90% |
+| 4 | 5.97% | 74.46% |
+| 8 | 10.10% | 98.77% |
+| 16 | 13.59% | 99.78% |
+
+k=8 and k=16 are the first pair whose coverage is essentially identical
+(98.77% vs 99.78%), so comparing them isolates exemplar count from the
+selection effect that confounds every lower-k comparison. On the 4978
+items covered in both, accuracy goes 10.22% -> 13.76%, a gain of
++3.54 pp (grammar cluster bootstrap CI [+1.51, +5.89], sign-flip
+permutation p = 0.0003; 265 items gained against 89 lost).
+
+So Result 3 holds where coverage is no longer doing any work: doubling
+the number of exemplars helps, and it helps by about three points, not
+by the thirty-four that would be needed to reach the grammar alone.
+
+Across all 32129 uncovered items in the five random and five
+high-coverage cells, the model is still correct exactly zero times.
