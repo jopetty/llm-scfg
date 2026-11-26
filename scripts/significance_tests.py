@@ -194,10 +194,32 @@ def permute_within_blocks(
     return permuted
 
 
+def pair_table(table: pd.DataFrame, left: str, right: str) -> pd.DataFrame:
+    """Restrict the grammar table to the two conditions being compared.
+
+    Pairwise tests must be formed from the pair's own grammars only.
+    Shuffling labels among every condition in a block lets a third
+    condition into the null distribution: in the orthography experiment
+    pointed Hebrew sits near 0% at every size, so including it inflated
+    the null for every other pair and hid real differences among them.
+    """
+
+    subset = table[table["condition"].isin([left, right])]
+    # Keep only blocks where both conditions are present.
+    present = subset.groupby("block")["condition"].nunique()
+    keep = present[present == 2].index
+    return subset[subset["block"].isin(keep)].reset_index(drop=True)
+
+
 def permutation_tests(
     table: pd.DataFrame, n_permutations: int, rng: np.random.Generator
 ) -> dict[str, Any]:
-    """Omnibus and pairwise randomization tests, blocked by grammar size."""
+    """Omnibus and pairwise randomization tests, blocked by grammar size.
+
+    The omnibus test permutes labels among all conditions within each
+    block. Each pairwise test permutes labels only among the two
+    conditions' grammars within each block (see ``pair_table``).
+    """
 
     values = table["accuracy"].to_numpy(dtype=float)
     labels = table["condition"].to_numpy()
@@ -207,28 +229,36 @@ def permutation_tests(
     pairs = list(itertools.combinations(conditions, 2))
 
     observed_omnibus = omnibus_statistic(centered, labels, conditions)
-    observed_pairs = {
-        pair: pairwise_statistic(centered, labels, *pair) for pair in pairs
-    }
-
     omnibus_hits = 0
-    pair_hits = dict.fromkeys(pairs, 0)
     for _ in range(n_permutations):
         shuffled = permute_within_blocks(labels, blocks, rng)
         if omnibus_statistic(centered, shuffled, conditions) >= observed_omnibus:
             omnibus_hits += 1
-        for pair in pairs:
-            if abs(pairwise_statistic(centered, shuffled, *pair)) >= abs(
-                observed_pairs[pair]
-            ):
-                pair_hits[pair] += 1
 
-    # Add-one correction: a randomization p-value is never exactly zero.
+    pair_results: dict[tuple[str, str], dict[str, float]] = {}
+    for pair in pairs:
+        sub = pair_table(table, *pair)
+        sub_labels = sub["condition"].to_numpy()
+        sub_blocks = sub["block"].to_numpy()
+        sub_centered = block_center(sub["accuracy"].to_numpy(dtype=float), sub_blocks)
+        observed = pairwise_statistic(sub_centered, sub_labels, *pair)
+        hits = 0
+        for _ in range(n_permutations):
+            shuffled = permute_within_blocks(sub_labels, sub_blocks, rng)
+            if (
+                abs(pairwise_statistic(sub_centered, shuffled, *pair))
+                >= abs(observed) - 1e-12
+            ):
+                hits += 1
+        # Add-one correction: a randomization p-value is never exactly zero.
+        pair_results[pair] = {
+            "p": (hits + 1) / (n_permutations + 1),
+            "difference": observed,
+        }
+
     return {
         "omnibus_p": (omnibus_hits + 1) / (n_permutations + 1),
-        "pairs": {
-            pair: {"p": (pair_hits[pair] + 1) / (n_permutations + 1)} for pair in pairs
-        },
+        "pairs": pair_results,
     }
 
 
@@ -421,7 +451,6 @@ def analyze(
 ) -> dict[str, Any]:
     panel = load_panel(slug)
     table = grammar_table(panel, slug)
-    cells = cell_means(table)
     rng = np.random.default_rng(seed)
 
     perm = permutation_tests(table, n_permutations, rng)
@@ -430,18 +459,17 @@ def analyze(
         naive_omnibus_p(panel, slug, NAIVE_PERMUTATIONS, rng) if run_naive else None
     )
 
-    centered = block_center(
-        table["accuracy"].to_numpy(dtype=float), table["block"].to_numpy()
-    )
-    labels = table["condition"].to_numpy()
-
     rows: list[dict[str, Any]] = []
     for pair, result in perm["pairs"].items():
-        difference = pairwise_statistic(centered, labels, *pair)
+        difference = result["difference"]
+        # Intervals, like the tests, use only the pair's own grammars, so
+        # a third condition cannot set the error term.
+        sub = pair_table(table, *pair)
+        pair_anova = randomized_block_anova(sub)
         interval = (
-            anova_interval(anova, difference)
-            if anova is not None
-            else paired_interval(cells, *pair)
+            anova_interval(pair_anova, difference)
+            if pair_anova is not None
+            else paired_interval(cell_means(sub), *pair)
         )
         rows.append(
             {

@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import pyrootutils
 from matplotlib.ticker import SymmetricalLogLocator
@@ -45,6 +46,7 @@ DEFAULT_PLOT_DATA_PATH = Path(__file__).with_name(
     "combined_experiment_overview_plot_data.csv"
 )
 FONT_SCALE = 0.8
+WILSON_Z = 1.959963984540054  # two-sided 95%
 
 GPT_5_6_MODELS = ["gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"]
 ANSWER_RE = re.compile(
@@ -621,6 +623,7 @@ def plot_experiments(
                 errorbar=None,
                 ax=axis,
             )
+            draw_error_bars(axis, panel, x_column, config)
             axis.set_ylim(-0.05, 1.05)
             axis.yaxis.set_major_formatter(aes.PCT_FORMATTER)
             axis.yaxis.grid(True, linestyle="--", alpha=0.5)
@@ -659,6 +662,46 @@ def plot_experiments(
     return figure
 
 
+def wilson_interval(
+    accuracy: pd.Series, n_items: pd.Series, z: float = WILSON_Z
+) -> tuple[pd.Series, pd.Series]:
+    """95% Wilson score interval for a binomial accuracy over sentences."""
+
+    n = n_items.astype(float)
+    p = accuracy.astype(float)
+    denominator = 1 + z**2 / n
+    centre = (p + z**2 / (2 * n)) / denominator
+    half = z * np.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / denominator
+    return centre - half, centre + half
+
+
+def draw_error_bars(
+    axis, panel: pd.DataFrame, x_column: str, config: dict[str, Any]
+) -> None:
+    """Draw precomputed Wilson intervals beneath each plotted curve."""
+
+    if not {"ci_low", "ci_high"} <= set(panel.columns):
+        return
+    hue_column = str(config["hue"])
+    palette = config["palette"] or {}
+    for level, group in panel.groupby(hue_column, observed=True):
+        group = group.sort_values(x_column)
+        axis.errorbar(
+            group[x_column],
+            group["match_value"],
+            yerr=[
+                group["match_value"] - group["ci_low"],
+                group["ci_high"] - group["match_value"],
+            ],
+            fmt="none",
+            ecolor=palette.get(level, "0.4"),
+            elinewidth=0.9,
+            capsize=1.5,
+            alpha=0.8,
+            zorder=1,
+        )
+
+
 def summarize_panel(
     panel: pd.DataFrame, config: dict[str, Any], panel_name: str
 ) -> pd.DataFrame:
@@ -675,8 +718,11 @@ def summarize_panel(
         group_columns.append("k_shots")
     summary = (
         panel.groupby(group_columns, dropna=False, observed=True)["match_value"]
-        .mean()
+        .agg(match_value="mean", n_items="size")
         .reset_index()
+    )
+    summary["ci_low"], summary["ci_high"] = wilson_interval(
+        summary["match_value"], summary["n_items"]
     )
     # These rows identify the model in titles/palettes without retaining examples.
     if "fuzzy_model" in panel.columns and "fuzzy_model" not in group_columns:
